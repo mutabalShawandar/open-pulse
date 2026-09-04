@@ -10,7 +10,7 @@ The administration interface and participant-facing experience will be available
 
 ## 2. Main Use Case
 
-An administrator or authorized clinic user creates a reusable survey containing sections and different question types. The survey can then be published through one or more campaigns.
+An administrator or platform user authorized for a clinic creates a reusable survey containing sections and different question types. The survey can then be published through one or more campaigns.
 
 For example:
 

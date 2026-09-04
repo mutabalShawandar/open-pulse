@@ -246,7 +246,11 @@ Initial tables:
 - role_permissions
 - user_roles
 
-Keycloak identifies the user. These local tables determine clinic access and application permissions.
+Keycloak identifies platform users only. Clinics are tenant records and do not authenticate. These local tables determine which platform users can access each clinic and what they can do. Patients and email recipients do not need platform accounts.
+
+Platform user creation must go through Keycloak's Admin REST API or administrative CLI (`kcadm`). Only after Keycloak returns a successful subject should the backend create the local user and external identity link. Never accept a Keycloak subject directly from the client.
+
+Because Keycloak and PostgreSQL are separate systems, handle provisioning as a workflow with compensation: if local database creation fails after Keycloak creation, disable or remove the Keycloak user and record the failure. Prefer disabling users over hard deletion.
 
 Add UUID primary keys, timestamps, unique constraints, foreign keys, deliberate delete behavior, and indexes for membership and authorization queries.
 
@@ -404,4 +408,3 @@ Begin Phase 2 with the survey builder:
 4. Draft editing.
 5. Immutable publishing.
 6. Survey CRUD authorization tests.
-

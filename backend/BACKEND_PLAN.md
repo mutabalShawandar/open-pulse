@@ -41,6 +41,8 @@ Do not split into microservices initially. The application has strong transactio
 - `clinic_settings`
 - `clinic_assets`
 
+Clinics are tenant records and do not log in. Platform users authenticate through Keycloak and receive access to clinic records through `clinic_members`. Patients and email recipients also do not need platform accounts; they use public or campaign-specific response links.
+
 ### Survey Builder
 
 - `surveys`
@@ -176,6 +178,12 @@ Use self-hosted Keycloak as the identity provider:
 - FastAPI validates Keycloak access tokens using the configured issuer, audience, signature, expiry, and intended algorithm.
 - The backend maps the validated Keycloak subject to a local user record.
 - Local database tables control clinic membership, application roles, and abstract permissions.
+
+User provisioning must use Keycloak's Admin REST API or administrative CLI (`kcadm`), never a manually invented external subject. The backend creates the local `users` and `external_identity_links` records only after Keycloak successfully returns the new user's subject. The client must never submit a subject to be trusted.
+
+Keycloak and PostgreSQL are separate systems, so provisioning is not one atomic transaction. Use a service workflow with compensation and reconciliation: if the local transaction fails after Keycloak creation, disable or remove the Keycloak user and record the failure for review. A later outbox or reconciliation job can make this more robust.
+
+Prefer deactivation over hard deletion for platform users. Disable the Keycloak user and mark the local user inactive. Hard deletion must be an explicit administrative operation with a retention review.
 
 FastAPI security dependencies should only extract and validate the authenticated principal. Authorization belongs in the service layer, not only in route handlers. Use permission names such as `survey.publish` and `campaign.export`, and always scope queries by the user's clinic memberships.
 
