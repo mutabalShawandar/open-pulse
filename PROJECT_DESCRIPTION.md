@@ -2,15 +2,15 @@
 
 ## 1. Overview
 
-The Survey Platform is a multi-practice survey application for clinics and similar organizations. Multiple users can create, manage, distribute, and evaluate surveys for different practices from one central system.
+The Survey Platform is a multi-clinic survey application for clinics and similar organizations. Multiple users can create, manage, distribute, and evaluate surveys for different clinics from one central system.
 
-The application will initially focus on medical surveys, such as patient satisfaction surveys. Surveys should be reusable: the same questionnaire can be used by multiple practices and campaigns while each campaign can have its own branding, title, text, and recipient list.
+The application will initially focus on medical surveys, such as patient satisfaction surveys. Surveys should be reusable: the same questionnaire can be used by multiple clinics and campaigns while each campaign can have its own branding, title, text, and recipient list.
 
 The administration interface and participant-facing experience will be available in German.
 
 ## 2. Main Use Case
 
-An administrator or authorized practice user creates a reusable survey containing sections and different question types. The survey can then be published through one or more campaigns.
+An administrator or authorized clinic user creates a reusable survey containing sections and different question types. The survey can then be published through one or more campaigns.
 
 For example:
 
@@ -75,7 +75,7 @@ A survey is the reusable questionnaire definition. It contains:
 
 A campaign is a specific distribution of a survey. It contains:
 
-- Practice or organization
+- Clinic or organization
 - Distribution method
 - Public slug or recipient links
 - Campaign title and introduction
@@ -99,17 +99,17 @@ For email campaigns, the system may know which recipients were invited, sent a m
 
 An anonymous survey must never become identifiable through an administrative report, export, event log, or API response.
 
-Because the initial use case involves medical practices, privacy, retention, access control, encryption, backups, and GDPR requirements must be reviewed before production use. The application should avoid collecting unnecessary patient-identifying information.
+Because the initial use case involves medical clinics, privacy, retention, access control, encryption, backups, and GDPR requirements must be reviewed before production use. The application should avoid collecting unnecessary patient-identifying information.
 
-## 6. Users, Practices, and Permissions
+## 6. Users, Clinics, and Permissions
 
-The platform supports multiple practices and multiple users. Users can belong to one or more practices and receive role-based permissions.
+The platform supports multiple clinics and multiple users. Users can belong to one or more clinics and receive role-based permissions.
 
 Permissions should be abstract capabilities, for example:
 
 - Manage users
 - Manage roles
-- Manage practices
+- Manage clinics
 - Create and edit surveys
 - Publish surveys
 - Manage campaigns
@@ -152,7 +152,7 @@ The application will be hosted on a single VPS in Europe. The frontend and backe
 
 The first release should focus on:
 
-- Practice and user administration
+- Clinic and user administration
 - Reusable survey creation
 - Sections and core question types
 - Draft and published survey versions
@@ -164,4 +164,3 @@ The first release should focus on:
 - PDF and Excel exports
 
 Advanced features such as complex branching logic, multilingual surveys, SMS distribution, integrations, white-labeling, and advanced text analysis can be added after the core workflow is stable.
-

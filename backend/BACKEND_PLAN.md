@@ -31,15 +31,15 @@ Do not split into microservices initially. The application has strong transactio
 - `permissions`
 - `user_roles`
 - `role_permissions`
-- `practice_members`
+- `clinic_members`
 - `external_identity_links` for mapping Keycloak subjects to local users
 - `audit_events`
 
-### Practices
+### Clinics
 
-- `practices`
-- `practice_settings`
-- `practice_assets`
+- `clinics`
+- `clinic_settings`
+- `clinic_assets`
 
 ### Survey Builder
 
@@ -150,7 +150,7 @@ Use versioned REST endpoints initially:
 ```text
 /api/v1/auth
 /api/v1/users
-/api/v1/practices
+/api/v1/clinics
 /api/v1/roles
 /api/v1/surveys
 /api/v1/surveys/{survey_id}/versions
@@ -175,13 +175,13 @@ Use self-hosted Keycloak as the identity provider:
 - Next.js uses OpenID Connect Authorization Code Flow with PKCE for administrator login.
 - FastAPI validates Keycloak access tokens using the configured issuer, audience, signature, expiry, and intended algorithm.
 - The backend maps the validated Keycloak subject to a local user record.
-- Local database tables control practice membership, application roles, and abstract permissions.
+- Local database tables control clinic membership, application roles, and abstract permissions.
 
-FastAPI security dependencies should only extract and validate the authenticated principal. Authorization belongs in the service layer, not only in route handlers. Use permission names such as `survey.publish` and `campaign.export`, and always scope queries by the user's practice memberships.
+FastAPI security dependencies should only extract and validate the authenticated principal. Authorization belongs in the service layer, not only in route handlers. Use permission names such as `survey.publish` and `campaign.export`, and always scope queries by the user's clinic memberships.
 
 Keycloak, PostgreSQL, Redis, the worker, and the backend should communicate over the private Docker network. Keycloak's administration interface must not be exposed publicly without explicit protection.
 
-The first authentication milestone must test valid tokens, expired tokens, wrong issuer, wrong audience, invalid signatures, missing permissions, and cross-practice access. FastAPI's built-in security helpers are useful for integration, but they do not replace an identity provider or an authorization model.
+The first authentication milestone must test valid tokens, expired tokens, wrong issuer, wrong audience, invalid signatures, missing permissions, and cross-clinic access. FastAPI's built-in security helpers are useful for integration, but they do not replace an identity provider or an authorization model.
 
 ## 7. Background Jobs
 
@@ -227,7 +227,7 @@ Excel export:
 
 PDF export:
 
-- Campaign title and practice branding
+- Campaign title and clinic branding
 - Date range and participation summary
 - Charts for choice and rating questions
 - Tables or appendix for text answers, subject to permissions and privacy settings
@@ -239,7 +239,7 @@ Recommended Python libraries are `openpyxl` or `xlsxwriter` for Excel and an HTM
 Create an append-only `audit_events` table containing:
 
 - Actor user ID, nullable for system actions
-- Practice ID
+- Clinic ID
 - Action name
 - Entity type and entity ID
 - Timestamp
@@ -278,7 +278,7 @@ backend/
 │   │       ├── router.py
 │   │       ├── auth.py
 │   │       ├── users.py
-│   │       ├── practices.py
+│   │       ├── clinics.py
 │   │       ├── roles.py
 │   │       ├── surveys.py
 │   │       ├── survey_versions.py
@@ -300,7 +300,7 @@ backend/
 │   │   └── migrations/
 │   ├── models/
 │   │   ├── identity.py
-│   │   ├── practice.py
+│   │   ├── clinic.py
 │   │   ├── survey.py
 │   │   ├── campaign.py
 │   │   ├── response.py
@@ -309,7 +309,7 @@ backend/
 │   ├── schemas/
 │   │   ├── auth.py
 │   │   ├── user.py
-│   │   ├── practice.py
+│   │   ├── clinic.py
 │   │   ├── survey.py
 │   │   ├── campaign.py
 │   │   ├── response.py
@@ -378,7 +378,7 @@ The root `docker-compose.yml` is the deployment entry point. It should orchestra
 - Root-level Docker Compose with backend, PostgreSQL, Keycloak, Redis, and worker services
 - Keycloak realm and client configuration
 - FastAPI token validation
-- Local users, practices, roles, permissions, and practice-scoped authorization
+- Local users, clinics, roles, permissions, and clinic-scoped authorization
 - Audit event infrastructure
 - Security tests for token validation and authorization boundaries
 
@@ -435,9 +435,9 @@ Start with the smallest end-to-end slice:
 2. Start the root Docker Compose stack with PostgreSQL and Keycloak.
 3. Configure one development Keycloak realm and client.
 4. Validate Keycloak tokens in FastAPI.
-5. Create a practice, local user mapping, and an admin permission.
+5. Create a clinic, local user mapping, and an admin permission.
 6. Protect one endpoint with `survey.create`.
-7. Test invalid tokens, missing permissions, and cross-practice access.
+7. Test invalid tokens, missing permissions, and cross-clinic access.
 8. Create a survey with one section and several core question types.
 9. Publish an immutable survey version.
 10. Create a public campaign with custom branding.
