@@ -4,6 +4,8 @@ from app.core.config import settings
 from sqlalchemy import text 
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db_session
+from typing import Annotated
+from app.api.deps import get_current_claims
 
 is_dev = settings.app_env == "development"
 
@@ -40,3 +42,16 @@ async def ready(
         
     return {"status": "ready"}
     
+
+@app.get("/api/v1/me", tags=["user"])
+async def get_current_user(
+    claims: Annotated[dict, Depends(get_current_claims)]
+) -> dict:
+    """
+    Endpoint to retrieve the current user's claims from the JWT token.
+    """
+    return {
+            "subject": claims.get("sub"),
+            "username": claims.get("preferred_username"),
+            "email": claims.get("email"),
+         }
