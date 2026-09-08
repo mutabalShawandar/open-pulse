@@ -27,7 +27,7 @@ Phase 1 is complete when:
 - Configuration is loaded centrally and secrets are not committed.
 - SQLAlchemy connects to PostgreSQL asynchronously.
 - Alembic can create and apply migrations.
-- Keycloak authenticates administrative users through OpenID Connect.
+- Keycloak authenticates human platform users through OpenID Connect; clinics do not authenticate.
 - FastAPI validates Keycloak access tokens.
 - Clinic membership and application permissions are enforced.
 - Audit events are recorded for security-sensitive actions.
@@ -246,7 +246,11 @@ Initial tables:
 - role_permissions
 - user_roles
 
-Keycloak identifies platform users only. Clinics are tenant records and do not authenticate. These local tables determine which platform users can access each clinic and what they can do. Patients and email recipients do not need platform accounts.
+Keycloak identifies human platform users only. Clinics are tenant records and do not authenticate. A platform user can manage multiple clinics, and each clinic can have multiple platform users. These local tables determine which users can access each clinic and what they can do. Patients and email recipients do not need platform accounts.
+
+The platform administrator manages user creation, global roles, and user-to-clinic assignments. Clinic accounts are intentionally out of scope for Phase 1.
+
+Do not grant application access to every valid Keycloak user automatically. Provisioning must be initiated or approved by a platform administrator.
 
 Platform user creation must go through Keycloak's Admin REST API or administrative CLI (`kcadm`). Only after Keycloak returns a successful subject should the backend create the local user and external identity link. Never accept a Keycloak subject directly from the client.
 
@@ -279,11 +283,11 @@ Add Keycloak settings to .env.example; never commit admin passwords.
 
 ### Goal
 
-Validate administrator access tokens issued by Keycloak.
+Validate platform-user access tokens issued by Keycloak.
 
 FastAPI must validate the issuer, audience, signature, expiry, and allowed algorithm, then map the Keycloak subject (sub) to a local user.
 
-FastAPI must not issue administrator JWTs, store administrator passwords, implement password reset, implement MFA, or trust unvalidated claims.
+FastAPI must not issue platform-user JWTs, store platform-user passwords, implement password reset, implement MFA, or trust unvalidated claims.
 
 ### Check
 

@@ -41,7 +41,7 @@ Do not split into microservices initially. The application has strong transactio
 - `clinic_settings`
 - `clinic_assets`
 
-Clinics are tenant records and do not log in. Platform users authenticate through Keycloak and receive access to clinic records through `clinic_members`. Patients and email recipients also do not need platform accounts; they use public or campaign-specific response links.
+Clinics are tenant records and do not log in. Only human platform users authenticate through Keycloak. A platform user may manage many clinics, and a clinic may be managed by many platform users through `clinic_members`. Patients and email recipients also do not need platform accounts; they use public or campaign-specific response links.
 
 ### Survey Builder
 
@@ -174,10 +174,14 @@ FastAPI is the API framework, not the application's identity provider. Do not im
 Use self-hosted Keycloak as the identity provider:
 
 - Keycloak manages users, passwords, sessions, email verification, password reset, and optional MFA.
-- Next.js uses OpenID Connect Authorization Code Flow with PKCE for administrator login.
+- Next.js uses OpenID Connect Authorization Code Flow with PKCE for platform-user login, including administrators and staff users.
 - FastAPI validates Keycloak access tokens using the configured issuer, audience, signature, expiry, and intended algorithm.
 - The backend maps the validated Keycloak subject to a local user record.
 - Local database tables control clinic membership, application roles, and abstract permissions.
+
+Administrators manage platform users, clinics, roles, and user-to-clinic assignments. Clinic assignment is application data and is not managed by clinic accounts in Keycloak because clinics do not authenticate.
+
+Do not auto-provision arbitrary users merely because they have a valid Keycloak login. Application access must be granted through an administrator-controlled provisioning workflow.
 
 User provisioning must use Keycloak's Admin REST API or administrative CLI (`kcadm`), never a manually invented external subject. The backend creates the local `users` and `external_identity_links` records only after Keycloak successfully returns the new user's subject. The client must never submit a subject to be trusted.
 

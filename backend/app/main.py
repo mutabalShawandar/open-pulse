@@ -5,7 +5,14 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db_session
 from typing import Annotated
-from app.api.deps import get_current_claims
+from app.api.deps import (
+    get_current_user as get_authenticated_user,
+    require_permission,
+)
+from app.models.user import User
+from app.schemas.user import UserCreateRequest, UserResponse
+from app.services.keycloak_admin import KeycloakAdminClient
+from app.services.user_service import create_platform_user
 
 is_dev = settings.app_env == "development"
 
@@ -45,13 +52,39 @@ async def ready(
 
 @app.get("/api/v1/me", tags=["user"])
 async def get_current_user(
-    claims: Annotated[dict, Depends(get_current_claims)]
+    user: Annotated[User, Depends(get_authenticated_user)]
 ) -> dict:
     """
-    Endpoint to retrieve the current user's claims from the JWT token.
+    Endpoint to retrieve the current local application user.
     """
     return {
-            "subject": claims.get("sub"),
-            "username": claims.get("preferred_username"),
-            "email": claims.get("email"),
+            "id": str(user.id),
+            "email": user.email,
+            "display_name": user.display_name,
+            "is_active": user.is_active,
          }
+
+
+@app.post(
+    "/api/v1/users",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["user"],
+)
+async def create_user(
+    payload: UserCreateRequest,
+    _: Annotated[User, Depends(require_permission("user.manage"))],
+    session: AsyncSession = Depends(get_db_session),
+) -> UserResponse:
+    user = await create_platform_user(
+        session=session,
+        payload=payload,
+        keycloak=KeycloakAdminClient(),
+    )
+
+    return UserResponse(
+        id=str(user.id),
+        email=user.email,
+        display_name=user.display_name,
+        is_active=user.is_active,
+    )
