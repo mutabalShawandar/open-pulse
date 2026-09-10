@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from uuid import UUID
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,12 +7,14 @@ from app.models.identity import ExternalIdentityLink
 from app.models.user import User
 from app.schemas.user import UserCreateRequest
 from app.services.keycloak_admin import KeycloakAdminClient
+from app.services.audit_service import add_audit_event
 
 
 async def create_platform_user(
     session: AsyncSession,
     payload: UserCreateRequest,
     keycloak: KeycloakAdminClient,
+    actor_user_id: UUID | None = None,
 ) -> User:
     subject = await keycloak.create_user(
         email=payload.email,
@@ -33,6 +36,15 @@ async def create_platform_user(
                 provider="keycloak",
                 subject=subject,
             )
+        )
+        add_audit_event(
+            session,
+            actor_user_id=actor_user_id,
+            clinic_id=None,
+            action="user.provisioned",
+            entity_type="user",
+            entity_id=user.id,
+            metadata={"provider": "keycloak"},
         )
         await session.commit()
         await session.refresh(user)

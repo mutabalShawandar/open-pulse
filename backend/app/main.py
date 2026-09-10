@@ -24,8 +24,10 @@ from app.services.user_service import create_platform_user
 from app.services.authorization_service import require_clinic_permission
 from app.services.clinic_service import add_clinic_member, create_clinic
 from app.services.auth_service import login_with_keycloak
+from app.core.logging import configure_logging
 
 is_dev = settings.app_env == "development"
+configure_logging()
 
 app = FastAPI(
     title="Umfrage Tool API",
@@ -109,13 +111,14 @@ async def get_current_user(
 )
 async def create_user(
     payload: UserCreateRequest,
-    _: Annotated[User, Depends(require_permission("user.manage"))],
+    actor: Annotated[User, Depends(require_permission("user.manage"))],
     session: AsyncSession = Depends(get_db_session),
 ) -> UserResponse:
     user = await create_platform_user(
         session=session,
         payload=payload,
         keycloak=KeycloakAdminClient(),
+        actor_user_id=actor.id,
     )
 
     return UserResponse(
