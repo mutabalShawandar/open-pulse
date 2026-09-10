@@ -8,6 +8,7 @@ from app.models.authorization import (
     RolePermission,
     UserRole,
 )
+from app.models.audit import AuditEvent
 
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     "RolePermission",
     "UserRole",
     "ClinicMember",
-    ]
+    "AuditEvent",
+]
