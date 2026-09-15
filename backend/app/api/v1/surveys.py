@@ -126,8 +126,9 @@ async def create_survey_endpoint(
 async def list_surveys_endpoint(
     _: Annotated[User, Depends(require_permission("survey.read"))],
     session: AsyncSession = Depends(get_db_session),
+    include_archived: bool = False,
 ) -> list[SurveySummaryResponse]:
-    surveys = await list_surveys(session)
+    surveys = await list_surveys(session, include_archived=include_archived)
     return [SurveySummaryResponse.model_validate(survey, from_attributes=True) for survey in surveys]
 
 

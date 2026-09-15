@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.schemas.user import UserCreateRequest
-from app.services.user_service import create_platform_user, grant_platform_admin
+from app.services.user_service import create_platform_user, deactivate_platform_user, grant_platform_admin
 
 
 class FakeKeycloak:
@@ -20,7 +20,7 @@ class FakeKeycloak:
     async def send_account_setup_email(self, _subject: str) -> None:
         pass
 
-    async def disable_user(self, subject: str) -> None:
+    async def disable_user(self, subject: str, **_kwargs) -> None:
         self.disabled_subjects.append(subject)
 
 
@@ -143,3 +143,31 @@ class UserServiceTests(unittest.TestCase):
                 for value in session.values
             )
         )
+
+    def test_deactivate_user_disables_keycloak_and_local_access(self) -> None:
+        user = SimpleNamespace(id=uuid4(), is_active=True)
+        identity = SimpleNamespace(subject="keycloak-subject")
+        keycloak = FakeKeycloak()
+
+        class DeactivationSession(SuccessfulSession):
+            def __init__(self) -> None:
+                super().__init__()
+                self.scalar_results = [user, identity]
+
+            async def scalar(self, _query):
+                return self.scalar_results.pop(0)
+
+        session = DeactivationSession()
+        returned_user = asyncio.run(
+            deactivate_platform_user(
+                session,
+                user_id=user.id,
+                actor_user_id=uuid4(),
+                keycloak=keycloak,
+            )
+        )
+        self.assertIs(returned_user, user)
+        self.assertFalse(user.is_active)
+        self.assertEqual(keycloak.disabled_subjects, ["keycloak-subject"])
+        self.assertEqual(session.commit_count, 1)
+        self.assertTrue(any(getattr(value, "action", None) == "user.deactivated" for value in session.values))

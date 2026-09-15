@@ -12,11 +12,24 @@ class ClinicMemberResponse(BaseModel):
     user_id: UUID
     clinic_id: UUID
     role_id: UUID
+    user_email: str | None = None
+    user_display_name: str | None = None
+    role_name: str | None = None
 
 
 class ClinicCreateRequest(BaseModel):
     name: str
     slug: str
+    logo_url: str | None = None
+    street: str | None = None
+    hausnummer: int | None = None
+    city: str | None = None
+    postal_code: str | None = None
+
+
+class ClinicUpdateRequest(BaseModel):
+    name: str | None = None
+    slug: str | None = None
     logo_url: str | None = None
     street: str | None = None
     hausnummer: int | None = None

@@ -112,12 +112,14 @@ class SurveyQuestionCreateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=500)
     help_text: str | None = Field(default=None, max_length=10_000)
     is_required: bool = False
+    allow_other: bool = False
 
 
 class SurveyQuestionUpdateRequest(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=500)
     help_text: str | None = Field(default=None, max_length=10_000)
     is_required: bool | None = None
+    allow_other: bool | None = None
 
 
 class SurveyQuestionResponse(BaseModel):
@@ -129,6 +131,7 @@ class SurveyQuestionResponse(BaseModel):
     title: str
     help_text: str | None
     is_required: bool
+    allow_other: bool
     position: int
     created_at: datetime
     updated_at: datetime

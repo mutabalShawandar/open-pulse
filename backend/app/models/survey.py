@@ -197,6 +197,7 @@ class SurveyQuestion(Base):
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     help_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_required: Mapped[bool] = mapped_column(nullable=False, default=False, server_default=text("false"))
+    allow_other: Mapped[bool] = mapped_column(nullable=False, default=False, server_default=text("false"))
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

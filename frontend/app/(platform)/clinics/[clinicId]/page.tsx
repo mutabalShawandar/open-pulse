@@ -1,0 +1,208 @@
+import Link from "next/link";
+import { ArrowLeftIcon, Building2Icon, MapPinIcon, PencilIcon, UsersRoundIcon } from "lucide-react";
+import { notFound } from "next/navigation";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ClinicSurveyVersions } from "@/components/clinics/clinic-survey-versions";
+import {
+  ApiError,
+  getClinic,
+  listClinicSurveyVersionAssignments,
+  listPublishedSurveyVersions,
+  listSurveys,
+} from "@/lib/api/client";
+import { getAccessToken } from "@/lib/auth/session";
+
+function fullAddress(clinic: {
+  street: string | null;
+  hausnummer: number | null;
+  postal_code: string | null;
+  city: string | null;
+}) {
+  const streetLine = [clinic.street, clinic.hausnummer].filter(Boolean).join(" ");
+  const cityLine = [clinic.postal_code, clinic.city].filter(Boolean).join(" ");
+  return [streetLine, cityLine].filter(Boolean);
+}
+
+async function loadClinic(clinicId: string) {
+  const accessToken = await getAccessToken();
+  if (!accessToken) notFound();
+
+  try {
+    return await getClinic(accessToken, clinicId);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) notFound();
+    throw error;
+  }
+}
+
+async function loadSurveyVersionManagement(clinicId: string) {
+  const accessToken = await getAccessToken();
+  if (!accessToken) return null;
+
+  const assignments = await listClinicSurveyVersionAssignments(accessToken, clinicId);
+
+  try {
+    const surveys = await listSurveys(accessToken);
+    const versions = await Promise.all(
+      surveys.map(async (survey) => ({
+        survey,
+        versions: await listPublishedSurveyVersions(accessToken, survey.id),
+      })),
+    );
+    const options = versions.flatMap(({ survey, versions: publishedVersions }) =>
+      publishedVersions
+        .filter((version) => version.status === "published")
+        .map((version) => ({
+          id: version.id,
+          label: `${survey.title} · Version ${version.version_number ?? "—"}`,
+        })),
+    );
+    return { assignments, options };
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) {
+      return { assignments, options: null };
+    }
+    throw error;
+  }
+}
+
+export default async function ClinicDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ clinicId: string }>;
+  searchParams: Promise<{
+    created?: string;
+    updated?: string;
+    assignmentAdded?: string;
+    assignmentRemoved?: string;
+    assignmentError?: string;
+  }>;
+}) {
+  const { clinicId } = await params;
+  const clinic = await loadClinic(clinicId);
+  const address = fullAddress(clinic);
+  const query = await searchParams;
+  const surveyVersionManagement = await loadSurveyVersionManagement(clinicId);
+  const assignmentError = query.assignmentError;
+
+  return (
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
+      <Button
+        nativeButton={false}
+        variant="ghost"
+        className="w-fit"
+        render={<Link href="/clinics" />}
+      >
+        <ArrowLeftIcon data-icon="inline-start" />
+        Alle Kliniken
+      </Button>
+      <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+        <div className="flex items-start gap-4">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/15">
+            <Building2Icon className="size-6" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Klinikprofil</p>
+            <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">{clinic.name}</h1>
+            <p className="mt-2 text-sm text-muted-foreground">/{clinic.slug}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Badge variant="secondary">Stammdaten</Badge>
+          <Button nativeButton={false} variant="outline" render={<Link href={`/clinics/${clinic.id}/edit`} />}>
+            <PencilIcon data-icon="inline-start" />
+            Bearbeiten
+          </Button>
+        </div>
+      </section>
+      {query.created || query.updated ? (
+        <Alert>
+          <AlertTitle>{query.created ? "Klinik angelegt" : "Änderungen gespeichert"}</AlertTitle>
+          <AlertDescription>
+            {query.created
+              ? "Die Klinik steht jetzt für die weitere Einrichtung bereit."
+              : "Die Stammdaten der Klinik wurden aktualisiert."}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {query.assignmentAdded || query.assignmentRemoved ? (
+        <Alert>
+          <AlertTitle>{query.assignmentAdded ? "Version zugeordnet" : "Zuordnung aufgehoben"}</AlertTitle>
+          <AlertDescription>
+            {query.assignmentAdded
+              ? "Die veröffentlichte Version kann jetzt für diese Klinik verwendet werden."
+              : "Die Version steht nicht mehr für neue Kampagnen dieser Klinik bereit."}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {assignmentError ? (
+        <Alert variant="destructive">
+          <AlertTitle>Zuordnung nicht aktualisiert</AlertTitle>
+          <AlertDescription>
+            {assignmentError === "exists"
+              ? "Diese veröffentlichte Version ist bereits der Klinik zugeordnet."
+              : assignmentError === "validation"
+                ? "Bitte wählen Sie eine veröffentlichte Version aus."
+                : "Die Änderung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Standortdaten</CardTitle>
+          <CardDescription>
+            Diese Angaben bilden die Grundlage für die spätere klinikspezifische Umfrageausspielung.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          {address.length > 0 ? (
+            <div className="flex items-start gap-3">
+              <MapPinIcon className="mt-0.5 size-4 text-primary" />
+              <address className="not-italic text-sm leading-6">
+                {address.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </address>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Für diese Klinik sind noch keine Standortdaten hinterlegt.</p>
+          )}
+        </CardContent>
+      </Card>
+      <Card className="border-dashed bg-muted/20">
+        <CardHeader>
+          <div className="flex size-9 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
+            <UsersRoundIcon className="size-4" />
+          </div>
+          <CardTitle className="mt-3">Klinikmitglieder</CardTitle>
+          <CardDescription>
+            Demnächst verfügbar: klinikspezifische Rollen und Zugriffszuweisungen.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Badge variant="outline">Demnächst</Badge>
+        </CardContent>
+      </Card>
+      {surveyVersionManagement ? (
+        <Card>
+          <CardHeader className="border-b">
+            <CardTitle>Veröffentlichte Umfrageversionen</CardTitle>
+            <CardDescription>
+              Kampagnen wählen später ausschließlich aus diesen aktiven, unveränderlichen Versionen.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-5">
+            <ClinicSurveyVersions clinicId={clinic.id} {...surveyVersionManagement} />
+          </CardContent>
+        </Card>
+      ) : null}
+    </div>
+  );
+}

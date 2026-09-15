@@ -33,7 +33,6 @@ from app.schemas.survey import (
     SurveyUpdateRequest,
 )
 from app.services.audit_service import add_audit_event
-from app.services.authorization_service import require_clinic_permission
 
 
 CHOICE_QUESTION_TYPES = {QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE}
@@ -93,12 +92,11 @@ async def create_survey(
     return survey, draft
 
 
-async def list_surveys(session: AsyncSession) -> list[Survey]:
-    result = await session.scalars(
-        select(Survey)
-        .where(Survey.status != SurveyStatus.ARCHIVED)
-        .order_by(Survey.created_at.desc(), Survey.id.desc())
-    )
+async def list_surveys(session: AsyncSession, include_archived: bool = False) -> list[Survey]:
+    statement = select(Survey).order_by(Survey.created_at.desc(), Survey.id.desc())
+    if not include_archived:
+        statement = statement.where(Survey.status != SurveyStatus.ARCHIVED)
+    result = await session.scalars(statement)
     return list(result)
 
 
@@ -256,6 +254,7 @@ async def _copy_version_content(
                 title=source_question.title,
                 help_text=source_question.help_text,
                 is_required=source_question.is_required,
+                allow_other=source_question.allow_other,
                 position=source_question.position,
             )
             session.add(target_question)
@@ -483,7 +482,6 @@ async def list_clinic_version_assignments(
     clinic_id: UUID,
     actor,
 ) -> list[SurveyVersionClinic]:
-    await require_clinic_permission(session, actor, clinic_id, "clinic.read")
     result = await session.scalars(
         select(SurveyVersionClinic)
         .where(
@@ -501,7 +499,6 @@ async def assign_version_to_clinic(
     survey_version_id: UUID,
     actor,
 ) -> SurveyVersionClinic:
-    await require_clinic_permission(session, actor, clinic_id, "clinic.read")
     version = await session.scalar(select(SurveyVersion).where(SurveyVersion.id == survey_version_id))
     if version is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey version not found")
@@ -568,7 +565,6 @@ async def unassign_version_from_clinic(
     survey_version_id: UUID,
     actor,
 ) -> None:
-    await require_clinic_permission(session, actor, clinic_id, "clinic.read")
     assignment = await session.scalar(
         select(SurveyVersionClinic).where(
             SurveyVersionClinic.survey_version_id == survey_version_id,
@@ -763,6 +759,11 @@ async def create_question(
 ) -> SurveyQuestion:
     await get_draft_or_404(session, survey_id, draft_id)
     await get_section_or_404(session, draft_id, section_id)
+    if payload.allow_other and payload.question_type not in CHOICE_QUESTION_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Only single_choice and multiple_choice questions support allow_other",
+        )
     last_position = await session.scalar(
         select(func.max(SurveyQuestion.position)).where(SurveyQuestion.section_id == section_id)
     )
@@ -772,6 +773,7 @@ async def create_question(
         title=payload.title,
         help_text=payload.help_text,
         is_required=payload.is_required,
+        allow_other=payload.allow_other,
         position=0 if last_position is None else last_position + 1,
     )
     session.add(question)
@@ -814,6 +816,11 @@ async def update_question(
     await get_draft_or_404(session, survey_id, draft_id)
     await get_section_or_404(session, draft_id, section_id)
     question = await get_question_or_404(session, section_id, question_id)
+    if payload.allow_other and question.question_type not in CHOICE_QUESTION_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Only single_choice and multiple_choice questions support allow_other",
+        )
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(question, field, value)
     try:

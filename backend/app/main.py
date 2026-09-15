@@ -22,12 +22,12 @@ from app.schemas.clinic import (
 )
 from app.services.keycloak_admin import KeycloakAdminClient
 from app.services.user_service import create_platform_user, grant_platform_admin
-from app.services.authorization_service import require_clinic_permission
 from app.services.clinic_service import add_clinic_member, create_clinic
 from app.services.auth_service import login_with_keycloak
 from app.core.logging import configure_logging
 from app.api.v1.surveys import router as surveys_router
 from app.api.v1.clinic_survey_versions import router as clinic_survey_versions_router
+from app.api.v1.administration import router as administration_router
 
 is_dev = settings.app_env == "development"
 configure_logging()
@@ -41,6 +41,7 @@ app = FastAPI(
 )
 app.include_router(surveys_router)
 app.include_router(clinic_survey_versions_router)
+app.include_router(administration_router)
 
 
 @app.post("/api/v1/auth/login", response_model=TokenResponse, tags=["auth"])
@@ -186,39 +187,29 @@ async def grant_platform_admin_role(
 @app.get("/api/v1/clinics/{clinic_id}", tags=["clinic"])
 async def get_clinic(
     clinic_id: UUID,
-    user: Annotated[User, Depends(get_authenticated_user)],
+    _: Annotated[User, Depends(get_authenticated_user)],
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
+    clinic = await session.scalar(select(Clinic).where(Clinic.id == clinic_id))
 
-        await require_clinic_permission(
-        session=session,
-        user=user,
-        clinic_id=clinic_id,
-        permission_name="clinic.read"
+    if clinic is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Clinic not found.",
         )
-        
-        clinic = await session.scalar(
-            select(Clinic).where(Clinic.id == clinic_id)
-        )
-        
-        if clinic is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Clinic not found.",
-            )
-        
-        return {
-            "id": str(clinic.id),
-            "name": clinic.name,
-            "slug": clinic.slug,
-            "logo_url": clinic.logo_url,
-            "street": clinic.street,
-            "hausnummer": clinic.hausnummer,
-            "city": clinic.city,
-            "postal_code": clinic.postal_code,
-            "created_at": clinic.created_at.isoformat(),
-            "updated_at": clinic.updated_at.isoformat(),
-        }
+
+    return {
+        "id": str(clinic.id),
+        "name": clinic.name,
+        "slug": clinic.slug,
+        "logo_url": clinic.logo_url,
+        "street": clinic.street,
+        "hausnummer": clinic.hausnummer,
+        "city": clinic.city,
+        "postal_code": clinic.postal_code,
+        "created_at": clinic.created_at.isoformat(),
+        "updated_at": clinic.updated_at.isoformat(),
+    }
 
 
 @app.post(

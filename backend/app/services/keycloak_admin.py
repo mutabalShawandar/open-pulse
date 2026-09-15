@@ -147,10 +147,36 @@ class KeycloakAdminClient:
                 detail="Unable to send the account setup email",
             ) from error
 
-    async def disable_user(self, subject: str) -> None:
+    async def disable_user(self, subject: str, *, strict: bool = False) -> None:
         # Preserve the external identity for reconciliation and audit review.
         if not settings.keycloak_admin_client_id or not settings.keycloak_admin_client_secret:
+            if strict:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Keycloak administration is not configured",
+                )
             return
+
+    async def enable_user(self, subject: str) -> None:
+        user_url = (
+            f"{settings.keycloak_internal_url}/admin/realms/{settings.keycloak_realm}"
+            f"/users/{subject}"
+        )
+
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(5.0)) as client:
+                admin_token = await self._get_admin_token(client)
+                response = await client.put(
+                    user_url,
+                    headers={"Authorization": f"Bearer {admin_token}"},
+                    json={"enabled": True},
+                )
+                response.raise_for_status()
+        except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Unable to enable Keycloak user",
+            ) from error
 
         user_url = (
             f"{settings.keycloak_internal_url}/admin/realms/{settings.keycloak_realm}"
@@ -167,7 +193,33 @@ class KeycloakAdminClient:
                     json={"enabled": False},
                 )
                 response.raise_for_status()
-        except (httpx.HTTPError, KeyError, ValueError):
+        except (httpx.HTTPError, KeyError, ValueError) as error:
+            if strict:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Unable to disable Keycloak user",
+                ) from error
             # The original provisioning error remains the response. A later
             # reconciliation job should handle failed compensation.
             return
+
+    async def delete_user(self, subject: str) -> None:
+        """Permanently delete a Keycloak account after application safeguards pass."""
+        user_url = (
+            f"{settings.keycloak_internal_url}/admin/realms/{settings.keycloak_realm}"
+            f"/users/{subject}"
+        )
+
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(5.0)) as client:
+                admin_token = await self._get_admin_token(client)
+                response = await client.delete(
+                    user_url,
+                    headers={"Authorization": f"Bearer {admin_token}"},
+                )
+                response.raise_for_status()
+        except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Unable to permanently delete Keycloak user",
+            ) from error
