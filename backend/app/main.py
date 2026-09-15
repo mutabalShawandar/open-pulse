@@ -8,10 +8,11 @@ from app.db.session import get_db_session
 from typing import Annotated
 from app.api.deps import (
     get_current_user as get_authenticated_user,
+    require_platform_admin,
     require_permission,
 )
 from app.models import User, Clinic
-from app.schemas.user import UserCreateRequest, UserResponse
+from app.schemas.user import PlatformAdminGrantResponse, UserCreateRequest, UserResponse
 from app.schemas.auth import LoginRequest, TokenResponse
 from app.schemas.clinic import (
     ClinicCreateRequest,
@@ -20,11 +21,13 @@ from app.schemas.clinic import (
     ClinicResponse,
 )
 from app.services.keycloak_admin import KeycloakAdminClient
-from app.services.user_service import create_platform_user
+from app.services.user_service import create_platform_user, grant_platform_admin
 from app.services.authorization_service import require_clinic_permission
 from app.services.clinic_service import add_clinic_member, create_clinic
 from app.services.auth_service import login_with_keycloak
 from app.core.logging import configure_logging
+from app.api.v1.surveys import router as surveys_router
+from app.api.v1.clinic_survey_versions import router as clinic_survey_versions_router
 
 is_dev = settings.app_env == "development"
 configure_logging()
@@ -36,6 +39,8 @@ app = FastAPI(
     redoc_url="/redoc" if is_dev else None,
     openapi_url="/openapi.json" if is_dev else None,
 )
+app.include_router(surveys_router)
+app.include_router(clinic_survey_versions_router)
 
 
 @app.post("/api/v1/auth/login", response_model=TokenResponse, tags=["auth"])
@@ -126,6 +131,54 @@ async def create_user(
         email=user.email,
         display_name=user.display_name,
         is_active=user.is_active,
+    )
+
+
+@app.post(
+    "/api/v1/admin-users",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["user"],
+)
+async def create_platform_admin_user(
+    payload: UserCreateRequest,
+    actor: Annotated[User, Depends(require_platform_admin)],
+    session: AsyncSession = Depends(get_db_session),
+) -> UserResponse:
+    user = await create_platform_user(
+        session=session,
+        payload=payload,
+        keycloak=KeycloakAdminClient(),
+        actor_user_id=actor.id,
+        is_platform_admin=True,
+    )
+    return UserResponse(
+        id=str(user.id),
+        email=user.email,
+        display_name=user.display_name,
+        is_active=user.is_active,
+    )
+
+
+@app.put(
+    "/api/v1/users/{user_id}/roles/platform-admin",
+    response_model=PlatformAdminGrantResponse,
+    tags=["user"],
+)
+async def grant_platform_admin_role(
+    user_id: UUID,
+    actor: Annotated[User, Depends(require_platform_admin)],
+    session: AsyncSession = Depends(get_db_session),
+) -> PlatformAdminGrantResponse:
+    user = await grant_platform_admin(session, user_id=user_id, actor_user_id=actor.id)
+    return PlatformAdminGrantResponse(
+        user=UserResponse(
+            id=str(user.id),
+            email=user.email,
+            display_name=user.display_name,
+            is_active=user.is_active,
+        ),
+        is_platform_admin=True,
     )
 
 

@@ -9,6 +9,18 @@ from app.models.authorization import (
     UserRole,
 )
 from app.models.audit import AuditEvent
+from app.models.survey import (
+    QuestionType,
+    Survey,
+    SurveyQuestion,
+    SurveyQuestionOption,
+    SurveyQuestionValidation,
+    SurveySection,
+    SurveyStatus,
+    SurveyVersion,
+    SurveyVersionClinic,
+    SurveyVersionStatus,
+)
 
 
 __all__ = [
@@ -21,4 +33,14 @@ __all__ = [
     "UserRole",
     "ClinicMember",
     "AuditEvent",
+    "QuestionType",
+    "Survey",
+    "SurveyQuestion",
+    "SurveyQuestionOption",
+    "SurveyQuestionValidation",
+    "SurveySection",
+    "SurveyStatus",
+    "SurveyVersion",
+    "SurveyVersionClinic",
+    "SurveyVersionStatus",
 ]

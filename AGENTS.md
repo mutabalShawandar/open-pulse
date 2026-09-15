@@ -25,20 +25,22 @@ This project is a German-language, multi-clinic survey platform for creating reu
 
 ## Current Progress
 
-Phase 1 is in progress. Completed foundation work includes FastAPI health/readiness endpoints, PostgreSQL and Alembic setup, local Keycloak Compose configuration, Keycloak JWT extraction and validation, issuer/expiry/signature/audience checks, JWKS caching with timeouts, and a protected `/api/v1/me` endpoint.
+Phases 1 and 2 are complete.
 
-The local authorization schema now includes `roles`, `permissions`, `role_permissions`, `user_roles`, and `clinic_members`. Initial roles and permissions are seeded through an Alembic migration. A protected `POST /api/v1/users` workflow has been added to create platform users through the Keycloak Admin API and then create the local user and external identity link.
+Phase 1 delivered FastAPI health/readiness endpoints, PostgreSQL and Alembic setup, local Keycloak Compose configuration, Keycloak JWT extraction and validation, issuer/expiry/signature/audience checks, JWKS caching with timeouts, and a protected `/api/v1/me` endpoint. The local authorization schema includes `roles`, `permissions`, `role_permissions`, `user_roles`, and `clinic_members`; protected platform-user and clinic-management workflows, audit events, clinic-scoped authorization, and automated unit/integration tests are also in place.
 
-Current limitations: the Keycloak Admin API service-account client is not configured yet; the development user has not been assigned the local `platform_admin` role; clinic authorization and audit logging are not implemented; and automated tests do not exist yet. Do not treat the current setup as production-ready.
+Phase 2 delivered the agency survey catalogue and builder. Surveys are reusable agency-wide records rather than clinic-owned records. The backend supports multiple editable drafts, deep-copying drafts and whole surveys, immutable published versions, sections, typed questions, choice options, validation rules, ordering, archive/restore, published-version reads, and assigning published versions to clinics. A campaign in later phases must bind to one exact assigned `survey_version_id`, never to a mutable draft or “latest” version.
 
-Next work order:
+Current limitations: Phase 3 campaign creation, public survey links, response sessions/submission, rate limiting and public-endpoint abuse protection are not implemented. Recipient import, email delivery, analytics, exports, and production hardening remain later phases. Do not treat the current setup as production-ready.
 
-1. Configure a Keycloak confidential service-account client with `manage-users` permission.
-2. Assign the initial local `platform_admin` role to the development user.
-3. Test `POST /api/v1/users` and its compensation behavior.
-4. Implement permission and clinic-membership checks in the service layer.
-5. Add audit events.
-6. Add automated unit and integration tests with cleanup for temporary users.
+Next work order: Phase 3 — Campaigns and Public Responses.
+
+1. Add campaign, campaign branding, and campaign-to-clinic-to-published-version models.
+2. Require campaign creation to select an active published-version assignment for its clinic.
+3. Implement public campaign lookup through a non-guessable public slug.
+4. Add secure public response sessions and typed answer persistence.
+5. Validate and complete anonymous responses against the immutable survey version.
+6. Add rate limiting, payload limits, token/slug safety, audit events, and automated integration tests.
 
 ## Documentation
 

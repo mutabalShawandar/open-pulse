@@ -11,3 +11,8 @@ class UserResponse(BaseModel):
     email: str
     display_name: str | None
     is_active: bool
+
+
+class PlatformAdminGrantResponse(BaseModel):
+    user: UserResponse
+    is_platform_admin: bool

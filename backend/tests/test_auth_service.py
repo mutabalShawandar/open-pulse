@@ -45,7 +45,13 @@ class AuthorizationServiceTestCase(unittest.IsolatedAsyncioTestCase):
         clinic_id = uuid4()
 
         class FakeSession:
+            def __init__(self) -> None:
+                self.calls = 0
+
             async def scalar(self, query):
+                self.calls += 1
+                if self.calls == 1:
+                    return None
                 return uuid4()
 
         asyncio.run(
@@ -54,6 +60,19 @@ class AuthorizationServiceTestCase(unittest.IsolatedAsyncioTestCase):
                 user,
                 clinic_id,
                 "survey.create",
+            )
+        )
+
+    def test_platform_admin_is_allowed_without_clinic_membership(self):
+        user = SimpleNamespace(id=uuid4(), is_active=True)
+
+        class FakeSession:
+            async def scalar(self, _query):
+                return uuid4()
+
+        asyncio.run(
+            require_clinic_permission(
+                FakeSession(), user, uuid4(), "clinic.read"
             )
         )
 
