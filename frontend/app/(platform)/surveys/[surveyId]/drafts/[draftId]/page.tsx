@@ -3,6 +3,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { DraftSectionEditor } from "@/components/surveys/draft-section-editor";
+import { DraftPreview } from "@/components/surveys/draft-preview";
 import { Button } from "@/components/ui/button";
 import { ApiError, getSurvey, getSurveyDraft } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
@@ -32,6 +33,7 @@ export default async function SurveyDraftPage({
           <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">{draft.draft_label || survey.title}</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">Baue die Struktur deiner Umfrage auf. Veröffentlicht wird später immer eine unveränderliche Version.</p>
         </header>
+        <DraftPreview surveyId={surveyId} draftId={draftId} title={draft.draft_label || survey.title} sections={draft.sections} />
         <DraftSectionEditor surveyId={surveyId} draftId={draftId} sections={draft.sections} />
     </div>
   );

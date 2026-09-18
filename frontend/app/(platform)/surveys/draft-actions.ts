@@ -8,12 +8,19 @@ import {
   createSurveySection,
   createSurveyQuestion,
   createSurveyQuestionOption,
+  createSurveyQuestionValidation,
   deleteSurveySection,
   deleteSurveyQuestion,
   deleteSurveyQuestionOption,
+  deleteSurveyQuestionValidation,
+  publishSurveyDraft,
+  reorderSurveyQuestionOptions,
+  reorderSurveyQuestions,
   reorderSurveySections,
   updateSurveySection,
   updateSurveyQuestion,
+  updateSurveyQuestionOption,
+  updateSurveyQuestionValidation,
 } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
 
@@ -108,14 +115,28 @@ export async function createQuestionAction(
   const title = value(formData, "title");
   const questionType = value(formData, "questionType");
   if (!title || !questionType) redirect(`${draftPath(surveyId, draftId)}?error=question-validation`);
+  const initialOptions = formData
+    .getAll("initialOption")
+    .map((option) => String(option).trim())
+    .filter(Boolean);
+  if (
+    (questionType === "single_choice" || questionType === "multiple_choice")
+    && (initialOptions.length < 2 || new Set(initialOptions).size !== initialOptions.length)
+  ) {
+    redirect(`${draftPath(surveyId, draftId)}?error=option-validation`);
+  }
   try {
-    await createSurveyQuestion(await token(), surveyId, draftId, sectionId, {
+    const accessToken = await token();
+    const question = await createSurveyQuestion(accessToken, surveyId, draftId, sectionId, {
       question_type: questionType as Parameters<typeof createSurveyQuestion>[4]["question_type"],
       title,
       help_text: value(formData, "helpText") || null,
       is_required: formData.get("isRequired") === "on",
       allow_other: formData.get("allowOther") === "on",
     });
+    for (const option of initialOptions) {
+      await createSurveyQuestionOption(accessToken, surveyId, draftId, sectionId, question.id, option);
+    }
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
     redirect(`${draftPath(surveyId, draftId)}?error=create-question`);
@@ -173,4 +194,76 @@ export async function deleteOptionAction(surveyId: string, draftId: string, sect
   try { await deleteSurveyQuestionOption(await token(), surveyId, draftId, sectionId, questionId, optionId); }
   catch { redirect(`${draftPath(surveyId, draftId)}?error=delete-option`); }
   finish(surveyId, draftId, "option-deleted");
+}
+
+export async function moveQuestionAction(surveyId: string, draftId: string, sectionId: string, formData: FormData) {
+  const ids = value(formData, "questionIds").split(",").filter(Boolean);
+  const questionId = value(formData, "questionId");
+  const index = ids.indexOf(questionId);
+  const target = value(formData, "direction") === "up" ? index - 1 : index + 1;
+  if (index < 0 || target < 0 || target >= ids.length) finish(surveyId, draftId);
+  [ids[index], ids[target]] = [ids[target], ids[index]];
+  try { await reorderSurveyQuestions(await token(), surveyId, draftId, sectionId, ids); }
+  catch { redirect(`${draftPath(surveyId, draftId)}?error=move-question`); }
+  finish(surveyId, draftId, "question-moved");
+}
+
+export async function updateOptionAction(surveyId: string, draftId: string, sectionId: string, questionId: string, optionId: string, formData: FormData) {
+  const label = value(formData, "optionLabel");
+  const optionValue = value(formData, "optionValue");
+  if (!label || !optionValue) redirect(`${draftPath(surveyId, draftId)}?error=option-validation`);
+  try { await updateSurveyQuestionOption(await token(), surveyId, draftId, sectionId, questionId, optionId, { label, value: optionValue }); }
+  catch { redirect(`${draftPath(surveyId, draftId)}?error=update-option`); }
+  finish(surveyId, draftId, "option-updated");
+}
+
+export async function moveOptionAction(surveyId: string, draftId: string, sectionId: string, questionId: string, formData: FormData) {
+  const ids = value(formData, "optionIds").split(",").filter(Boolean);
+  const optionId = value(formData, "optionId");
+  const index = ids.indexOf(optionId);
+  const target = value(formData, "direction") === "up" ? index - 1 : index + 1;
+  if (index < 0 || target < 0 || target >= ids.length) finish(surveyId, draftId);
+  [ids[index], ids[target]] = [ids[target], ids[index]];
+  try { await reorderSurveyQuestionOptions(await token(), surveyId, draftId, sectionId, questionId, ids); }
+  catch { redirect(`${draftPath(surveyId, draftId)}?error=move-option`); }
+  finish(surveyId, draftId, "option-moved");
+}
+
+function validationValue(formData: FormData, ruleType: string): string | number {
+  const raw = value(formData, "ruleValue");
+  return ruleType === "min_date" || ruleType === "max_date" ? raw : Number(raw);
+}
+
+export async function createValidationAction(surveyId: string, draftId: string, sectionId: string, questionId: string, formData: FormData) {
+  const ruleType = value(formData, "ruleType");
+  const ruleValue = validationValue(formData, ruleType);
+  if (!ruleType || (typeof ruleValue === "number" && !Number.isFinite(ruleValue))) redirect(`${draftPath(surveyId, draftId)}?error=validation-rule`);
+  try { await createSurveyQuestionValidation(await token(), surveyId, draftId, sectionId, questionId, { rule_type: ruleType, rule_value: { value: ruleValue } }); }
+  catch { redirect(`${draftPath(surveyId, draftId)}?error=create-validation`); }
+  finish(surveyId, draftId, "validation-created");
+}
+
+export async function updateValidationAction(surveyId: string, draftId: string, sectionId: string, questionId: string, validationId: string, ruleType: string, formData: FormData) {
+  const ruleValue = validationValue(formData, ruleType);
+  if (typeof ruleValue === "number" && !Number.isFinite(ruleValue)) redirect(`${draftPath(surveyId, draftId)}?error=validation-rule`);
+  try { await updateSurveyQuestionValidation(await token(), surveyId, draftId, sectionId, questionId, validationId, { rule_value: { value: ruleValue } }); }
+  catch { redirect(`${draftPath(surveyId, draftId)}?error=update-validation`); }
+  finish(surveyId, draftId, "validation-updated");
+}
+
+export async function deleteValidationAction(surveyId: string, draftId: string, sectionId: string, questionId: string, validationId: string) {
+  try { await deleteSurveyQuestionValidation(await token(), surveyId, draftId, sectionId, questionId, validationId); }
+  catch { redirect(`${draftPath(surveyId, draftId)}?error=delete-validation`); }
+  finish(surveyId, draftId, "validation-deleted");
+}
+
+export async function publishDraftAction(surveyId: string, draftId: string) {
+  try {
+    const version = await publishSurveyDraft(await token(), surveyId, draftId);
+    revalidatePath(`/surveys/${surveyId}`);
+    redirect(`/surveys/${surveyId}/versions/${version.version_number}?published=1`);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
+    redirect(`${draftPath(surveyId, draftId)}?error=publish`);
+  }
 }

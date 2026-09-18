@@ -106,8 +106,23 @@ export type SurveyQuestion = {
 };
 
 export type SurveyQuestionDetail = SurveyQuestion & {
-  options: Array<{ id: string; question_id: string; label: string; value: string; position: number }>;
-  validations: Array<{ id: string; question_id: string; rule_type: string; rule_value: Record<string, string | number> }>;
+  options: SurveyQuestionOption[];
+  validations: SurveyQuestionValidation[];
+};
+
+export type SurveyQuestionOption = {
+  id: string;
+  question_id: string;
+  label: string;
+  value: string;
+  position: number;
+};
+
+export type SurveyQuestionValidation = {
+  id: string;
+  question_id: string;
+  rule_type: string;
+  rule_value: Record<string, string | number>;
 };
 
 export type SurveySectionDetail = SurveySection & {
@@ -116,6 +131,10 @@ export type SurveySectionDetail = SurveySection & {
 
 export type SurveyDraftDetail = SurveyDraft & {
   survey_id: string;
+  sections: SurveySectionDetail[];
+};
+
+export type PublishedSurveyVersionDetail = SurveyVersion & {
   sections: SurveySectionDetail[];
 };
 

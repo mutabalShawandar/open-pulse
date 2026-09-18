@@ -11,9 +11,12 @@ import type {
   SurveyDetail,
   SurveyDraftDetail,
   SurveyQuestion,
+  SurveyQuestionOption,
+  SurveyQuestionValidation,
   SurveyQuestionType,
   SurveySection,
   SurveyVersion,
+  PublishedSurveyVersionDetail,
   Role,
 } from "@/lib/api/types";
 
@@ -194,6 +197,12 @@ export function deleteSurveyQuestion(
   );
 }
 
+export function reorderSurveyQuestions(
+  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionIds: string[],
+): Promise<SurveyQuestion[]> {
+  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/reorder`, "POST", { question_ids: questionIds });
+}
+
 export function createSurveyQuestionOption(
   accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, label: string,
 ): Promise<{ id: string }> {
@@ -204,6 +213,39 @@ export function deleteSurveyQuestionOption(
   accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, optionId: string,
 ): Promise<void> {
   return deleteSurveyResource(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options/${optionId}`);
+}
+
+export function updateSurveyQuestionOption(
+  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, optionId: string,
+  payload: { label: string; value: string },
+): Promise<SurveyQuestionOption> {
+  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options/${optionId}`, "PATCH", payload);
+}
+
+export function reorderSurveyQuestionOptions(
+  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, optionIds: string[],
+): Promise<SurveyQuestionOption[]> {
+  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options/reorder`, "POST", { option_ids: optionIds });
+}
+
+export function createSurveyQuestionValidation(
+  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string,
+  payload: { rule_type: string; rule_value: { value: string | number } },
+): Promise<SurveyQuestionValidation> {
+  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/validations`, "POST", payload);
+}
+
+export function updateSurveyQuestionValidation(
+  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, validationId: string,
+  payload: { rule_value: { value: string | number } },
+): Promise<SurveyQuestionValidation> {
+  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/validations/${validationId}`, "PATCH", payload);
+}
+
+export function deleteSurveyQuestionValidation(
+  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, validationId: string,
+): Promise<void> {
+  return deleteSurveyResource(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/validations/${validationId}`);
 }
 
 export function createSurvey(accessToken: string, payload: { title: string; description: string | null; initial_draft_label: string | null }): Promise<SurveyDetail> {
@@ -231,6 +273,18 @@ export function listPublishedSurveyVersions(
   surveyId: string,
 ): Promise<SurveyVersion[]> {
   return apiFetch<SurveyVersion[]>(`/api/v1/surveys/${surveyId}/versions`, accessToken);
+}
+
+export function getPublishedSurveyVersion(
+  accessToken: string, surveyId: string, versionNumber: number,
+): Promise<PublishedSurveyVersionDetail> {
+  return apiFetch<PublishedSurveyVersionDetail>(`/api/v1/surveys/${surveyId}/versions/${versionNumber}`, accessToken);
+}
+
+export function publishSurveyDraft(
+  accessToken: string, surveyId: string, draftId: string,
+): Promise<SurveyVersion> {
+  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/publish`, "POST");
 }
 
 export function listClinicSurveyVersionAssignments(

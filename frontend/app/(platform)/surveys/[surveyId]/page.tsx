@@ -91,6 +91,9 @@ export default async function SurveyDetailPage({
               <div key={version.id} className="rounded-lg border p-3">
                 <p className="font-medium">Version {version.version_number}</p>
                 <p className="mt-1 text-sm text-muted-foreground">Unveränderlich veröffentlicht</p>
+                <Button nativeButton={false} variant="outline" size="sm" className="mt-3" render={<Link href={`/surveys/${survey.id}/versions/${version.version_number}`} />}>
+                  Version ansehen
+                </Button>
               </div>
             ))}
             {!survey.drafts.length && !versions.length ? <p className="text-sm text-muted-foreground">Noch keine Versionen.</p> : null}
