@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     keycloak_issuer: str
     keycloak_admin_client_id: str | None = None
     keycloak_admin_client_secret: str | None = None
+    redis_url: str = "redis://localhost:6379/0"
+    cors_origins: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,

@@ -163,3 +163,27 @@ export type PublishedSurveyVersionOption = {
   id: string;
   label: string;
 };
+
+export type Campaign = {
+  id: string;
+  clinic_id: string;
+  survey_version_id: string;
+  survey_title: string;
+  survey_version_number: number;
+  title: string;
+  description: string | null;
+  public_slug: string;
+  status: "draft" | "scheduled" | "active" | "paused" | "completed" | "cancelled";
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CampaignAnalytics = {
+  campaign_id: string;
+  campaign_title: string;
+  started_count: number;
+  completed_count: number;
+  questions: Array<{ question_id: string; title: string; question_type: string; answer_count: number; average: number | null; median: number | null; minimum: number | null; maximum: number | null; choices: Array<{ label: string; count: number }>; distribution: Array<{ label: string; count: number }>; text_answers: string[]; earliest_date: string | null; latest_date: string | null }>;
+};

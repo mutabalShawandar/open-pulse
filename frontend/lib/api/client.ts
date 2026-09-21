@@ -9,6 +9,7 @@ import type {
   PlatformUser,
   Survey,
   SurveyDetail,
+  SurveyDraft,
   SurveyDraftDetail,
   SurveyQuestion,
   SurveyQuestionOption,
@@ -18,6 +19,8 @@ import type {
   SurveyVersion,
   PublishedSurveyVersionDetail,
   Role,
+  Campaign,
+  CampaignAnalytics,
 } from "@/lib/api/types";
 
 export class ApiError extends Error {
@@ -45,6 +48,31 @@ export function listPlatformUsers(accessToken: string): Promise<PlatformUser[]> 
 
 export function listClinics(accessToken: string): Promise<Clinic[]> {
   return apiFetch<Clinic[]>("/api/v1/clinics", accessToken);
+}
+
+export function listCampaigns(accessToken: string): Promise<Campaign[]> {
+  return apiFetch<Campaign[]>("/api/v1/campaigns", accessToken);
+}
+
+export function getCampaign(accessToken: string, campaignId: string): Promise<Campaign> {
+  return apiFetch<Campaign>(`/api/v1/campaigns/${campaignId}`, accessToken);
+}
+
+export function getCampaignAnalytics(accessToken: string, clinicId: string, campaignId: string): Promise<CampaignAnalytics> {
+  return apiFetch<CampaignAnalytics>(`/api/v1/clinics/${clinicId}/analytics/campaigns/${campaignId}`, accessToken);
+}
+
+export function createCampaign(accessToken: string, payload: { clinic_id: string; survey_version_id: string; title: string; description: string | null }): Promise<Campaign> {
+  return writeSurvey(accessToken, "/api/v1/campaigns", "POST", payload);
+}
+
+export function updateCampaign(accessToken: string, campaignId: string, payload: { status: Campaign["status"] }): Promise<Campaign> {
+  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}`, "PATCH", payload);
+}
+
+export async function deleteCampaign(accessToken: string, campaignId: string): Promise<void> {
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/campaigns/${campaignId}`, { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" });
+  if (!response.ok) throw new ApiError(response.status);
 }
 
 export function getClinic(accessToken: string, clinicId: string): Promise<ClinicDetail> {
@@ -250,6 +278,14 @@ export function deleteSurveyQuestionValidation(
 
 export function createSurvey(accessToken: string, payload: { title: string; description: string | null; initial_draft_label: string | null }): Promise<SurveyDetail> {
   return writeSurvey(accessToken, "/api/v1/surveys", "POST", payload);
+}
+
+export function createSurveyDraft(
+  accessToken: string,
+  surveyId: string,
+  payload: { draft_label: string | null; source_version_id: string | null },
+): Promise<SurveyDraft> {
+  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts`, "POST", payload);
 }
 
 export function updateSurvey(accessToken: string, surveyId: string, payload: { title: string; description: string | null }): Promise<Survey> {

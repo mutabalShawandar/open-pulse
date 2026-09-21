@@ -118,6 +118,7 @@ export default async function ClinicDetailPage({
             <PencilIcon data-icon="inline-start" />
             Bearbeiten
           </Button>
+          <Button nativeButton={false} variant="outline" render={<Link href={`/clinics/${clinic.id}/analytics`} />}>Auswertungen</Button>
         </div>
       </section>
       {query.created || query.updated ? (

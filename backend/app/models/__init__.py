@@ -9,6 +9,16 @@ from app.models.authorization import (
     UserRole,
 )
 from app.models.audit import AuditEvent
+from app.models.campaign import (
+    Campaign,
+    CampaignStatus,
+    ResponseAnswer,
+    ResponseAnswerOption,
+    ResponseIdentityMode,
+    ResponseSession,
+    ResponseStatus,
+    SurveyResponse,
+)
 from app.models.survey import (
     QuestionType,
     Survey,
@@ -33,6 +43,14 @@ __all__ = [
     "UserRole",
     "ClinicMember",
     "AuditEvent",
+    "Campaign",
+    "CampaignStatus",
+    "ResponseIdentityMode",
+    "SurveyResponse",
+    "ResponseStatus",
+    "ResponseSession",
+    "ResponseAnswer",
+    "ResponseAnswerOption",
     "QuestionType",
     "Survey",
     "SurveyQuestion",

@@ -258,12 +258,13 @@ export async function deleteValidationAction(surveyId: string, draftId: string, 
 }
 
 export async function publishDraftAction(surveyId: string, draftId: string) {
+  let version;
   try {
-    const version = await publishSurveyDraft(await token(), surveyId, draftId);
-    revalidatePath(`/surveys/${surveyId}`);
-    redirect(`/surveys/${surveyId}/versions/${version.version_number}?published=1`);
+    version = await publishSurveyDraft(await token(), surveyId, draftId);
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
     redirect(`${draftPath(surveyId, draftId)}?error=publish`);
   }
+  revalidatePath(`/surveys/${surveyId}`);
+  redirect(`/surveys/${surveyId}/versions/${version.version_number}?published=1`);
 }

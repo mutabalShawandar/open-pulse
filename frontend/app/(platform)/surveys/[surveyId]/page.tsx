@@ -4,16 +4,21 @@ import { notFound } from "next/navigation";
 
 import {
   archiveSurveyAction,
+  copySurveyAction,
+  createSurveyDraftAction,
   restoreSurveyAction,
   updateSurveyAction,
 } from "@/app/(platform)/surveys/actions";
+import { SurveyCopyDialog } from "@/components/surveys/survey-copy-dialog";
+import { SurveyNewDraftDialog } from "@/components/surveys/survey-new-draft-dialog";
+import { DraftPreview } from "@/components/surveys/draft-preview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ApiError, getSurvey, listPublishedSurveyVersions } from "@/lib/api/client";
+import { ApiError, getSurvey, getSurveyDraft, listPublishedSurveyVersions } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
 
 export default async function SurveyDetailPage({
@@ -32,6 +37,10 @@ export default async function SurveyDetailPage({
   }
 
   const versions = await listPublishedSurveyVersions(accessToken, surveyId);
+  const draftDetails = await Promise.all(
+    survey.drafts.map((draft) => getSurveyDraft(accessToken, surveyId, draft.id)),
+  );
+  const draftsById = new Map(draftDetails.map((draft) => [draft.id, draft]));
   const archived = survey.status === "archived";
 
   return (
@@ -47,12 +56,29 @@ export default async function SurveyDetailPage({
           </Badge>
           <h1 className="mt-3 font-heading text-3xl font-semibold tracking-tight">{survey.title}</h1>
         </div>
-        <form action={(archived ? restoreSurveyAction : archiveSurveyAction).bind(null, survey.id)}>
-          <Button type="submit" variant={archived ? "outline" : "destructive"}>
-            {archived ? <RotateCcwIcon data-icon="inline-start" /> : <ArchiveIcon data-icon="inline-start" />}
-            {archived ? "Wiederherstellen" : "Archivieren"}
-          </Button>
-        </form>
+        <div className="flex flex-wrap gap-2">
+          <SurveyCopyDialog
+            action={copySurveyAction.bind(null, survey.id)}
+            description={survey.description}
+            sourceVersions={[
+              ...survey.drafts.map((draft) => ({
+                id: draft.id,
+                label: `${draft.draft_label || "Unbenannter Entwurf"} · bearbeitbarer Entwurf`,
+              })),
+              ...versions.map((version) => ({
+                id: version.id,
+                label: `Version ${version.version_number} · veröffentlicht`,
+              })),
+            ]}
+            surveyTitle={survey.title}
+          />
+          <form action={(archived ? restoreSurveyAction : archiveSurveyAction).bind(null, survey.id)}>
+            <Button type="submit" variant={archived ? "outline" : "destructive"}>
+              {archived ? <RotateCcwIcon data-icon="inline-start" /> : <ArchiveIcon data-icon="inline-start" />}
+              {archived ? "Wiederherstellen" : "Archivieren"}
+            </Button>
+          </form>
+        </div>
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
@@ -78,13 +104,38 @@ export default async function SurveyDetailPage({
             <CardDescription>{survey.drafts.length} Entwürfe · {versions.length} veröffentlicht</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
+            {!archived ? (
+              <SurveyNewDraftDialog
+                action={createSurveyDraftAction.bind(null, survey.id)}
+                sourceVersions={[
+                  ...survey.drafts.map((draft) => ({
+                    id: draft.id,
+                    label: `${draft.draft_label || "Unbenannter Entwurf"} · bearbeitbarer Entwurf`,
+                  })),
+                  ...versions.map((version) => ({
+                    id: version.id,
+                    label: `Version ${version.version_number} · veröffentlicht`,
+                  })),
+                ]}
+              />
+            ) : null}
             {survey.drafts.map((draft) => (
               <div key={draft.id} className="rounded-lg border p-3">
                 <p className="font-medium">{draft.draft_label || "Unbenannter Entwurf"}</p>
                 <p className="mt-1 text-sm text-muted-foreground">Bearbeitbar</p>
-                <Button nativeButton={false} variant="outline" size="sm" className="mt-3" render={<Link href={`/surveys/${survey.id}/drafts/${draft.id}`} />}>
-                  Entwurf bearbeiten
-                </Button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button nativeButton={false} variant="outline" size="sm" render={<Link href={`/surveys/${survey.id}/drafts/${draft.id}`} />}>
+                    Entwurf bearbeiten
+                  </Button>
+                  {draftsById.get(draft.id) ? (
+                    <DraftPreview
+                      surveyId={survey.id}
+                      draftId={draft.id}
+                      title={draft.draft_label || survey.title}
+                      sections={draftsById.get(draft.id)!.sections}
+                    />
+                  ) : null}
+                </div>
               </div>
             ))}
             {versions.map((version) => (

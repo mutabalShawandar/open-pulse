@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Request, status
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
 from sqlalchemy import select, text
@@ -28,6 +30,9 @@ from app.core.logging import configure_logging
 from app.api.v1.surveys import router as surveys_router
 from app.api.v1.clinic_survey_versions import router as clinic_survey_versions_router
 from app.api.v1.administration import router as administration_router
+from app.api.v1.campaigns import router as campaigns_router
+from app.api.v1.public import router as public_router
+from app.api.v1.analytics import router as analytics_router
 
 is_dev = settings.app_env == "development"
 configure_logging()
@@ -42,6 +47,25 @@ app = FastAPI(
 app.include_router(surveys_router)
 app.include_router(clinic_survey_versions_router)
 app.include_router(administration_router)
+app.include_router(campaigns_router)
+app.include_router(public_router)
+app.include_router(analytics_router)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()],
+    allow_methods=["GET", "POST", "PUT", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
+
+
+@app.middleware("http")
+async def limit_public_request_body(request: Request, call_next):
+    """Reject oversized public payloads before Pydantic parses them."""
+    if request.url.path.startswith("/api/v1/public/"):
+        content_length = request.headers.get("content-length")
+        if content_length and content_length.isdigit() and int(content_length) > 262_144:
+            return JSONResponse(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, content={"detail": "Request body is too large"})
+    return await call_next(request)
 
 
 @app.post("/api/v1/auth/login", response_model=TokenResponse, tags=["auth"])

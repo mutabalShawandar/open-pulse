@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   Building2Icon,
   ClipboardListIcon,
+  MegaphoneIcon,
   LayoutDashboardIcon,
   ShieldCheckIcon,
 } from "lucide-react";
@@ -13,6 +14,7 @@ import { userDisplayName, userInitials } from "@/lib/user-display";
 const navigation = [
   { label: "Übersicht", icon: LayoutDashboardIcon, href: "/" },
   { label: "Umfragen", icon: ClipboardListIcon, href: "/surveys" },
+  { label: "Kampagnen", icon: MegaphoneIcon, href: "/campaigns" },
   { label: "Kliniken", icon: Building2Icon, href: "/clinics" },
   {
     label: "Administration",
