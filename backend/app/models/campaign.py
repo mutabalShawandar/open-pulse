@@ -64,6 +64,7 @@ class Campaign(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     public_slug: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True, default=generate_public_slug)
+    public_path: Mapped[str | None] = mapped_column(String(128), nullable=True, unique=True, index=True)
     status: Mapped[CampaignStatus] = mapped_column(Enum(CampaignStatus, name="campaign_status", values_callable=_enum_values), nullable=False, default=CampaignStatus.DRAFT, server_default=CampaignStatus.DRAFT.value, index=True)
     response_identity_mode: Mapped[ResponseIdentityMode] = mapped_column(Enum(ResponseIdentityMode, name="response_identity_mode", values_callable=_enum_values), nullable=False, default=ResponseIdentityMode.ANONYMOUS, server_default=ResponseIdentityMode.ANONYMOUS.value)
     branding: Mapped[dict | None] = mapped_column(JSON, nullable=True)

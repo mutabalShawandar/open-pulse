@@ -173,6 +173,7 @@ export type Campaign = {
   title: string;
   description: string | null;
   public_slug: string;
+  public_path: string | null;
   status: "draft" | "scheduled" | "active" | "paused" | "completed" | "cancelled";
   starts_at: string | null;
   ends_at: string | null;

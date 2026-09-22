@@ -34,6 +34,7 @@ export function CampaignWizard({ clinicId, initialRecipients, surveyVersionOptio
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [endsAt, setEndsAt] = useState("");
 
   const [recipients, setRecipients] = useState<Recipient[]>(initialRecipients);
   const [selectedRecipientIds, setSelectedRecipientIds] = useState<Set<string>>(new Set());
@@ -106,6 +107,7 @@ export function CampaignWizard({ clinicId, initialRecipients, surveyVersionOptio
         clinicId,
         title,
         description,
+        endsAt: endsAt ? new Date(endsAt).toISOString() : null,
         surveyVersionId,
         recipientIds: [...selectedRecipientIds],
         email: email.subject.trim() ? email : null,
@@ -132,6 +134,7 @@ export function CampaignWizard({ clinicId, initialRecipients, surveyVersionOptio
           <CardContent className="flex flex-col gap-5">
             <Field><FieldLabel htmlFor="wizard-title">Titel</FieldLabel><Input id="wizard-title" required value={title} onChange={(event) => setTitle(event.target.value)} /></Field>
             <Field><FieldLabel htmlFor="wizard-description">Beschreibung</FieldLabel><Textarea id="wizard-description" value={description} onChange={(event) => setDescription(event.target.value)} /></Field>
+            <Field><FieldLabel htmlFor="wizard-ends-at">Endet am <span className="font-normal text-muted-foreground">(optional)</span></FieldLabel><Input id="wizard-ends-at" type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /><FieldDescription>Nach diesem Zeitpunkt wird die Kampagne automatisch beendet und nimmt keine Antworten mehr an.</FieldDescription></Field>
           </CardContent>
         </Card>
       ) : null}

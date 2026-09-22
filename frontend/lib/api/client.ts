@@ -160,11 +160,11 @@ export function getCampaignAnalytics(accessToken: string, clinicId: string, camp
   return apiFetch<CampaignAnalytics>(`/api/v1/clinics/${clinicId}/analytics/campaigns/${campaignId}`, accessToken);
 }
 
-export function createCampaign(accessToken: string, payload: { clinic_id: string; survey_version_id: string; title: string; description: string | null }): Promise<Campaign> {
+export function createCampaign(accessToken: string, payload: { clinic_id: string; survey_version_id: string; title: string; description: string | null; ends_at?: string | null }): Promise<Campaign> {
   return writeSurvey(accessToken, "/api/v1/campaigns", "POST", payload);
 }
 
-export function updateCampaign(accessToken: string, campaignId: string, payload: { status: Campaign["status"] } | { survey_version_id: string }): Promise<Campaign> {
+export function updateCampaign(accessToken: string, campaignId: string, payload: { status?: Campaign["status"]; survey_version_id?: string; ends_at?: string | null }): Promise<Campaign> {
   return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}`, "PATCH", payload);
 }
 

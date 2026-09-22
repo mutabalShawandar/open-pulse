@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import time
 from uuid import UUID
 
 from redis.asyncio import Redis
@@ -10,12 +11,14 @@ from redis.exceptions import ConnectionError as RedisConnectionError, TimeoutErr
 
 from app.core.config import settings
 from app.db.session import async_session_factory
+from app.services.campaign_service import complete_expired_campaigns
 from app.services.delivery_service import QUEUE_NAME, enqueue_delivery_jobs, process_delivery_job
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BLPOP_TIMEOUT_SECONDS = 5
+EXPIRY_SWEEP_INTERVAL_SECONDS = 60
 
 
 async def run() -> None:
@@ -23,8 +26,15 @@ async def run() -> None:
     # socket read races the server-side block and raises redis.exceptions.TimeoutError on
     # every idle poll instead of BLPOP returning None as intended.
     redis = Redis.from_url(settings.redis_url, decode_responses=True, socket_timeout=BLPOP_TIMEOUT_SECONDS + 5)
+    last_expiry_sweep = 0.0
     try:
         while True:
+            if time.monotonic() - last_expiry_sweep >= EXPIRY_SWEEP_INTERVAL_SECONDS:
+                async with async_session_factory() as session:
+                    completed = await complete_expired_campaigns(session)
+                    if completed:
+                        logger.info("Automatically completed %s expired campaign(s)", completed)
+                last_expiry_sweep = time.monotonic()
             try:
                 item = await redis.blpop(QUEUE_NAME, timeout=BLPOP_TIMEOUT_SECONDS)
             except (RedisTimeoutError, RedisConnectionError):

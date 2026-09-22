@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     keycloak_admin_client_secret: str | None = None
     redis_url: str = "redis://localhost:6379/0"
     public_frontend_url: str = "http://localhost:3000"
+    public_backend_url: str = "http://localhost:8000"
+    minio_endpoint: str = "http://minio:9000"
+    minio_access_key: str | None = None
+    minio_secret_key: str | None = None
+    minio_bucket: str = "clinic-assets"
     # e.g. "domain.de" — when set, public survey links use "https://{clinic_slug}.{public_root_domain}/{public_slug}"
     # instead of "{public_frontend_url}/umfragen/{public_slug}". Requires wildcard DNS/TLS and the frontend's
     # subdomain-rewrite middleware to be in place.
@@ -38,4 +43,3 @@ class Settings(BaseSettings):
         )
 
 settings = Settings()
-

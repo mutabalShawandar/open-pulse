@@ -34,6 +34,17 @@ export async function changeCampaignStatusAction(clinicId: string, campaignId: s
   revalidatePath(`/clinics/${clinicId}/campaigns`); revalidatePath(`/clinics/${clinicId}/campaigns/${campaignId}`); redirect(`/clinics/${clinicId}/campaigns/${campaignId}`);
 }
 
+export async function updateCampaignEndDateAction(clinicId: string, campaignId: string, formData: FormData) {
+  const endsAt = text(formData, "endsAt") || null;
+  try {
+    await updateCampaign(await token(), campaignId, { ends_at: endsAt });
+  } catch (error) {
+    const statusCode = error instanceof ApiError ? error.status : "unknown";
+    redirect(`/clinics/${clinicId}/campaigns/${campaignId}?error=end-date&status=${statusCode}`);
+  }
+  revalidatePath(`/clinics/${clinicId}/campaigns`); revalidatePath(`/clinics/${clinicId}/campaigns/${campaignId}`); redirect(`/clinics/${clinicId}/campaigns/${campaignId}?end-date=saved`);
+}
+
 export async function changeCampaignSurveyVersionAction(clinicId: string, campaignId: string, formData: FormData) {
   const surveyVersionId = text(formData, "surveyVersionId");
   if (!surveyVersionId) redirect(`/clinics/${clinicId}/campaigns/${campaignId}?error=survey-version`);
@@ -156,6 +167,7 @@ export type WizardSubmitPayload = {
   clinicId: string;
   title: string;
   description: string;
+  endsAt: string | null;
   surveyVersionId: string;
   recipientIds: string[];
   email: { subject: string; htmlBody: string; textBody: string; senderName: string; replyTo: string } | null;
@@ -169,7 +181,7 @@ export async function submitCampaignWizardAction(payload: WizardSubmitPayload): 
   const clinic = await resolveClinicBySlug(accessToken, payload.clinicId);
   let campaignId: string;
   try {
-    const campaign = await createCampaign(accessToken, { clinic_id: clinic.id, survey_version_id: payload.surveyVersionId, title: payload.title.trim(), description: payload.description.trim() || null });
+    const campaign = await createCampaign(accessToken, { clinic_id: clinic.id, survey_version_id: payload.surveyVersionId, title: payload.title.trim(), description: payload.description.trim() || null, ends_at: payload.endsAt });
     campaignId = campaign.id;
   } catch {
     return { ok: false, error: "Die Kampagne konnte nicht erstellt werden. Bitte prüfen Sie die ausgewählte Umfrageversion." };

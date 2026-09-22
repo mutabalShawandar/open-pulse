@@ -2,17 +2,31 @@ from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Campaign, CampaignDelivery, CampaignRecipient, CampaignRecipientStatus, CampaignStatus, Clinic, QuestionType, ResponseAnswer, ResponseAnswerOption, ResponseSession, ResponseStatus, Survey, SurveyQuestion, SurveyQuestionOption, SurveyQuestionValidation, SurveyResponse, SurveySection, SurveyVersion, SurveyVersionClinic, SurveyVersionStatus
 from app.models.campaign import generate_response_token, hash_response_token
+from app.core.links import normalize_campaign_path
 from app.schemas.campaign import CampaignCreateRequest, CampaignUpdateRequest, PublicAnswerRequest
 from app.services.audit_service import add_audit_event
 
 
 CHOICE_TYPES = {QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE}
 TEXT_TYPES = {QuestionType.SHORT_TEXT, QuestionType.LONG_TEXT}
+
+
+async def assign_public_path(session: AsyncSession, campaign: Campaign) -> str:
+    """Assign a unique, human-readable public route without exposing the secure slug."""
+    base = normalize_campaign_path(campaign.title)
+    candidate = base
+    suffix = 2
+    while await session.scalar(select(Campaign.id).where(Campaign.public_path == candidate, Campaign.id != campaign.id).limit(1)):
+        suffix_text = f"-{suffix}"
+        candidate = f"{base[:128 - len(suffix_text)]}{suffix_text}"
+        suffix += 1
+    campaign.public_path = candidate
+    return candidate
 
 
 async def create_campaign(session: AsyncSession, payload: CampaignCreateRequest, actor_user_id: UUID) -> Campaign:
@@ -30,6 +44,7 @@ async def create_campaign(session: AsyncSession, payload: CampaignCreateRequest,
     campaign = Campaign(**payload.model_dump(), created_by_user_id=actor_user_id)
     session.add(campaign)
     await session.flush()
+    await assign_public_path(session, campaign)
     add_audit_event(session, actor_user_id=actor_user_id, clinic_id=campaign.clinic_id, action="campaign.created", entity_type="campaign", entity_id=campaign.id, metadata={"survey_version_id": str(campaign.survey_version_id)})
     await session.commit()
     await session.refresh(campaign)
@@ -53,7 +68,7 @@ async def get_campaign_or_404(session: AsyncSession, campaign_id: UUID) -> Campa
 async def campaign_response_data(session: AsyncSession, campaign: Campaign) -> dict:
     version = await session.get(SurveyVersion, campaign.survey_version_id)
     survey = await session.get(Survey, version.survey_id) if version else None
-    return {"id": campaign.id, "clinic_id": campaign.clinic_id, "survey_version_id": campaign.survey_version_id, "survey_title": survey.title if survey else "Unbekannte Umfrage", "survey_version_number": version.version_number if version and version.version_number else 0, "title": campaign.title, "description": campaign.description, "public_slug": campaign.public_slug, "status": campaign.status, "response_identity_mode": campaign.response_identity_mode, "branding": campaign.branding, "starts_at": campaign.starts_at, "ends_at": campaign.ends_at, "created_at": campaign.created_at, "updated_at": campaign.updated_at}
+    return {"id": campaign.id, "clinic_id": campaign.clinic_id, "survey_version_id": campaign.survey_version_id, "survey_title": survey.title if survey else "Unbekannte Umfrage", "survey_version_number": version.version_number if version and version.version_number else 0, "title": campaign.title, "description": campaign.description, "public_slug": campaign.public_slug, "public_path": campaign.public_path, "status": campaign.status, "response_identity_mode": campaign.response_identity_mode, "branding": campaign.branding, "starts_at": campaign.starts_at, "ends_at": campaign.ends_at, "created_at": campaign.created_at, "updated_at": campaign.updated_at}
 
 
 async def delete_campaign(session: AsyncSession, campaign_id: UUID, actor_user_id: UUID) -> None:
@@ -103,13 +118,53 @@ async def update_campaign(session: AsyncSession, campaign_id: UUID, payload: Cam
     return campaign
 
 
-def _is_publicly_open(campaign: Campaign) -> bool:
-    now = datetime.now(UTC)
+def campaign_has_ended(campaign: Campaign, now: datetime | None = None) -> bool:
+    return campaign.ends_at is not None and campaign.ends_at <= (now or datetime.now(UTC))
+
+
+def _is_publicly_open(campaign: Campaign, now: datetime | None = None) -> bool:
+    now = now or datetime.now(UTC)
     return campaign.status == CampaignStatus.ACTIVE and (campaign.starts_at is None or campaign.starts_at <= now) and (campaign.ends_at is None or now < campaign.ends_at)
 
 
+async def complete_expired_campaigns(session: AsyncSession, now: datetime | None = None) -> int:
+    """Close expired runnable campaigns and stop deliveries that have not been sent."""
+    now = now or datetime.now(UTC)
+    campaigns = list(await session.scalars(
+        select(Campaign)
+        .where(
+            Campaign.status.in_([CampaignStatus.SCHEDULED, CampaignStatus.ACTIVE, CampaignStatus.PAUSED]),
+            Campaign.ends_at.is_not(None),
+            Campaign.ends_at <= now,
+        )
+        .with_for_update(skip_locked=True)
+    ))
+    for campaign in campaigns:
+        campaign.status = CampaignStatus.COMPLETED
+        deliveries = list(await session.scalars(
+            select(CampaignDelivery)
+            .join(CampaignRecipient)
+            .where(
+                CampaignRecipient.campaign_id == campaign.id,
+                CampaignDelivery.status.in_(["queued", "sending"]),
+            )
+            .with_for_update(skip_locked=True)
+        ))
+        for delivery in deliveries:
+            delivery.status = "failed"
+            delivery.last_error = "Kampagne ist beendet"
+            recipient = await session.get(CampaignRecipient, delivery.campaign_recipient_id)
+            if recipient and recipient.status != CampaignRecipientStatus.SENT:
+                recipient.status = CampaignRecipientStatus.FAILED
+                recipient.last_error = delivery.last_error
+        add_audit_event(session, actor_user_id=None, clinic_id=campaign.clinic_id, action="campaign.auto_completed", entity_type="campaign", entity_id=campaign.id, metadata={"ends_at": campaign.ends_at.isoformat()})
+    if campaigns:
+        await session.commit()
+    return len(campaigns)
+
+
 async def get_public_campaign(session: AsyncSession, slug: str) -> Campaign:
-    campaign = await session.scalar(select(Campaign).where(Campaign.public_slug == slug))
+    campaign = await session.scalar(select(Campaign).where(or_(Campaign.public_path == slug, Campaign.public_slug == slug)))
     if campaign is None or not _is_publicly_open(campaign):
         raise HTTPException(status_code=404, detail="Campaign not available")
     return campaign
@@ -147,6 +202,9 @@ async def session_response_or_404(session: AsyncSession, token: str) -> SurveyRe
     response_session.last_seen_at = datetime.now(UTC)
     response = await session.get(SurveyResponse, response_session.response_id)
     if response is None:
+        raise HTTPException(status_code=404, detail="Response session not available")
+    campaign = await session.get(Campaign, response.campaign_id)
+    if campaign is None or not _is_publicly_open(campaign):
         raise HTTPException(status_code=404, detail="Response session not available")
     return response
 

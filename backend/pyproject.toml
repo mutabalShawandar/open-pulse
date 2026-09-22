@@ -14,6 +14,8 @@ dependencies = [
     "redis>=7.2.1",
     "sqlalchemy>=2.0.52",
     "xlsxwriter>=3.2.9",
+    "boto3>=1.43.99",
+    "pillow>=12.3.0",
 ]
 
 [dependency-groups]

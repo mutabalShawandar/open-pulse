@@ -1,10 +1,16 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.models.campaign import CampaignStatus, ResponseIdentityMode, ResponseStatus
 from app.models.survey import QuestionType
+
+
+def _require_timezone(value: datetime | None) -> datetime | None:
+    if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+        raise ValueError("Campaign dates must include a timezone")
+    return value
 
 
 class CampaignCreateRequest(BaseModel):
@@ -16,6 +22,11 @@ class CampaignCreateRequest(BaseModel):
     branding: dict | None = None
     starts_at: datetime | None = None
     ends_at: datetime | None = None
+
+    @field_validator("starts_at", "ends_at")
+    @classmethod
+    def require_timezone(cls, value: datetime | None) -> datetime | None:
+        return _require_timezone(value)
 
     @model_validator(mode="after")
     def validate_window(self):
@@ -33,6 +44,11 @@ class CampaignUpdateRequest(BaseModel):
     ends_at: datetime | None = None
     status: CampaignStatus | None = None
 
+    @field_validator("starts_at", "ends_at")
+    @classmethod
+    def require_timezone(cls, value: datetime | None) -> datetime | None:
+        return _require_timezone(value)
+
 
 class CampaignResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -44,6 +60,7 @@ class CampaignResponse(BaseModel):
     title: str
     description: str | None
     public_slug: str
+    public_path: str | None
     status: CampaignStatus
     response_identity_mode: ResponseIdentityMode
     branding: dict | None

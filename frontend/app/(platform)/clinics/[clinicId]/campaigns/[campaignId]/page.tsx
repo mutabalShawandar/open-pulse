@@ -4,6 +4,7 @@ import { ExternalLinkIcon } from "lucide-react";
 import { SendCampaignDialog } from "@/components/campaigns/send-campaign-dialog";
 import { DeleteCampaignDialog } from "@/components/campaigns/delete-campaign-dialog";
 import { ChangeSurveyVersionDialog } from "@/components/campaigns/change-survey-version-dialog";
+import { CampaignEndDateForm } from "@/components/campaigns/campaign-end-date-form";
 import { EmailTemplateEditor } from "@/components/campaigns/email-template-editor";
 import { RecipientImportForm } from "@/components/campaigns/recipient-import-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -15,6 +16,7 @@ import { AnalyticsExportActions } from "@/components/clinics/analytics-export-ac
 import { AnalyticsQuestionCard } from "@/components/clinics/analytics-question-card";
 import {
   changeCampaignStatusAction,
+  updateCampaignEndDateAction,
   changeCampaignSurveyVersionAction,
   deleteCampaignAction,
   importCampaignRecipientsAction,
@@ -108,7 +110,7 @@ export default async function CampaignDetailPage(props: PageProps<"/clinics/[cli
     if (!(error instanceof ApiError && error.status === 403)) throw error;
   }
 
-  const link = buildPublicSurveyUrl(clinic.slug, campaign.public_slug);
+  const link = buildPublicSurveyUrl(clinic.slug, campaign.public_path ?? campaign.public_slug);
   const totals = { queued: deliveries.filter((delivery) => delivery.status === "queued" || delivery.status === "sending").length, sent: deliveries.filter((delivery) => delivery.status === "sent").length, failed: deliveries.filter((delivery) => delivery.status === "failed").length };
   const hasDeliveries = deliveries.length > 0;
   const editable = (campaign.status === "draft" || campaign.status === "scheduled") && !hasDeliveries;
@@ -116,6 +118,7 @@ export default async function CampaignDetailPage(props: PageProps<"/clinics/[cli
   const assignedIds = new Set(assignedRecipients.map((item) => item.recipient_id));
   const availableRecipients = clinicRecipients.filter((item) => item.status === "active" && !assignedIds.has(item.id));
   const hasFailedDeliveries = deliveries.some((delivery) => delivery.status === "failed");
+  const endDateEditable = campaign.status !== "completed" && campaign.status !== "cancelled";
   const imported = typeof query.created === "string";
   const emailMessage = emailErrorMessage(typeof query.error === "string" ? query.error : undefined, typeof query.status === "string" ? query.status : undefined);
   const sendMessage = sendErrorMessage(typeof query.error === "string" ? query.error : undefined, typeof query.status === "string" ? query.status : undefined);
@@ -156,8 +159,9 @@ export default async function CampaignDetailPage(props: PageProps<"/clinics/[cli
           {hasResponses ? <Alert><AlertTitle>Kampagne läuft bereits</AlertTitle><AlertDescription>Es liegen bereits Antworten vor. Umfrageversion und Löschen sind deshalb gesperrt.</AlertDescription></Alert> : null}
           <div className="flex flex-wrap gap-2"><SendCampaignDialog campaignTitle={campaign.title} recipientCount={assignedRecipients.length} subject={template?.subject ?? ""} action={queueCampaignDeliveriesAction.bind(null, clinicId, campaign.id)} /></div>
           <Card><CardHeader><CardTitle>Versandübersicht</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-3"><p><span className="block text-2xl font-semibold">{totals.queued}</span><span className="text-sm text-muted-foreground">in Warteschlange</span></p><p><span className="block text-2xl font-semibold">{totals.sent}</span><span className="text-sm text-muted-foreground">versendet</span></p><p><span className="block text-2xl font-semibold">{totals.failed}</span><span className="text-sm text-muted-foreground">fehlgeschlagen</span></p></CardContent></Card>
-          <Card><CardHeader><CardTitle>Öffentlicher Umfragelink</CardTitle></CardHeader><CardContent className="flex flex-wrap items-center gap-3"><code className="rounded bg-muted px-3 py-2 text-sm">{link}</code><Button nativeButton={false} variant="outline" render={<a href={link} target="_blank" rel="noreferrer" />}><ExternalLinkIcon data-icon="inline-start" />Öffnen</Button></CardContent></Card>
-          <Card><CardHeader><CardTitle>Status</CardTitle><CardDescription>{hasDeliveries ? "Es wurden bereits E-Mails versendet — die Kampagne kann nicht mehr zu „Entwurf“ oder „Geplant“ zurückgesetzt werden." : "Empfänger und Vorlage können nur im Status „Entwurf“ oder „Geplant“ bearbeitet werden. Der Versand setzt den Status automatisch auf „Versendet“."}</CardDescription></CardHeader><CardContent className="flex flex-wrap gap-2">{statusOptions.map(([value, label]) => <form key={value} action={changeCampaignStatusAction.bind(null, clinicId, campaign.id)}><input type="hidden" name="status" value={value} /><Button type="submit" variant={campaign.status === value ? "default" : "outline"}>{label}</Button></form>)}</CardContent></Card>
+           <Card><CardHeader><CardTitle>Öffentlicher Umfragelink</CardTitle></CardHeader><CardContent className="flex flex-wrap items-center gap-3"><code className="rounded bg-muted px-3 py-2 text-sm">{link}</code><Button nativeButton={false} variant="outline" render={<a href={link} target="_blank" rel="noreferrer" />}><ExternalLinkIcon data-icon="inline-start" />Öffnen</Button></CardContent></Card>
+           <Card><CardHeader><CardTitle>Laufzeit</CardTitle><CardDescription>{campaign.ends_at ? `Die Kampagne endet am ${date.format(new Date(campaign.ends_at))}.` : "Diese Kampagne hat aktuell kein Enddatum."}</CardDescription></CardHeader><CardContent>{endDateEditable ? <CampaignEndDateForm endsAt={campaign.ends_at} action={updateCampaignEndDateAction.bind(null, clinicId, campaign.id)} /> : <p className="text-sm text-muted-foreground">Abgeschlossene oder abgebrochene Kampagnen können nicht mehr geändert werden.</p>}</CardContent></Card>
+           <Card><CardHeader><CardTitle>Status</CardTitle><CardDescription>{hasDeliveries ? "Es wurden bereits E-Mails versendet — die Kampagne kann nicht mehr zu „Entwurf“ oder „Geplant“ zurückgesetzt werden." : "Empfänger und Vorlage können nur im Status „Entwurf“ oder „Geplant“ bearbeitet werden. Der Versand setzt den Status automatisch auf „Versendet“."}</CardDescription></CardHeader><CardContent className="flex flex-wrap gap-2">{statusOptions.map(([value, label]) => <form key={value} action={changeCampaignStatusAction.bind(null, clinicId, campaign.id)}><input type="hidden" name="status" value={value} /><Button type="submit" variant={campaign.status === value ? "default" : "outline"}>{label}</Button></form>)}</CardContent></Card>
         </TabsContent>
 
         <TabsContent value="recipients" className="flex flex-col gap-6 pt-4">

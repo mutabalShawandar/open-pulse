@@ -17,6 +17,7 @@ from app.core.links import build_public_survey_url
 from app.models import Campaign, CampaignDelivery, CampaignEmailTemplate, CampaignRecipient, CampaignRecipientStatus, Clinic, Recipient, RecipientStatus
 from app.models.campaign import CampaignStatus, generate_response_token, hash_response_token
 from app.services.audit_service import add_audit_event
+from app.services.campaign_service import assign_public_path
 from app.services.smtp_service import get_smtp_configuration, send_campaign_email
 
 QUEUE_NAME = "campaign-deliveries"
@@ -81,6 +82,8 @@ async def queue_campaign_deliveries(session: AsyncSession, campaign_id: UUID, ac
     validate_template_variables(template.subject, template.html_body, template.text_body)
     if await get_smtp_configuration(session) is None:
         raise HTTPException(status_code=409, detail="Configure outbound email before queueing")
+    if campaign.public_path is None:
+        await assign_public_path(session, campaign)
 
     rows = list(await session.execute(
         select(CampaignRecipient, Recipient)
@@ -169,7 +172,7 @@ async def process_delivery_job(session: AsyncSession, delivery_id: UUID, raw_tok
     recipient = await session.get(Recipient, campaign_recipient.recipient_id)
     if campaign is None or recipient is None:
         return 0
-    if campaign.status in {CampaignStatus.CANCELLED, CampaignStatus.PAUSED}:
+    if campaign.status in {CampaignStatus.CANCELLED, CampaignStatus.COMPLETED, CampaignStatus.PAUSED} or (campaign.ends_at is not None and campaign.ends_at <= datetime.now(UTC)):
         return 0
     if recipient.status != RecipientStatus.ACTIVE:
         delivery.status = "failed"
@@ -192,7 +195,7 @@ async def process_delivery_job(session: AsyncSession, delivery_id: UUID, raw_tok
     await session.commit()
 
     clinic = await session.get(Clinic, campaign.clinic_id)
-    link = build_public_survey_url(clinic.slug if clinic else "umfrage", campaign.public_slug, raw_token)
+    link = build_public_survey_url(clinic.slug if clinic else "umfrage", campaign.public_path or campaign.public_slug, raw_token)
     variables = {"{{recipient_name}}": recipient.display_name or "", "{{survey_link}}": link, "{{clinic_name}}": clinic.name if clinic else "", "{{campaign_title}}": campaign.title}
     try:
         await send_campaign_email(session, recipient.email, render_template(template.subject, variables), render_template(template.html_body, variables), render_template(template.text_body, variables), sender_name=template.sender_name, reply_to=template.reply_to)

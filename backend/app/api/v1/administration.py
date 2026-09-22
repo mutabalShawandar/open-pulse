@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,6 +26,7 @@ from app.schemas.clinic import (
 )
 from app.schemas.user import UserResponse
 from app.services.clinic_service import remove_clinic_member, update_clinic
+from app.services.storage_service import save_clinic_logo
 from app.services.keycloak_admin import KeycloakAdminClient
 from app.services.user_service import (
     deactivate_platform_user,
@@ -35,6 +36,16 @@ from app.services.user_service import (
 
 
 router = APIRouter(tags=["administration"])
+
+@router.post("/api/v1/clinics/{clinic_id}/logo", response_model=ClinicResponse, tags=["clinic"])
+async def upload_clinic_logo_endpoint(clinic_id: UUID, logo: UploadFile = File(...), actor: Annotated[User, Depends(require_permission("clinic.create"))] = None, session: AsyncSession = Depends(get_db_session)) -> ClinicResponse:
+    clinic = await session.get(Clinic, clinic_id)
+    if clinic is None: raise HTTPException(status_code=404, detail="Clinic not found")
+    key, url = await save_clinic_logo(clinic.id, logo)
+    clinic.logo_storage_key, clinic.logo_url = key, url
+    add_audit_event(session, actor_user_id=actor.id, clinic_id=clinic.id, action="clinic.logo_uploaded", entity_type="clinic", entity_id=clinic.id)
+    await session.commit(); await session.refresh(clinic)
+    return ClinicResponse.model_validate(clinic)
 
 
 @router.get("/api/v1/administration/smtp", response_model=SmtpConfigurationResponse | None, tags=["administration"])

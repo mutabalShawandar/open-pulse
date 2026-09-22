@@ -1,6 +1,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, status
+from fastapi.responses import Response
+from uuid import UUID
+from app.models import Clinic
+from app.services.storage_service import read_clinic_logo
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db_session
@@ -10,6 +14,13 @@ from app.services.rate_limit_service import enforce_public_rate_limit
 
 
 router = APIRouter(prefix="/api/v1/public", tags=["public surveys"])
+
+@router.get("/clinic-logos/{clinic_id}")
+async def public_clinic_logo_endpoint(clinic_id: UUID, session: AsyncSession = Depends(get_db_session)) -> Response:
+    clinic = await session.get(Clinic, clinic_id)
+    if clinic is None or clinic.logo_storage_key is None: raise HTTPException(status_code=404, detail="Logo not found")
+    data, media_type = await read_clinic_logo(clinic.logo_storage_key)
+    return Response(content=data, media_type=media_type, headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 async def public_read_limit(request: Request) -> None:

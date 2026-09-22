@@ -64,3 +64,4 @@ class Clinic(Base):
         onupdate=func.now(),
         nullable=False
     )
+    logo_storage_key: Mapped[str | None] = mapped_column(String(512), nullable=True, unique=True)
