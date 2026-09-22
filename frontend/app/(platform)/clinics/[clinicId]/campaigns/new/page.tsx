@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 
 import { CampaignWizard } from "@/components/campaigns/campaign-wizard";
 import { Button } from "@/components/ui/button";
-import { ApiError, getClinic, listClinicSurveyVersionAssignments, listPublishedSurveyVersions, listRecipients, listSurveys } from "@/lib/api/client";
+import { listClinicSurveyVersionAssignments, listPublishedSurveyVersions, listRecipients, listSurveys } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
+import { resolveClinicBySlug } from "@/lib/resolve-clinic";
 
 async function loadSurveyVersionOptions(token: string, clinicId: string) {
   const assignments = (await listClinicSurveyVersionAssignments(token, clinicId)).filter((assignment) => assignment.unassigned_at === null);
@@ -20,25 +20,19 @@ async function loadSurveyVersionOptions(token: string, clinicId: string) {
 }
 
 export default async function NewCampaignPage(props: PageProps<"/clinics/[clinicId]/campaigns/new">) {
-  const { clinicId } = await props.params;
+  const { clinicId: clinicSlug } = await props.params;
   const token = await getAccessToken();
   if (!token) return null;
-  let clinic;
-  try {
-    clinic = await getClinic(token, clinicId);
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) notFound();
-    throw error;
-  }
+  const clinic = await resolveClinicBySlug(token, clinicSlug);
   const [recipients, surveyVersionOptions] = await Promise.all([
-    listRecipients(token, clinicId),
-    loadSurveyVersionOptions(token, clinicId),
+    listRecipients(token, clinic.id),
+    loadSurveyVersionOptions(token, clinic.id),
   ]);
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-7 sm:px-6 lg:py-10">
-      <Button nativeButton={false} variant="ghost" className="w-fit" render={<Link href={`/clinics/${clinicId}/campaigns`} />}>← Kampagnen</Button>
+      <Button nativeButton={false} variant="ghost" className="w-fit" render={<Link href={`/clinics/${clinicSlug}/campaigns`} />}>← Kampagnen</Button>
       <div><p className="text-sm text-muted-foreground">{clinic.name}</p><h1 className="mt-2 text-3xl font-semibold">Kampagne erstellen</h1></div>
-      <CampaignWizard clinicId={clinicId} initialRecipients={recipients.filter((recipient) => recipient.status === "active")} surveyVersionOptions={surveyVersionOptions} />
+      <CampaignWizard clinicId={clinicSlug} initialRecipients={recipients.filter((recipient) => recipient.status === "active")} surveyVersionOptions={surveyVersionOptions} />
     </div>
   );
 }

@@ -7,20 +7,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { importClinicRecipientsAction, optOutClinicRecipientAction } from "../../actions";
-import { getClinic, listRecipients } from "@/lib/api/client";
+import { listRecipients } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
+import { resolveClinicBySlug } from "@/lib/resolve-clinic";
 
 export default async function ClinicRecipientsPage({ params, searchParams }: { params: Promise<{ clinicId: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
-  const { clinicId } = await params;
+  const { clinicId: clinicSlug } = await params;
   const query = await searchParams;
   const token = await getAccessToken();
   if (!token) return null;
-  const [clinic, recipients] = await Promise.all([getClinic(token, clinicId), listRecipients(token, clinicId)]);
+  const clinic = await resolveClinicBySlug(token, clinicSlug);
+  const recipients = await listRecipients(token, clinic.id);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
       <div>
-        <Button nativeButton={false} variant="ghost" render={<Link href={`/clinics/${clinicId}`} />}><ArrowLeftIcon data-icon="inline-start" /> Zur Klinik</Button>
+        <Button nativeButton={false} variant="ghost" render={<Link href={`/clinics/${clinicSlug}`} />}><ArrowLeftIcon data-icon="inline-start" /> Zur Klinik</Button>
         <div className="mt-4 flex items-start gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-secondary text-secondary-foreground"><UsersRoundIcon className="size-5" /></div>
           <div><p className="text-sm font-medium text-muted-foreground">{clinic.name}</p><h1 className="font-heading text-3xl font-semibold tracking-tight">Empfängerverzeichnis</h1></div>
@@ -33,7 +35,7 @@ export default async function ClinicRecipientsPage({ params, searchParams }: { p
 
       <Card>
         <CardHeader><CardTitle>Empfänger hinzufügen</CardTitle><CardDescription>Einzelne Patienten/Kontakte werden über Formularfelder erfasst. Für größere Listen verwenden Sie die CSV-Datei.</CardDescription></CardHeader>
-        <CardContent><RecipientImportForm action={importClinicRecipientsAction.bind(null, clinicId)} submitLabel="Empfänger speichern" /></CardContent>
+        <CardContent><RecipientImportForm action={importClinicRecipientsAction.bind(null, clinicSlug)} submitLabel="Empfänger speichern" /></CardContent>
       </Card>
 
       <Card>
@@ -43,7 +45,7 @@ export default async function ClinicRecipientsPage({ params, searchParams }: { p
             <div key={recipient.id} className="flex flex-col gap-2 rounded-lg border px-3 py-3 sm:flex-row sm:items-center">
               <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{recipient.display_name || "Ohne Namen"}</p><p className="truncate text-sm text-muted-foreground">{recipient.email}</p></div>
               <Badge variant={recipient.status === "active" ? "secondary" : "outline"}>{recipient.status === "active" ? "Aktiv" : recipient.status === "opted_out" ? "Abgemeldet" : "Unzustellbar"}</Badge>
-              {recipient.status === "active" ? <OptOutRecipientDialog recipientName={recipient.display_name || recipient.email} action={optOutClinicRecipientAction.bind(null, clinicId, recipient.id)} /> : null}
+              {recipient.status === "active" ? <OptOutRecipientDialog recipientName={recipient.display_name || recipient.email} action={optOutClinicRecipientAction.bind(null, clinicSlug, recipient.id)} /> : null}
             </div>
           )) : <p className="py-6 text-sm text-muted-foreground">Noch keine Empfänger für diese Klinik gespeichert.</p>}
         </CardContent>

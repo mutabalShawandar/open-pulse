@@ -12,20 +12,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiError, getCampaignAnalytics, listCampaigns } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
+import { resolveClinicBySlug } from "@/lib/resolve-clinic";
 import type { Campaign, CampaignAnalytics } from "@/lib/api/types";
 
 export default async function ClinicAnalyticsPage(
   props: PageProps<"/clinics/[clinicId]/analytics">,
 ) {
-  const { clinicId } = await props.params;
+  const { clinicId: clinicSlug } = await props.params;
   const campaignId = (await props.searchParams).campaign as string | undefined;
   const token = await getAccessToken();
+  if (!token) redirect("/login");
+  const clinic = await resolveClinicBySlug(token, clinicSlug);
 
   let campaigns: Campaign[] = [];
   try {
-    campaigns = token
-      ? (await listCampaigns(token)).filter((campaign) => campaign.clinic_id === clinicId)
-      : [];
+    campaigns = (await listCampaigns(token)).filter((campaign) => campaign.clinic_id === clinic.id);
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) redirect("/login");
     throw error;
@@ -34,8 +35,8 @@ export default async function ClinicAnalyticsPage(
   const selectedCampaignId = campaignId ?? campaigns[0]?.id;
   let analytics: CampaignAnalytics | null = null;
   try {
-    analytics = token && selectedCampaignId
-      ? await getCampaignAnalytics(token, clinicId, selectedCampaignId)
+    analytics = selectedCampaignId
+      ? await getCampaignAnalytics(token, clinic.id, selectedCampaignId)
       : null;
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) redirect("/login");
@@ -48,7 +49,7 @@ export default async function ClinicAnalyticsPage(
         nativeButton={false}
         variant="ghost"
         className="w-fit"
-        render={<Link href={`/clinics/${clinicId}`} />}
+        render={<Link href={`/clinics/${clinicSlug}`} />}
       >
         <ArrowLeftIcon data-icon="inline-start" />
         Zur Klinik
@@ -67,7 +68,7 @@ export default async function ClinicAnalyticsPage(
                 key={campaign.id}
                 nativeButton={false}
                 variant={campaign.id === selectedCampaignId ? "default" : "outline"}
-                render={<Link href={`/clinics/${clinicId}/analytics?campaign=${campaign.id}`} />}
+                render={<Link href={`/clinics/${clinicSlug}/analytics?campaign=${campaign.id}`} />}
               >
                 {campaign.title}
               </Button>
@@ -76,7 +77,7 @@ export default async function ClinicAnalyticsPage(
 
           {analytics ? (
             <>
-              <AnalyticsExportActions clinicId={clinicId} campaignId={selectedCampaignId!} />
+              <AnalyticsExportActions clinicId={clinic.id} campaignId={selectedCampaignId!} />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Metric icon={<UsersIcon />} label="Gestartet" value={analytics.started_count} />
                 <Metric icon={<CheckCircle2Icon />} label="Abgeschlossen" value={analytics.completed_count} />

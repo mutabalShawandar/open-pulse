@@ -257,13 +257,48 @@ export async function deleteValidationAction(surveyId: string, draftId: string, 
   finish(surveyId, draftId, "validation-deleted");
 }
 
+export async function saveRatingBoundsAction(
+  surveyId: string,
+  draftId: string,
+  sectionId: string,
+  questionId: string,
+  minValidationId: string | null,
+  maxValidationId: string | null,
+  formData: FormData,
+) {
+  const minValue = Number(value(formData, "minValue"));
+  const maxValue = Number(value(formData, "maxValue"));
+  if (!Number.isFinite(minValue) || !Number.isFinite(maxValue)) {
+    redirect(`${draftPath(surveyId, draftId)}?error=validation-rule&message=${encodeURIComponent("Minimal- und Maximalwert müssen Zahlen sein.")}`);
+  }
+  const accessToken = await token();
+  try {
+    if (minValidationId) {
+      await updateSurveyQuestionValidation(accessToken, surveyId, draftId, sectionId, questionId, minValidationId, { rule_value: { value: minValue } });
+    } else {
+      await createSurveyQuestionValidation(accessToken, surveyId, draftId, sectionId, questionId, { rule_type: "min_value", rule_value: { value: minValue } });
+    }
+    if (maxValidationId) {
+      await updateSurveyQuestionValidation(accessToken, surveyId, draftId, sectionId, questionId, maxValidationId, { rule_value: { value: maxValue } });
+    } else {
+      await createSurveyQuestionValidation(accessToken, surveyId, draftId, sectionId, questionId, { rule_type: "max_value", rule_value: { value: maxValue } });
+    }
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
+    const message = error instanceof ApiError && error.detail ? error.detail : "Bewertungsskala konnte nicht gespeichert werden.";
+    redirect(`${draftPath(surveyId, draftId)}?error=validation-rule&message=${encodeURIComponent(message)}`);
+  }
+  finish(surveyId, draftId, "validation-updated");
+}
+
 export async function publishDraftAction(surveyId: string, draftId: string) {
   let version;
   try {
     version = await publishSurveyDraft(await token(), surveyId, draftId);
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
-    redirect(`${draftPath(surveyId, draftId)}?error=publish`);
+    const message = error instanceof ApiError && error.detail ? error.detail : "Veröffentlichung fehlgeschlagen.";
+    redirect(`${draftPath(surveyId, draftId)}?error=publish&message=${encodeURIComponent(message)}`);
   }
   revalidatePath(`/surveys/${surveyId}`);
   redirect(`/surveys/${surveyId}/versions/${version.version_number}?published=1`);

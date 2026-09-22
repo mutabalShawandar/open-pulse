@@ -8,11 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { createOptionAction, createQuestionAction, createSectionAction, createValidationAction, deleteOptionAction, deleteQuestionAction, deleteSectionAction, deleteValidationAction, moveOptionAction, moveQuestionAction, moveSectionAction, updateOptionAction, updateQuestionAction, updateSectionAction, updateValidationAction } from "@/app/(platform)/surveys/draft-actions";
+import { createOptionAction, createQuestionAction, createSectionAction, deleteOptionAction, deleteQuestionAction, deleteSectionAction, moveOptionAction, moveQuestionAction, moveSectionAction, saveRatingBoundsAction, updateOptionAction, updateQuestionAction, updateSectionAction } from "@/app/(platform)/surveys/draft-actions";
 import type { SurveyQuestionDetail, SurveySectionDetail } from "@/lib/api/types";
 
 const questionTypes = [["short_text", "Kurzantwort"], ["long_text", "Langer Text"], ["single_choice", "Einfachauswahl"], ["multiple_choice", "Mehrfachauswahl"], ["yes_no", "Ja / Nein"], ["rating", "Bewertung"], ["number", "Zahl"], ["date", "Datum"]] as const;
-const validationRules = { rating: [["min_value", "Minimalwert"], ["max_value", "Maximalwert"], ["step", "Schrittweite"]], short_text: [["min_length", "Mindestlänge"], ["max_length", "Maximallänge"]], long_text: [["min_length", "Mindestlänge"], ["max_length", "Maximallänge"]], number: [["min_value", "Minimalwert"], ["max_value", "Maximalwert"]], date: [["min_date", "Frühestes Datum"], ["max_date", "Spätestes Datum"]], multiple_choice: [["min_selections", "Mindestauswahl"], ["max_selections", "Maximalauswahl"]] } as const;
 type Props = { surveyId: string; draftId: string; sections: SurveySectionDetail[] };
 
 export function DraftSectionEditor({ surveyId, draftId, sections }: Props) {
@@ -38,9 +37,23 @@ function ChoiceOptions({ surveyId, draftId, sectionId, question }: { surveyId: s
 }
 
 function ValidationRules({ surveyId, draftId, sectionId, question }: { surveyId: string; draftId: string; sectionId: string; question: SurveyQuestionDetail }) {
-  const rules = validationRules[question.question_type as keyof typeof validationRules]; if (!rules) return null;
-  const available = rules.filter(([ruleType]) => !question.validations.some((validation) => validation.rule_type === ruleType));
-  return <details className="mt-3 rounded-md border border-dashed p-3"><summary className="flex cursor-pointer items-center gap-2 text-sm font-medium"><SlidersHorizontalIcon className="size-4" />Validierung ({question.validations.length})</summary><div className="mt-3 flex flex-col gap-2">{question.validations.map((validation) => <div key={validation.id} className="flex flex-col gap-2 rounded-md bg-muted/40 p-2 sm:flex-row sm:items-center"><span className="text-sm font-medium">{rules.find(([value]) => value === validation.rule_type)?.[1] ?? validation.rule_type}</span><form action={updateValidationAction.bind(null, surveyId, draftId, sectionId, question.id, validation.id, validation.rule_type)} className="flex flex-1 gap-2"><Input name="ruleValue" type={validation.rule_type.endsWith("date") ? "date" : "number"} min={validation.rule_type.endsWith("date") ? undefined : 0} step={validation.rule_type === "step" ? "any" : 1} defaultValue={String(validation.rule_value.value)} required /><Button type="submit" size="sm" variant="outline">Speichern</Button></form><form action={deleteValidationAction.bind(null, surveyId, draftId, sectionId, question.id, validation.id)}><Button type="submit" size="icon-sm" variant="ghost" aria-label="Validierung löschen"><Trash2Icon /></Button></form></div>)}</div>{available.length ? <form action={createValidationAction.bind(null, surveyId, draftId, sectionId, question.id)} className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_10rem_auto]"><select name="ruleType" className="h-9 rounded-md border bg-background px-3 text-sm">{available.map(([ruleType, label]) => <option key={ruleType} value={ruleType}>{label}</option>)}</select><Input name="ruleValue" placeholder="Wert (Datum: JJJJ-MM-TT)" required /><Button type="submit" size="sm" className="w-fit">Hinzufügen</Button></form> : null}</details>;
+  if (question.question_type !== "rating") return null;
+  const minValidation = question.validations.find((validation) => validation.rule_type === "min_value");
+  const maxValidation = question.validations.find((validation) => validation.rule_type === "max_value");
+  return <details className="mt-3 rounded-md border border-dashed p-3" open={Boolean(minValidation || maxValidation)}>
+    <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium"><SlidersHorizontalIcon className="size-4" />Bewertungsskala</summary>
+    <form action={saveRatingBoundsAction.bind(null, surveyId, draftId, sectionId, question.id, minValidation?.id ?? null, maxValidation?.id ?? null)} className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <Field>
+        <FieldLabel htmlFor={`min-value-${question.id}`}>Minimalwert</FieldLabel>
+        <Input id={`min-value-${question.id}`} name="minValue" type="number" step={1} defaultValue={minValidation ? String(minValidation.rule_value.value) : undefined} required />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={`max-value-${question.id}`}>Maximalwert</FieldLabel>
+        <Input id={`max-value-${question.id}`} name="maxValue" type="number" step={1} defaultValue={maxValidation ? String(maxValidation.rule_value.value) : undefined} required />
+      </Field>
+      <Button type="submit" size="sm" className="w-fit">Speichern</Button>
+    </form>
+  </details>;
 }
 
 function DeleteQuestion({ surveyId, draftId, sectionId, questionId }: { surveyId: string; draftId: string; sectionId: string; questionId: string }) { return <AlertDialog><AlertDialogTrigger render={<Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive" aria-label="Frage löschen" />}><Trash2Icon /></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Frage löschen?</AlertDialogTitle><AlertDialogDescription>Diese Frage wird unwiderruflich aus dem Entwurf entfernt.</AlertDialogDescription></AlertDialogHeader><form action={deleteQuestionAction.bind(null, surveyId, draftId, sectionId, questionId)}><AlertDialogFooter><AlertDialogCancel>Abbrechen</AlertDialogCancel><AlertDialogAction type="submit" variant="destructive">Löschen</AlertDialogAction></AlertDialogFooter></form></AlertDialogContent></AlertDialog>; }

@@ -188,7 +188,7 @@ export default async function ClinicDetailPage({
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-5">
-            <ClinicSurveyVersions clinicId={clinic.id} clinicSlug={clinicSlug} {...surveyVersionManagement} />
+            <ClinicSurveyVersions clinicSlug={clinicSlug} {...surveyVersionManagement} />
           </CardContent>
         </Card>
       ) : null}

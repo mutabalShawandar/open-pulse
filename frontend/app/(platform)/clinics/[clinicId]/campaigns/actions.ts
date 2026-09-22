@@ -17,6 +17,7 @@ import {
   updateCampaign,
 } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
+import { resolveClinicBySlug } from "@/lib/resolve-clinic";
 import type { Recipient } from "@/lib/api/types";
 
 async function token() { const value = await getAccessToken(); if (!value) redirect("/login"); return value; }
@@ -45,10 +46,10 @@ export async function deleteCampaignAction(clinicId: string, campaignId: string)
   revalidatePath(`/clinics/${clinicId}/campaigns`); redirect(`/clinics/${clinicId}/campaigns`);
 }
 
-export async function importCampaignRecipientsAction(clinicId: string, campaignId: string, formData: FormData) {
+export async function importCampaignRecipientsAction(clinicSlug: string, campaignId: string, formData: FormData) {
   const file = formData.get("recipientFile");
   const hasFile = file instanceof File && file.size > 0;
-  if (file instanceof File && file.size > 2 * 1024 * 1024) redirect(`/clinics/${clinicId}/campaigns/${campaignId}?tab=recipients&error=file-size`);
+  if (file instanceof File && file.size > 2 * 1024 * 1024) redirect(`/clinics/${clinicSlug}/campaigns/${campaignId}?tab=recipients&error=file-size`);
   const recipients = hasFile
     ? (await file.text()).replace(/^﻿/, "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((row) => {
       const [displayName, email] = row.includes(";") ? row.split(";", 2) : row.includes(",") ? row.split(",", 2) : ["", row];
@@ -58,15 +59,16 @@ export async function importCampaignRecipientsAction(clinicId: string, campaignI
       display_name: String(formData.getAll("recipientName")[index] ?? "").trim() || null,
       email: email.trim(),
     })).filter((recipient) => recipient.email);
-  if (!recipients.length || recipients.length > 2_000) redirect(`/clinics/${clinicId}/campaigns/${campaignId}?tab=recipients&error=recipients`);
+  if (!recipients.length || recipients.length > 2_000) redirect(`/clinics/${clinicSlug}/campaigns/${campaignId}?tab=recipients&error=recipients`);
   let createdCount = 0;
   let duplicateCount = 0;
   let assignedCount = 0;
   try {
     const accessToken = await token();
-    const result = await importRecipients(accessToken, clinicId, recipients);
+    const clinic = await resolveClinicBySlug(accessToken, clinicSlug);
+    const result = await importRecipients(accessToken, clinic.id, recipients);
     const importedEmails = new Set(recipients.map((recipient) => recipient.email.trim().toLowerCase()));
-    const clinicRecipients = await listRecipients(accessToken, clinicId);
+    const clinicRecipients = await listRecipients(accessToken, clinic.id);
     const recipientIds = clinicRecipients
       .filter((recipient) => recipient.status === "active" && importedEmails.has(recipient.email.trim().toLowerCase()))
       .map((recipient) => recipient.id);
@@ -75,10 +77,10 @@ export async function importCampaignRecipientsAction(clinicId: string, campaignI
     duplicateCount = result.duplicate_count;
     assignedCount = assigned.length;
   } catch {
-    redirect(`/clinics/${clinicId}/campaigns/${campaignId}?tab=recipients&error=recipients`);
+    redirect(`/clinics/${clinicSlug}/campaigns/${campaignId}?tab=recipients&error=recipients`);
   }
-  revalidatePath(`/clinics/${clinicId}/campaigns/${campaignId}`);
-  redirect(`/clinics/${clinicId}/campaigns/${campaignId}?tab=recipients&created=${createdCount}&duplicates=${duplicateCount}&assigned=${assignedCount}`);
+  revalidatePath(`/clinics/${clinicSlug}/campaigns/${campaignId}`);
+  redirect(`/clinics/${clinicSlug}/campaigns/${campaignId}?tab=recipients&created=${createdCount}&duplicates=${duplicateCount}&assigned=${assignedCount}`);
 }
 
 export async function assignCampaignRecipientsAction(clinicId: string, campaignId: string, formData: FormData) {
@@ -137,12 +139,13 @@ export async function retryFailedCampaignDeliveriesAction(clinicId: string, camp
 
 export type WizardImportResult = { ok: true; createdCount: number; duplicateCount: number; recipients: Recipient[] } | { ok: false; error: string };
 
-export async function importWizardRecipientsAction(clinicId: string, recipients: { display_name: string | null; email: string }[]): Promise<WizardImportResult> {
+export async function importWizardRecipientsAction(clinicSlug: string, recipients: { display_name: string | null; email: string }[]): Promise<WizardImportResult> {
   if (!recipients.length || recipients.length > 2_000) return { ok: false, error: "Bitte prüfen Sie das Format und die maximale Anzahl von 2.000 Empfängern." };
   try {
     const accessToken = await token();
-    const result = await importRecipients(accessToken, clinicId, recipients);
-    const clinicRecipients = await listRecipients(accessToken, clinicId);
+    const clinic = await resolveClinicBySlug(accessToken, clinicSlug);
+    const result = await importRecipients(accessToken, clinic.id, recipients);
+    const clinicRecipients = await listRecipients(accessToken, clinic.id);
     return { ok: true, createdCount: result.created_count, duplicateCount: result.duplicate_count, recipients: clinicRecipients.filter((recipient) => recipient.status === "active") };
   } catch {
     return { ok: false, error: "Der Import konnte nicht verarbeitet werden." };
@@ -163,9 +166,10 @@ export type WizardSubmitResult = { ok: true; campaignId: string } | { ok: false;
 export async function submitCampaignWizardAction(payload: WizardSubmitPayload): Promise<WizardSubmitResult> {
   if (!payload.title.trim() || !payload.surveyVersionId) return { ok: false, error: "Titel und Umfrageversion sind erforderlich." };
   const accessToken = await token();
+  const clinic = await resolveClinicBySlug(accessToken, payload.clinicId);
   let campaignId: string;
   try {
-    const campaign = await createCampaign(accessToken, { clinic_id: payload.clinicId, survey_version_id: payload.surveyVersionId, title: payload.title.trim(), description: payload.description.trim() || null });
+    const campaign = await createCampaign(accessToken, { clinic_id: clinic.id, survey_version_id: payload.surveyVersionId, title: payload.title.trim(), description: payload.description.trim() || null });
     campaignId = campaign.id;
   } catch {
     return { ok: false, error: "Die Kampagne konnte nicht erstellt werden. Bitte prüfen Sie die ausgewählte Umfrageversion." };

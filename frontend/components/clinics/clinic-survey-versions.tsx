@@ -40,7 +40,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", {
   year: "numeric",
 });
 
-export function ClinicSurveyVersions({ assignments, clinicId, clinicSlug, options }: ClinicSurveyVersionsProps) {
+export function ClinicSurveyVersions({ assignments, clinicSlug, options }: ClinicSurveyVersionsProps) {
   const assignedIds = new Set(assignments.map((assignment) => assignment.survey_version_id));
   const assignableOptions = options?.filter((option) => !assignedIds.has(option.id)) ?? [];
   const labels = new Map(options?.map((option) => [option.id, option.label]));
@@ -72,7 +72,7 @@ export function ClinicSurveyVersions({ assignments, clinicId, clinicSlug, option
                 <Badge variant="secondary">Aktiv</Badge>
                 {options ? (
                   <UnassignVersionDialog
-                    clinicId={clinicId}
+                    clinicSlug={clinicSlug}
                     surveyVersionId={assignment.survey_version_id}
                     surveyVersionName={labels.get(assignment.survey_version_id) ?? "diese Umfrageversion"}
                   />
@@ -92,7 +92,7 @@ export function ClinicSurveyVersions({ assignments, clinicId, clinicSlug, option
         ) : assignableOptions.length === 0 ? (
           <p className="mt-5 text-sm text-muted-foreground">Es sind keine weiteren veröffentlichten Versionen verfügbar.</p>
         ) : (
-          <form action={assignSurveyVersionAction.bind(null, clinicId)} className="mt-5">
+          <form action={assignSurveyVersionAction.bind(null, clinicSlug)} className="mt-5">
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="surveyVersionId">Veröffentlichte Version</FieldLabel>
@@ -125,11 +125,11 @@ function AssignButton() {
 }
 
 function UnassignVersionDialog({
-  clinicId,
+  clinicSlug,
   surveyVersionId,
   surveyVersionName,
 }: {
-  clinicId: string;
+  clinicSlug: string;
   surveyVersionId: string;
   surveyVersionName: string;
 }) {
@@ -149,7 +149,7 @@ function UnassignVersionDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-          <form action={unassignSurveyVersionAction.bind(null, clinicId)}>
+          <form action={unassignSurveyVersionAction.bind(null, clinicSlug)}>
             <input type="hidden" name="surveyVersionId" value={surveyVersionId} />
             <AlertDialogAction type="submit" variant="destructive">Zuordnung aufheben</AlertDialogAction>
           </form>

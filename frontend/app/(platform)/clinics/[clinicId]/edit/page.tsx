@@ -7,8 +7,9 @@ import { ClinicForm } from "@/components/clinics/clinic-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ApiError, getClinic } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
+import { resolveClinicBySlug } from "@/lib/resolve-clinic";
 
 function errorMessage(error: string | string[] | undefined) {
   if (error === "exists") return "Diese interne Kennung wird bereits von einer anderen Klinik verwendet.";
@@ -17,12 +18,12 @@ function errorMessage(error: string | string[] | undefined) {
   return null;
 }
 
-async function loadClinic(clinicId: string) {
+async function loadClinic(clinicSlug: string) {
   const accessToken = await getAccessToken();
   if (!accessToken) notFound();
 
   try {
-    return await getClinic(accessToken, clinicId);
+    return await resolveClinicBySlug(accessToken, clinicSlug);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
@@ -33,8 +34,8 @@ export default async function EditClinicPage({
   params,
   searchParams,
 }: PageProps<"/clinics/[clinicId]/edit">) {
-  const { clinicId } = await params;
-  const clinic = await loadClinic(clinicId);
+  const { clinicId: clinicSlug } = await params;
+  const clinic = await loadClinic(clinicSlug);
 
   const error = errorMessage((await searchParams).error);
 
@@ -44,7 +45,7 @@ export default async function EditClinicPage({
         nativeButton={false}
         variant="ghost"
         className="w-fit"
-        render={<Link href={`/clinics/${clinic.id}`} />}
+        render={<Link href={`/clinics/${clinicSlug}`} />}
       >
         <ArrowLeftIcon data-icon="inline-start" />
         Zur Klinik
@@ -72,7 +73,7 @@ export default async function EditClinicPage({
         </CardHeader>
         <CardContent className="pt-5">
           <ClinicForm
-            action={updateClinicAction.bind(null, clinic.id)}
+            action={updateClinicAction.bind(null, clinicSlug)}
             clinic={clinic}
             submitLabel="Änderungen speichern"
           />

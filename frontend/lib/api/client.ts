@@ -31,9 +31,19 @@ import type {
 } from "@/lib/api/types";
 
 export class ApiError extends Error {
-  constructor(public readonly status: number) {
-    super(`API request failed with status ${status}`);
+  constructor(public readonly status: number, public readonly detail?: string) {
+    super(detail ?? `API request failed with status ${status}`);
   }
+}
+
+async function readErrorDetail(response: Response): Promise<string | undefined> {
+  try {
+    const body = await response.json();
+    if (typeof body?.detail === "string") return body.detail;
+  } catch {
+    // response body wasn't JSON; fall back to the generic status message
+  }
+  return undefined;
 }
 
 async function apiFetch<T>(path: string, accessToken: string): Promise<T> {
@@ -41,7 +51,7 @@ async function apiFetch<T>(path: string, accessToken: string): Promise<T> {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
-  if (!response.ok) throw new ApiError(response.status);
+  if (!response.ok) throw new ApiError(response.status, await readErrorDetail(response));
   return response.json() as Promise<T>;
 }
 
@@ -201,7 +211,7 @@ async function writeSurvey<T>(accessToken: string, path: string, method: "POST" 
     body: payload ? JSON.stringify(payload) : undefined,
     cache: "no-store",
   });
-  if (!response.ok) throw new ApiError(response.status);
+  if (!response.ok) throw new ApiError(response.status, await readErrorDetail(response));
   return response.json() as Promise<T>;
 }
 
@@ -211,7 +221,7 @@ async function deleteSurveyResource(accessToken: string, path: string): Promise<
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
-  if (!response.ok) throw new ApiError(response.status);
+  if (!response.ok) throw new ApiError(response.status, await readErrorDetail(response));
 }
 
 export function createSurveySection(

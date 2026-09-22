@@ -13,7 +13,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="de"
       className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>

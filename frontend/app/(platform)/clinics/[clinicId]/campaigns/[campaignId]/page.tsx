@@ -30,7 +30,6 @@ import {
   getCampaign,
   getCampaignAnalytics,
   getCampaignEmailTemplate,
-  getClinic,
   listCampaignDeliveries,
   listCampaignRecipients,
   listClinicSurveyVersionAssignments,
@@ -41,6 +40,7 @@ import {
 import { getAccessToken } from "@/lib/auth/session";
 import { campaignStatusLabels } from "@/lib/campaign-status";
 import { buildPublicSurveyUrl } from "@/lib/public-link";
+import { resolveClinicBySlug } from "@/lib/resolve-clinic";
 import type { Campaign, CampaignAnalytics } from "@/lib/api/types";
 
 const statusMessages: Record<string, string> = {
@@ -90,19 +90,20 @@ export default async function CampaignDetailPage(props: PageProps<"/clinics/[cli
   const token = await getAccessToken();
   if (!token) return null;
 
-  const [campaign, clinic, template, assignedRecipients, clinicRecipients, deliveries, surveyVersionOptions] = await Promise.all([
+  const clinic = await resolveClinicBySlug(token, clinicId);
+
+  const [campaign, template, assignedRecipients, clinicRecipients, deliveries, surveyVersionOptions] = await Promise.all([
     getCampaign(token, campaignId),
-    getClinic(token, clinicId),
     getCampaignEmailTemplate(token, campaignId),
     listCampaignRecipients(token, campaignId),
-    listRecipients(token, clinicId),
+    listRecipients(token, clinic.id),
     listCampaignDeliveries(token, campaignId),
-    loadAssignedSurveyVersionOptions(token, clinicId),
+    loadAssignedSurveyVersionOptions(token, clinic.id),
   ]);
 
   let analytics: CampaignAnalytics | null = null;
   try {
-    analytics = await getCampaignAnalytics(token, clinicId, campaignId);
+    analytics = await getCampaignAnalytics(token, clinic.id, campaignId);
   } catch (error) {
     if (!(error instanceof ApiError && error.status === 403)) throw error;
   }
@@ -201,7 +202,7 @@ export default async function CampaignDetailPage(props: PageProps<"/clinics/[cli
         <TabsContent value="analytics" className="flex flex-col gap-6 pt-4">
           {analytics ? (
             <>
-              <AnalyticsExportActions clinicId={clinicId} campaignId={campaign.id} />
+              <AnalyticsExportActions clinicId={clinic.id} campaignId={campaign.id} />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Gestartet</CardTitle><p className="mt-1 text-3xl font-semibold">{analytics.started_count}</p></CardHeader></Card>
                 <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Abgeschlossen</CardTitle><p className="mt-1 text-3xl font-semibold">{analytics.completed_count}</p></CardHeader></Card>
