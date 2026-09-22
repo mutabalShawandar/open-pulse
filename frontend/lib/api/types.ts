@@ -187,3 +187,64 @@ export type CampaignAnalytics = {
   completed_count: number;
   questions: Array<{ question_id: string; title: string; question_type: string; answer_count: number; average: number | null; median: number | null; minimum: number | null; maximum: number | null; choices: Array<{ label: string; count: number }>; distribution: Array<{ label: string; count: number }>; text_answers: string[]; earliest_date: string | null; latest_date: string | null }>;
 };
+
+export type SmtpConfiguration = {
+  id: string;
+  host: string;
+  port: number;
+  use_starttls: boolean;
+  use_ssl: boolean;
+  username: string | null;
+  password_configured: boolean;
+  sender_name: string;
+  sender_email: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Recipient = {
+  id: string;
+  clinic_id: string;
+  display_name: string | null;
+  email: string;
+  status: "active" | "opted_out" | "bounced";
+  source: string;
+  opted_out_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RecipientImportResult = {
+  created_count: number;
+  duplicate_count: number;
+  recipients: Recipient[];
+};
+
+export type CampaignRecipient = {
+  id: string;
+  campaign_id: string;
+  recipient_id: string;
+  display_name: string | null;
+  email: string;
+  recipient_status: Recipient["status"];
+  status: "pending" | "queued" | "sent" | "failed" | "bounced" | "completed";
+  sent_at: string | null;
+  last_error: string | null;
+  created_at: string;
+};
+
+export type CampaignEmailTemplate = { campaign_id: string; subject: string; html_body: string; text_body: string; sender_name: string | null; reply_to: string | null; locked_at: string | null };
+
+export type CampaignDelivery = {
+  id: string;
+  recipient_id: string;
+  display_name: string | null;
+  email: string;
+  status: "queued" | "sending" | "sent" | "failed";
+  attempt_count: number;
+  queued_at: string | null;
+  sent_at: string | null;
+  last_error: string | null;
+};
+
+export type CampaignDeliveryQueueResult = { queued_count: number; skipped_count: number };

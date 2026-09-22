@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Campaign, CampaignStatus, Clinic, QuestionType, ResponseAnswer, ResponseAnswerOption, ResponseSession, ResponseStatus, Survey, SurveyQuestion, SurveyQuestionOption, SurveyQuestionValidation, SurveyResponse, SurveySection, SurveyVersion, SurveyVersionClinic, SurveyVersionStatus
+from app.models import Campaign, CampaignDelivery, CampaignRecipient, CampaignRecipientStatus, CampaignStatus, Clinic, QuestionType, ResponseAnswer, ResponseAnswerOption, ResponseSession, ResponseStatus, Survey, SurveyQuestion, SurveyQuestionOption, SurveyQuestionValidation, SurveyResponse, SurveySection, SurveyVersion, SurveyVersionClinic, SurveyVersionStatus
 from app.models.campaign import generate_response_token, hash_response_token
 from app.schemas.campaign import CampaignCreateRequest, CampaignUpdateRequest, PublicAnswerRequest
 from app.services.audit_service import add_audit_event
@@ -69,8 +69,33 @@ async def update_campaign(session: AsyncSession, campaign_id: UUID, payload: Cam
     campaign = await get_campaign_or_404(session, campaign_id)
     if campaign.status in {CampaignStatus.COMPLETED, CampaignStatus.CANCELLED}:
         raise HTTPException(status_code=409, detail="Completed or cancelled campaigns cannot be changed")
+    if payload.survey_version_id is not None and payload.survey_version_id != campaign.survey_version_id:
+        if await session.scalar(select(SurveyResponse.id).where(SurveyResponse.campaign_id == campaign.id).limit(1)):
+            raise HTTPException(status_code=409, detail="Cannot change the survey version after responses have been collected")
+        version = await session.get(SurveyVersion, payload.survey_version_id)
+        if version is None or version.status != SurveyVersionStatus.PUBLISHED:
+            raise HTTPException(status_code=422, detail="Campaigns require a published survey version")
+        assignment = await session.scalar(select(SurveyVersionClinic.id).where(SurveyVersionClinic.clinic_id == campaign.clinic_id, SurveyVersionClinic.survey_version_id == version.id, SurveyVersionClinic.unassigned_at.is_(None)))
+        if assignment is None:
+            raise HTTPException(status_code=422, detail="The published survey version is not actively assigned to this clinic")
+    if payload.status in {CampaignStatus.DRAFT, CampaignStatus.SCHEDULED}:
+        if await session.scalar(select(CampaignDelivery.id).join(CampaignRecipient).where(CampaignRecipient.campaign_id == campaign.id).limit(1)):
+            raise HTTPException(status_code=409, detail="Cannot revert to draft/scheduled after sending has started")
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(campaign, field, value)
+    if payload.status == CampaignStatus.CANCELLED:
+        queued_deliveries = list(await session.scalars(
+            select(CampaignDelivery)
+            .join(CampaignRecipient)
+            .where(CampaignRecipient.campaign_id == campaign.id, CampaignDelivery.status.in_(["queued", "sending"]))
+        ))
+        for delivery in queued_deliveries:
+            delivery.status = "failed"
+            delivery.last_error = "Kampagne wurde abgebrochen"
+            recipient = await session.get(CampaignRecipient, delivery.campaign_recipient_id)
+            if recipient and recipient.status != CampaignRecipientStatus.SENT:
+                recipient.status = CampaignRecipientStatus.FAILED
+                recipient.last_error = delivery.last_error
     if campaign.starts_at and campaign.ends_at and campaign.starts_at >= campaign.ends_at:
         raise HTTPException(status_code=422, detail="starts_at must be before ends_at")
     add_audit_event(session, actor_user_id=actor_user_id, clinic_id=campaign.clinic_id, action="campaign.updated", entity_type="campaign", entity_id=campaign.id, metadata={"changed_fields": sorted(payload.model_fields_set)})

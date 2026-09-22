@@ -69,6 +69,8 @@ services:
     image: quay.io/keycloak/keycloak:26.1
     command: start-dev
     environment:
+      # Browser-facing base URL. Internal services use KEYCLOAK_INTERNAL_URL instead.
+      KC_HOSTNAME: ${KEYCLOAK_URL}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
       KC_DB: postgres
@@ -90,6 +92,7 @@ services:
       MP_DATABASE: /data/mailpit.db
     ports:
       - "8025:8025"
+      - "1025:1025"
     volumes:
       - mailpit_data:/data
       

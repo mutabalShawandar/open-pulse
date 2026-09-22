@@ -9,6 +9,16 @@ from app.api.deps import get_current_user, require_permission, require_platform_
 from app.db.session import get_db_session
 from app.models import AuditEvent, Clinic, ClinicMember, Role, User
 from app.schemas.authorization import AuditEventResponse, PermissionResponse, RoleResponse
+from app.schemas.email import (
+    SmtpConfigurationResponse,
+    SmtpConfigurationUpsertRequest,
+    SmtpTestEmailRequest,
+)
+from app.services.smtp_service import (
+    get_smtp_configuration,
+    save_smtp_configuration,
+    send_smtp_test_email,
+)
 from app.schemas.clinic import (
     ClinicMemberResponse,
     ClinicResponse,
@@ -25,6 +35,41 @@ from app.services.user_service import (
 
 
 router = APIRouter(tags=["administration"])
+
+
+@router.get("/api/v1/administration/smtp", response_model=SmtpConfigurationResponse | None, tags=["administration"])
+async def get_smtp_configuration_endpoint(
+    _: Annotated[User, Depends(require_platform_admin)],
+    session: AsyncSession = Depends(get_db_session),
+) -> SmtpConfigurationResponse | None:
+    configuration = await get_smtp_configuration(session)
+    if configuration is None:
+        return None
+    return SmtpConfigurationResponse.model_validate(
+        {**{field: getattr(configuration, field) for field in SmtpConfigurationResponse.model_fields if field != "password_configured"}, "password_configured": configuration.password_encrypted is not None}
+    )
+
+
+@router.put("/api/v1/administration/smtp", response_model=SmtpConfigurationResponse, tags=["administration"])
+async def save_smtp_configuration_endpoint(
+    payload: SmtpConfigurationUpsertRequest,
+    actor: Annotated[User, Depends(require_platform_admin)],
+    session: AsyncSession = Depends(get_db_session),
+) -> SmtpConfigurationResponse:
+    configuration = await save_smtp_configuration(session, payload, actor.id)
+    return SmtpConfigurationResponse.model_validate(
+        {**{field: getattr(configuration, field) for field in SmtpConfigurationResponse.model_fields if field != "password_configured"}, "password_configured": configuration.password_encrypted is not None}
+    )
+
+
+@router.post("/api/v1/administration/smtp/test", status_code=status.HTTP_204_NO_CONTENT, tags=["administration"])
+async def test_smtp_configuration_endpoint(
+    payload: SmtpTestEmailRequest,
+    actor: Annotated[User, Depends(require_platform_admin)],
+    session: AsyncSession = Depends(get_db_session),
+) -> Response:
+    await send_smtp_test_email(session, payload.recipient_email, actor.id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 @router.get("/api/v1/clinics", response_model=list[ClinicResponse], tags=["clinic"])
 async def list_clinics_endpoint(
     _: Annotated[User, Depends(get_current_user)],

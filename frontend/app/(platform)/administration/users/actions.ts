@@ -7,6 +7,7 @@ import {
   ApiError,
   createPlatformUser,
   deactivatePlatformUser,
+  grantPlatformAdmin,
   permanentlyDeletePlatformUser,
   reactivatePlatformUser,
 } from "@/lib/api/client";
@@ -66,6 +67,21 @@ export async function reactivateUserAction(formData: FormData) {
 
   revalidatePath("/administration/users");
   redirect("/administration/users?reactivated=1");
+}
+
+export async function grantPlatformAdminAction(formData: FormData) {
+  const userId = String(formData.get("userId") ?? "");
+  const accessToken = await getAccessToken();
+  if (!accessToken) redirect("/login");
+  if (!userId) redirect("/administration/users?error=grant-admin");
+  try {
+    await grantPlatformAdmin(accessToken, userId);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
+    redirect("/administration/users?error=grant-admin");
+  }
+  revalidatePath("/administration/users");
+  redirect("/administration/users?adminGranted=1");
 }
 
 export async function permanentlyDeleteUserAction(formData: FormData) {

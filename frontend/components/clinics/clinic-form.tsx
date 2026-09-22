@@ -12,9 +12,10 @@ type ClinicFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   clinic?: ClinicInput;
   submitLabel: string;
+  showLogoUrl?: boolean;
 };
 
-export function ClinicForm({ action, clinic, submitLabel }: ClinicFormProps) {
+export function ClinicForm({ action, clinic, submitLabel, showLogoUrl = true }: ClinicFormProps) {
   return (
     <form action={action}>
       <FieldGroup>
@@ -35,11 +36,13 @@ export function ClinicForm({ action, clinic, submitLabel }: ClinicFormProps) {
             <FieldDescription>Nur Kleinbuchstaben, Zahlen und Bindestriche.</FieldDescription>
           </Field>
         </div>
-        <Field>
-          <FieldLabel htmlFor="logoUrl">Logo-URL</FieldLabel>
-          <Input id="logoUrl" name="logoUrl" type="url" defaultValue={clinic?.logo_url ?? ""} />
-          <FieldDescription>Optional. Eine öffentlich erreichbare Bildadresse.</FieldDescription>
-        </Field>
+        {showLogoUrl ? (
+          <Field>
+            <FieldLabel htmlFor="logoUrl">Logo-URL</FieldLabel>
+            <Input id="logoUrl" name="logoUrl" type="url" defaultValue={clinic?.logo_url ?? ""} />
+            <FieldDescription>Optional. Eine öffentlich erreichbare Bildadresse.</FieldDescription>
+          </Field>
+        ) : null}
         <div className="border-t pt-5">
           <p className="font-medium">Standort</p>
           <p className="mt-1 text-sm text-muted-foreground">Diese Angaben können später für die Umfrageausspielung verwendet werden.</p>

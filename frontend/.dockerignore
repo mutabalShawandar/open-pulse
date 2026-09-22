@@ -1,0 +1,11 @@
+node_modules
+.next
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+README.md
+FRONTEND_PLAN.md
+AGENTS.md
+CLAUDE.md

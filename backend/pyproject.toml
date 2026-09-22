@@ -5,6 +5,7 @@ requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.19.1",
     "asyncpg>=0.31.0",
+    "cryptography>=46.0.0",
     "fastapi[standard]>=0.141.1",
     "httpx>=0.28.1",
     "pydantic-settings>=2.15.0",
@@ -13,4 +14,9 @@ dependencies = [
     "redis>=7.2.1",
     "sqlalchemy>=2.0.52",
     "xlsxwriter>=3.2.9",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
 ]

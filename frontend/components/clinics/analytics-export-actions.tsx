@@ -1,11 +1,14 @@
 "use client";
 
 import { FileDownIcon, FileSpreadsheetIcon, FileTextIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export function AnalyticsExportActions({ clinicId, campaignId }: { clinicId: string; campaignId: string }) {
+  const router = useRouter();
+
   const download = (format: "pdf" | "xlsx") => {
-    window.location.assign(`/api/clinics/${clinicId}/analytics/${campaignId}/export/${format}`);
+    router.push(`/api/clinics/${clinicId}/analytics/${campaignId}/export/${format}`);
   };
 
   return (

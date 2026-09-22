@@ -5,7 +5,6 @@ import { DeactivateUserDialog } from "@/components/administration/deactivate-use
 import { PermanentlyDeleteUserDialog } from "@/components/administration/permanently-delete-user-dialog";
 import { ReactivateUserButton } from "@/components/administration/reactivate-user-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { listPlatformUsers } from "@/lib/api/client";

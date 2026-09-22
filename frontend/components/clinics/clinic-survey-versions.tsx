@@ -30,7 +30,7 @@ import type {
 
 type ClinicSurveyVersionsProps = {
   assignments: ClinicSurveyVersionAssignment[];
-  clinicId: string;
+  clinicSlug: string;
   options: PublishedSurveyVersionOption[] | null;
 };
 
@@ -40,7 +40,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", {
   year: "numeric",
 });
 
-export function ClinicSurveyVersions({ assignments, clinicId, options }: ClinicSurveyVersionsProps) {
+export function ClinicSurveyVersions({ assignments, clinicId, clinicSlug, options }: ClinicSurveyVersionsProps) {
   const assignedIds = new Set(assignments.map((assignment) => assignment.survey_version_id));
   const assignableOptions = options?.filter((option) => !assignedIds.has(option.id)) ?? [];
   const labels = new Map(options?.map((option) => [option.id, option.label]));

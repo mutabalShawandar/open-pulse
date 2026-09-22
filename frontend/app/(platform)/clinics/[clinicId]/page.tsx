@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeftIcon, Building2Icon, MapPinIcon, PencilIcon, UsersRoundIcon } from "lucide-react";
+import { ArrowLeftIcon, Building2Icon, MapPinIcon, PencilIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +9,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ClinicSurveyVersions } from "@/components/clinics/clinic-survey-versions";
 import {
   ApiError,
-  getClinic,
   listClinicSurveyVersionAssignments,
   listPublishedSurveyVersions,
   listSurveys,
 } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
+import { resolveClinicBySlug } from "@/lib/resolve-clinic";
 
 function fullAddress(clinic: {
   street: string | null;
@@ -27,12 +27,12 @@ function fullAddress(clinic: {
   return [streetLine, cityLine].filter(Boolean);
 }
 
-async function loadClinic(clinicId: string) {
+async function loadClinic(clinicSlug: string) {
   const accessToken = await getAccessToken();
   if (!accessToken) notFound();
 
   try {
-    return await getClinic(accessToken, clinicId);
+    return await resolveClinicBySlug(accessToken, clinicSlug);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
@@ -83,11 +83,11 @@ export default async function ClinicDetailPage({
     assignmentError?: string;
   }>;
 }) {
-  const { clinicId } = await params;
-  const clinic = await loadClinic(clinicId);
+  const { clinicId: clinicSlug } = await params;
+  const clinic = await loadClinic(clinicSlug);
   const address = fullAddress(clinic);
   const query = await searchParams;
-  const surveyVersionManagement = await loadSurveyVersionManagement(clinicId);
+  const surveyVersionManagement = await loadSurveyVersionManagement(clinic.id);
   const assignmentError = query.assignmentError;
 
   return (
@@ -114,11 +114,13 @@ export default async function ClinicDetailPage({
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="secondary">Stammdaten</Badge>
-          <Button nativeButton={false} variant="outline" render={<Link href={`/clinics/${clinic.id}/edit`} />}>
+          <Button nativeButton={false} variant="outline" render={<Link href={`/clinics/${clinicSlug}/edit`} />}>
             <PencilIcon data-icon="inline-start" />
             Bearbeiten
           </Button>
-          <Button nativeButton={false} variant="outline" render={<Link href={`/clinics/${clinic.id}/analytics`} />}>Auswertungen</Button>
+          <Button nativeButton={false} variant="outline" render={<Link href={`/clinics/${clinicSlug}/campaigns`} />}>Kampagnen</Button>
+          <Button nativeButton={false} variant="outline" render={<Link href={`/clinics/${clinicSlug}/recipients`} />}>Empfänger</Button>
+          <Button nativeButton={false} variant="outline" render={<Link href={`/clinics/${clinicSlug}/analytics`} />}>Auswertungen</Button>
         </div>
       </section>
       {query.created || query.updated ? (
@@ -177,20 +179,6 @@ export default async function ClinicDetailPage({
           )}
         </CardContent>
       </Card>
-      <Card className="border-dashed bg-muted/20">
-        <CardHeader>
-          <div className="flex size-9 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
-            <UsersRoundIcon className="size-4" />
-          </div>
-          <CardTitle className="mt-3">Klinikmitglieder</CardTitle>
-          <CardDescription>
-            Demnächst verfügbar: klinikspezifische Rollen und Zugriffszuweisungen.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Badge variant="outline">Demnächst</Badge>
-        </CardContent>
-      </Card>
       {surveyVersionManagement ? (
         <Card>
           <CardHeader className="border-b">
@@ -200,7 +188,7 @@ export default async function ClinicDetailPage({
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-5">
-            <ClinicSurveyVersions clinicId={clinic.id} {...surveyVersionManagement} />
+            <ClinicSurveyVersions clinicId={clinic.id} clinicSlug={clinicSlug} {...surveyVersionManagement} />
           </CardContent>
         </Card>
       ) : null}

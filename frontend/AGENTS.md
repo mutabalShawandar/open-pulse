@@ -16,8 +16,8 @@ Read `FRONTEND_PLAN.md` before starting frontend work. It is the source of truth
 
 - Next.js 16 App Router application exists in this directory.
 - shadcn/ui is initialised with the `base-nova` style, Base UI primitives, Tailwind CSS 4, `lucide-react`, and the `@/*` alias.
-- No application pages, authentication flow, FastAPI client, or platform workflows have been implemented yet.
-- Backend Phases 1 and 2 are available. Phase 3 campaigns and public responses are not available and must not be represented as working frontend features.
+- Platform pages, Keycloak PKCE authentication, the typed FastAPI client, and Phase 1–3 workflows are implemented.
+- Phase 4 email-distribution work is in progress and must not be described as released until it is committed and verified end to end.
 
 ## Working conventions
 

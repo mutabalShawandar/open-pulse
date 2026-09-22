@@ -33,6 +33,7 @@ from app.api.v1.administration import router as administration_router
 from app.api.v1.campaigns import router as campaigns_router
 from app.api.v1.public import router as public_router
 from app.api.v1.analytics import router as analytics_router
+from app.api.v1.recipients import campaign_router as campaign_recipients_router, router as recipients_router
 
 is_dev = settings.app_env == "development"
 configure_logging()
@@ -50,9 +51,12 @@ app.include_router(administration_router)
 app.include_router(campaigns_router)
 app.include_router(public_router)
 app.include_router(analytics_router)
+app.include_router(recipients_router)
+app.include_router(campaign_recipients_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()],
+    allow_origin_regex=settings.cors_origin_regex,
     allow_methods=["GET", "POST", "PUT", "OPTIONS"],
     allow_headers=["Content-Type"],
 )
@@ -149,6 +153,9 @@ async def create_user(
         payload=payload,
         keycloak=KeycloakAdminClient(),
         actor_user_id=actor.id,
+        # Temporary operating policy: every platform invitation receives full access.
+        # Revert to explicit role assignment before production launch.
+        is_platform_admin=True,
     )
 
     return UserResponse(

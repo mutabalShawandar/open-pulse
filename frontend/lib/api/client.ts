@@ -21,6 +21,13 @@ import type {
   Role,
   Campaign,
   CampaignAnalytics,
+  SmtpConfiguration,
+  Recipient,
+  RecipientImportResult,
+  CampaignRecipient,
+  CampaignEmailTemplate,
+  CampaignDelivery,
+  CampaignDeliveryQueueResult,
 } from "@/lib/api/types";
 
 export class ApiError extends Error {
@@ -46,6 +53,43 @@ export function listPlatformUsers(accessToken: string): Promise<PlatformUser[]> 
   return apiFetch<PlatformUser[]>("/api/v1/users", accessToken);
 }
 
+export function getSmtpConfiguration(accessToken: string): Promise<SmtpConfiguration | null> {
+  return apiFetch<SmtpConfiguration | null>("/api/v1/administration/smtp", accessToken);
+}
+
+export async function saveSmtpConfiguration(
+  accessToken: string,
+  payload: {
+    host: string;
+    port: number;
+    use_starttls: boolean;
+    use_ssl: boolean;
+    username: string | null;
+    password: string | null;
+    sender_name: string;
+    sender_email: string;
+  },
+): Promise<SmtpConfiguration> {
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/administration/smtp`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+  if (!response.ok) throw new ApiError(response.status);
+  return response.json() as Promise<SmtpConfiguration>;
+}
+
+export async function sendSmtpTestEmail(accessToken: string, recipientEmail: string): Promise<void> {
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/administration/smtp/test`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ recipient_email: recipientEmail }),
+    cache: "no-store",
+  });
+  if (!response.ok) throw new ApiError(response.status);
+}
+
 export function listClinics(accessToken: string): Promise<Clinic[]> {
   return apiFetch<Clinic[]>("/api/v1/clinics", accessToken);
 }
@@ -58,6 +102,50 @@ export function getCampaign(accessToken: string, campaignId: string): Promise<Ca
   return apiFetch<Campaign>(`/api/v1/campaigns/${campaignId}`, accessToken);
 }
 
+export function getCampaignEmailTemplate(accessToken: string, campaignId: string): Promise<CampaignEmailTemplate | null> { return apiFetch<CampaignEmailTemplate | null>(`/api/v1/campaigns/${campaignId}/email-template`, accessToken); }
+
+export function saveCampaignEmailTemplate(accessToken: string, campaignId: string, payload: Omit<CampaignEmailTemplate, "campaign_id" | "locked_at">): Promise<CampaignEmailTemplate> { return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/email-template`, "PUT", payload); }
+
+export function testCampaignEmailTemplate(accessToken: string, campaignId: string, recipientEmail: string): Promise<void> {
+  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/email-template/test`, "POST", { recipient_email: recipientEmail });
+}
+
+export function listCampaignDeliveries(accessToken: string, campaignId: string): Promise<CampaignDelivery[]> {
+  return apiFetch<CampaignDelivery[]>(`/api/v1/campaigns/${campaignId}/deliveries`, accessToken);
+}
+
+export function queueCampaignDeliveries(accessToken: string, campaignId: string): Promise<CampaignDeliveryQueueResult> {
+  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/send`, "POST");
+}
+
+export function retryFailedCampaignDeliveries(accessToken: string, campaignId: string): Promise<CampaignDeliveryQueueResult> {
+  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/deliveries/retry-failed`, "POST");
+}
+
+export function listRecipients(accessToken: string, clinicId: string): Promise<Recipient[]> {
+  return apiFetch<Recipient[]>(`/api/v1/clinics/${clinicId}/recipients`, accessToken);
+}
+
+export function listCampaignRecipients(accessToken: string, campaignId: string): Promise<CampaignRecipient[]> {
+  return apiFetch<CampaignRecipient[]>(`/api/v1/campaigns/${campaignId}/recipients`, accessToken);
+}
+
+export function importRecipients(accessToken: string, clinicId: string, recipients: Array<{ email: string; display_name: string | null }>): Promise<RecipientImportResult> {
+  return writeSurvey(accessToken, `/api/v1/clinics/${clinicId}/recipients/import`, "POST", { recipients });
+}
+
+export function optOutRecipient(accessToken: string, clinicId: string, recipientId: string): Promise<Recipient> {
+  return writeSurvey(accessToken, `/api/v1/clinics/${clinicId}/recipients/${recipientId}/opt-out`, "POST");
+}
+
+export function assignCampaignRecipients(accessToken: string, campaignId: string, recipientIds: string[]): Promise<CampaignRecipient[]> {
+  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/recipients`, "POST", { recipient_ids: recipientIds });
+}
+
+export function removeCampaignRecipient(accessToken: string, campaignId: string, recipientId: string): Promise<void> {
+  return deleteSurveyResource(accessToken, `/api/v1/campaigns/${campaignId}/recipients/${recipientId}`);
+}
+
 export function getCampaignAnalytics(accessToken: string, clinicId: string, campaignId: string): Promise<CampaignAnalytics> {
   return apiFetch<CampaignAnalytics>(`/api/v1/clinics/${clinicId}/analytics/campaigns/${campaignId}`, accessToken);
 }
@@ -66,7 +154,7 @@ export function createCampaign(accessToken: string, payload: { clinic_id: string
   return writeSurvey(accessToken, "/api/v1/campaigns", "POST", payload);
 }
 
-export function updateCampaign(accessToken: string, campaignId: string, payload: { status: Campaign["status"] }): Promise<Campaign> {
+export function updateCampaign(accessToken: string, campaignId: string, payload: { status: Campaign["status"] } | { survey_version_id: string }): Promise<Campaign> {
   return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}`, "PATCH", payload);
 }
 
@@ -106,7 +194,7 @@ export function getSurveyDraft(
   );
 }
 
-async function writeSurvey<T>(accessToken: string, path: string, method: "POST" | "PATCH", payload?: unknown): Promise<T> {
+async function writeSurvey<T>(accessToken: string, path: string, method: "POST" | "PATCH" | "PUT", payload?: unknown): Promise<T> {
   const response = await fetch(`${authConfig.apiBaseUrl}${path}`, {
     method,
     headers: { Authorization: `Bearer ${accessToken}`, ...(payload ? { "Content-Type": "application/json" } : {}) },
@@ -477,6 +565,15 @@ export async function permanentlyDeletePlatformUser(
 ): Promise<void> {
   const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/users/${userId}`, {
     method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+  if (!response.ok) throw new ApiError(response.status);
+}
+
+export async function grantPlatformAdmin(accessToken: string, userId: string): Promise<void> {
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/users/${userId}/roles/platform-admin`, {
+    method: "PUT",
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });

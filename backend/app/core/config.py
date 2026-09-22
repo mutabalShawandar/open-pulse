@@ -17,7 +17,19 @@ class Settings(BaseSettings):
     keycloak_admin_client_id: str | None = None
     keycloak_admin_client_secret: str | None = None
     redis_url: str = "redis://localhost:6379/0"
+    public_frontend_url: str = "http://localhost:3000"
+    # e.g. "domain.de" — when set, public survey links use "https://{clinic_slug}.{public_root_domain}/{public_slug}"
+    # instead of "{public_frontend_url}/umfragen/{public_slug}". Requires wildcard DNS/TLS and the frontend's
+    # subdomain-rewrite middleware to be in place.
+    public_root_domain: str | None = None
+    campaign_delivery_max_attempts: int = 3
+    campaign_delivery_retry_base_seconds: int = 15
     cors_origins: str = "http://localhost:3000"
+    # Matches clinic subdomains (e.g. "https://clinic-slug.domain.de") when PUBLIC_ROOT_DOMAIN
+    # is in use, since those origins can't be listed individually in CORS_ORIGINS.
+    cors_origin_regex: str | None = None
+    # A Fernet key. Keep this in the deployment secret store, never in Git.
+    email_credential_encryption_key: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,

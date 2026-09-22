@@ -53,7 +53,7 @@ export default async function ClinicsPage() {
             const location = clinicLocation(clinic);
 
             return (
-              <Link key={clinic.id} href={`/clinics/${clinic.id}`} className="group block">
+              <Link key={clinic.id} href={`/clinics/${clinic.slug}`} className="group block">
                 <Card className="h-full transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:ring-primary/35">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-3">

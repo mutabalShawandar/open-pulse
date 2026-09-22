@@ -9,6 +9,8 @@ from app.models.authorization import (
     UserRole,
 )
 from app.models.audit import AuditEvent
+from app.models.email import CampaignDelivery, CampaignEmailTemplate, SmtpConfiguration
+from app.models.recipient import CampaignRecipient, CampaignRecipientStatus, Recipient, RecipientStatus
 from app.models.campaign import (
     Campaign,
     CampaignStatus,
@@ -43,6 +45,13 @@ __all__ = [
     "UserRole",
     "ClinicMember",
     "AuditEvent",
+    "SmtpConfiguration",
+    "CampaignEmailTemplate",
+    "CampaignDelivery",
+    "Recipient",
+    "RecipientStatus",
+    "CampaignRecipient",
+    "CampaignRecipientStatus",
     "Campaign",
     "CampaignStatus",
     "ResponseIdentityMode",

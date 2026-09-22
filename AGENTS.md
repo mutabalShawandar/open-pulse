@@ -25,22 +25,22 @@ This project is a German-language, multi-clinic survey platform for creating reu
 
 ## Current Progress
 
-Phases 1 and 2 are complete.
+Phases 1–3 are complete. Phase 4 is in progress and currently has uncommitted work; do not describe its unfinished delivery workflow as released.
 
 Phase 1 delivered FastAPI health/readiness endpoints, PostgreSQL and Alembic setup, local Keycloak Compose configuration, Keycloak JWT extraction and validation, issuer/expiry/signature/audience checks, JWKS caching with timeouts, and a protected `/api/v1/me` endpoint. The local authorization schema includes `roles`, `permissions`, `role_permissions`, `user_roles`, and `clinic_members`; protected platform-user and clinic-management workflows, audit events, clinic-scoped authorization, and automated unit/integration tests are also in place.
 
 Phase 2 delivered the agency survey catalogue and builder. Surveys are reusable agency-wide records rather than clinic-owned records. The backend supports multiple editable drafts, deep-copying drafts and whole surveys, immutable published versions, sections, typed questions, choice options, validation rules, ordering, archive/restore, published-version reads, and assigning published versions to clinics. A campaign in later phases must bind to one exact assigned `survey_version_id`, never to a mutable draft or “latest” version.
 
-Current limitations: Phase 3 campaign creation, public survey links, response sessions/submission, rate limiting and public-endpoint abuse protection are not implemented. Recipient import, email delivery, analytics, exports, and production hardening remain later phases. Do not treat the current setup as production-ready.
+Phase 3 delivered campaign branding and clinic-to-published-version binding, non-guessable public campaign links, secure anonymous response sessions and typed answer persistence, immutable-version validation/completion, public-endpoint payload limits and rate limiting, audit events, and automated tests.
 
-Next work order: Phase 3 — Campaigns and Public Responses.
+Current limitations: identified response mode is not implemented; public responses are anonymous only. Phase 4 recipient import, campaign-recipient selection, SMTP configuration, templates, and delivery work is in progress and must be completed, tested, and committed before it is treated as available. Production hardening remains incomplete: encrypted automated backups, monitoring/error reporting, retention/deletion jobs, security/load testing, and a production VPS deployment and recovery runbook are required. Do not treat the current setup as production-ready.
 
-1. Add campaign, campaign branding, and campaign-to-clinic-to-published-version models.
-2. Require campaign creation to select an active published-version assignment for its clinic.
-3. Implement public campaign lookup through a non-guessable public slug.
-4. Add secure public response sessions and typed answer persistence.
-5. Validate and complete anonymous responses against the immutable survey version.
-6. Add rate limiting, payload limits, token/slug safety, audit events, and automated integration tests.
+Next work order: complete Phase 4, then perform Phase 6 production hardening.
+
+1. Complete and commit recipient, template, durable delivery, retry, and delivery-status workflows.
+2. Decide whether identified response mode is required for the first public release and implement it if so.
+3. Verify campaign analytics and PDF/Excel export workflows against real completed responses.
+4. Add production deployment, backup/restore, monitoring, retention, security, and load-test evidence before release.
 
 ## Documentation
 

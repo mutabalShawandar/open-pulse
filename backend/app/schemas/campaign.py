@@ -27,6 +27,7 @@ class CampaignCreateRequest(BaseModel):
 class CampaignUpdateRequest(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=10_000)
+    survey_version_id: UUID | None = None
     branding: dict | None = None
     starts_at: datetime | None = None
     ends_at: datetime | None = None
