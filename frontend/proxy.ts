@@ -11,7 +11,10 @@ export function proxy(request: NextRequest) {
   const hostname = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
   const url = request.nextUrl.clone();
   const isRootDomain = !rootDomain || hostname === rootDomain || hostname === `www.${rootDomain}`;
-  const isSubdomainSurvey = Boolean(rootDomain) && !isRootDomain && hostname.endsWith(`.${rootDomain}`);
+  const isPlatformHost = Boolean(rootDomain) && (
+    hostname === `app.${rootDomain}` || hostname === `staging-app.${rootDomain}`
+  );
+  const isSubdomainSurvey = Boolean(rootDomain) && !isRootDomain && !isPlatformHost && hostname.endsWith(`.${rootDomain}`);
   const isPlatformSurvey = url.pathname.startsWith("/umfragen/");
   if (!isSubdomainSurvey && !isPlatformSurvey) return NextResponse.next();
 
