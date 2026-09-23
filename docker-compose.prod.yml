@@ -56,6 +56,10 @@ services:
       - --hostname=${KEYCLOAK_URL}
       - --proxy-headers=xforwarded
       - --proxy-trusted-addresses=${KEYCLOAK_PROXY_TRUSTED_ADDRESSES}
+      # Realm imports use these placeholders for environment-specific URLs and
+      # credentials. Keycloak 26 blocks system-variable resolution unless each
+      # name is explicitly allowed.
+      - --spi-admin--allowed-system-variables=APP_URL,KEYCLOAK_URL,KEYCLOAK_ADMIN_CLIENT_SECRET,KEYCLOAK_SMTP_AUTH,KEYCLOAK_SMTP_ENVELOPE_FROM,KEYCLOAK_SMTP_FROM,KEYCLOAK_SMTP_FROM_DISPLAY_NAME,KEYCLOAK_SMTP_HOST,KEYCLOAK_SMTP_PASSWORD,KEYCLOAK_SMTP_PORT,KEYCLOAK_SMTP_REPLY_TO,KEYCLOAK_SMTP_SSL,KEYCLOAK_SMTP_STARTTLS,KEYCLOAK_SMTP_USERNAME
       - --import-realm
     environment:
       # Needed only for first startup. Remove both values after the permanent
