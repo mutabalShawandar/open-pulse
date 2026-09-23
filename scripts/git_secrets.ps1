@@ -9,7 +9,10 @@ param(
 
     [string]$VpsDeployPath = "/home/deploy/apps/umfrage",
 
-    [string]$SshKeyPath = (Join-Path $env:USERPROFILE ".ssh\umfrage_github_actions")
+    [string]$SshKeyPath = (Join-Path $env:USERPROFILE ".ssh\umfrage_github_actions"),
+
+    [ValidateSet("staging", "production", "all")]
+    [string]$Target = "all"
 )
 
 Set-StrictMode -Version Latest
@@ -45,7 +48,9 @@ if ([string]::IsNullOrWhiteSpace($knownHosts)) {
     throw "No SSH host keys exist in $knownHostsPath. First connect once with 'ssh deploy@$VpsHost'."
 }
 
-foreach ($environment in @("staging", "production")) {
+$environments = if ($Target -eq "all") { @("staging", "production") } else { @($Target) }
+
+foreach ($environment in $environments) {
     Ensure-GitHubEnvironment $environment
     $environmentFile = Join-Path $root ".env.$environment"
     if (-not (Test-Path -LiteralPath $environmentFile)) {
@@ -61,4 +66,4 @@ foreach ($environment in @("staging", "production")) {
     Set-EnvironmentSecret $environment "VPS_KNOWN_HOSTS" $knownHosts
 }
 
-Write-Host "Uploaded deployment secrets for staging and production. Secret values were not displayed."
+Write-Host "Uploaded deployment secrets for $($environments -join ', '). Secret values were not displayed."
