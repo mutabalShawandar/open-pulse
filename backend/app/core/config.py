@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     keycloak_internal_url: str
     keycloak_realm: str
     keycloak_client_id: str
+    keycloak_audience: str = "umfrage-api"
     keycloak_issuer: str
     keycloak_admin_client_id: str | None = None
     keycloak_admin_client_secret: str | None = None

@@ -102,6 +102,7 @@ Set-Value "KEYCLOAK_URL" "https://$authHost"
 Set-Value "KEYCLOAK_ISSUER" "https://$authHost/realms/$realm"
 Set-Value "KEYCLOAK_REALM" $realm
 Set-Value "KEYCLOAK_REALM_IMPORT_DIR" $importDirectory
+Set-Value "KEYCLOAK_AUDIENCE" "umfrage-api"
 
 foreach ($name in @(
     "APP_POSTGRES_PASSWORD",

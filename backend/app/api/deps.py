@@ -114,7 +114,7 @@ async def get_current_claims(
             jwt.PyJWK.from_dict(signing_key),
             algorithms=["RS256"],
             issuer=settings.keycloak_issuer,
-            audience=settings.keycloak_client_id,
+            audience=settings.keycloak_audience,
             options={"verify_aud": True},
         )
         

@@ -47,6 +47,7 @@ jobs:
           KEYCLOAK_INTERNAL_URL: http://localhost:8081
           KEYCLOAK_REALM: Umfrage
           KEYCLOAK_CLIENT_ID: umfrage-frontend
+          KEYCLOAK_AUDIENCE: umfrage-api
           KEYCLOAK_ISSUER: http://localhost:8081/realms/Umfrage
         run: |
           uv sync --frozen --all-groups
