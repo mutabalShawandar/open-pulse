@@ -89,7 +89,7 @@
       "standardFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
-      "fullScopeAllowed": false,
+      "fullScopeAllowed": true,
       "secret": "${KEYCLOAK_ADMIN_CLIENT_SECRET}",
       "redirectUris": [],
       "webOrigins": []

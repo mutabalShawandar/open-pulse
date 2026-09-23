@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const verifier = request.cookies.get(verifierCookie)?.value;
 
   if (!code || !returnedState || returnedState !== expectedState || !verifier) {
-    return clearTemporaryCookies(NextResponse.redirect(new URL("/login?error=callback", request.url)));
+    return clearTemporaryCookies(NextResponse.redirect(appUrl("/login?error=callback")));
   }
 
   const body = new URLSearchParams({
@@ -29,20 +29,24 @@ export async function GET(request: NextRequest) {
   if (authConfig.keycloakClientSecret) body.set("client_secret", authConfig.keycloakClientSecret);
 
   const tokenResponse = await fetch(authEndpoints.token, { method: "POST", body, cache: "no-store" });
-  if (!tokenResponse.ok) return clearTemporaryCookies(NextResponse.redirect(new URL("/login?error=token", request.url)));
+  if (!tokenResponse.ok) return clearTemporaryCookies(NextResponse.redirect(appUrl("/login?error=token")));
 
   const tokens = (await tokenResponse.json()) as TokenResponse;
   try {
     const user = await getCurrentUser(tokens.access_token);
-    if (!user.is_active) return clearTemporaryCookies(NextResponse.redirect(new URL("/access-denied", request.url)));
+    if (!user.is_active) return clearTemporaryCookies(NextResponse.redirect(appUrl("/access-denied")));
   } catch {
-    return clearTemporaryCookies(NextResponse.redirect(new URL("/access-denied", request.url)));
+    return clearTemporaryCookies(NextResponse.redirect(appUrl("/access-denied")));
   }
 
-  const response = clearTemporaryCookies(NextResponse.redirect(new URL("/", request.url)));
+  const response = clearTemporaryCookies(NextResponse.redirect(appUrl("/")));
   response.cookies.set(sessionCookies.accessTokenCookie, tokens.access_token, sessionCookieOptions(tokens.expires_in));
   if (tokens.refresh_token) response.cookies.set(sessionCookies.refreshTokenCookie, tokens.refresh_token, sessionCookieOptions(60 * 60 * 24 * 14));
   return response;
+}
+
+function appUrl(path: string): URL {
+  return new URL(path, authConfig.appUrl);
 }
 
 function clearTemporaryCookies(response: NextResponse) {
