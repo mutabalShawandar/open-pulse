@@ -30,7 +30,7 @@ export function DashboardSidebar({ user }: { user: CurrentUser }) {
         <div className="flex size-9 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-black/15">
           <ClipboardListIcon className="size-5" />
         </div>
-        <span className="font-heading text-lg font-semibold tracking-tight">B-O-W Umfragen</span>
+        <span className="font-heading text-lg font-semibold tracking-tight">Praxisumfrage</span>
       </Link>
       <nav aria-label="Hauptnavigation" className="mt-10 flex flex-col gap-1">
         {navigation.map(({ label, icon: Icon, href }) => (

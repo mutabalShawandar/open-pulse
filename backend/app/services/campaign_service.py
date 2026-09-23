@@ -293,7 +293,7 @@ async def complete_response(session: AsyncSession, response: SurveyResponse) -> 
     answered_ids = set(await session.scalars(select(ResponseAnswer.question_id).where(ResponseAnswer.response_id == response.id)))
     if missing := required_ids - answered_ids:
         raise HTTPException(status_code=422, detail="Required questions are missing", headers={"X-Missing-Question-Count": str(len(missing))})
-    response.status = ResponseStatus.COMPLETED; response.completed_at = datetime.now(UTC)
+    response.status = ResponseStatus.COMPLETED; response.completed_at = datetime.now(UTC); response.legal_accepted_at = response.completed_at
     campaign = await session.get(Campaign, response.campaign_id)
     add_audit_event(session, actor_user_id=None, clinic_id=campaign.clinic_id if campaign else None, action="response.completed", entity_type="survey_response", entity_id=response.id, metadata={"campaign_id": str(response.campaign_id)})
     await session.commit(); await session.refresh(response)

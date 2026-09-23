@@ -8,7 +8,7 @@ from app.services.storage_service import read_clinic_logo
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db_session
-from app.schemas.campaign import PublicAnswerSaveRequest, PublicCampaignResponse, PublicResponseSessionResponse, PublicResponseStatusResponse
+from app.schemas.campaign import PublicAnswerSaveRequest, PublicCampaignResponse, PublicResponseCompletionRequest, PublicResponseSessionResponse, PublicResponseStatusResponse
 from app.services.campaign_service import complete_response, get_public_campaign, public_campaign_sections, save_answers, session_response_or_404, start_public_response
 from app.services.rate_limit_service import enforce_public_rate_limit
 
@@ -34,7 +34,8 @@ async def public_write_limit(request: Request) -> None:
 @router.get("/campaigns/{slug}", response_model=PublicCampaignResponse, dependencies=[Depends(public_read_limit)])
 async def public_campaign_endpoint(slug: str, session: AsyncSession = Depends(get_db_session)) -> PublicCampaignResponse:
     campaign = await get_public_campaign(session, slug)
-    return PublicCampaignResponse(title=campaign.title, description=campaign.description, branding=campaign.branding, response_identity_mode=campaign.response_identity_mode, sections=await public_campaign_sections(session, campaign))
+    clinic = await session.get(Clinic, campaign.clinic_id)
+    return PublicCampaignResponse(title=campaign.title, description=campaign.description, clinic_name=clinic.name if clinic else "", logo_url=clinic.logo_url if clinic else None, branding=campaign.branding, response_identity_mode=campaign.response_identity_mode, sections=await public_campaign_sections(session, campaign))
 
 
 @router.post("/campaigns/{slug}/responses", response_model=PublicResponseSessionResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(public_write_limit)])
@@ -51,6 +52,6 @@ async def save_answers_endpoint(session_token: str, payload: PublicAnswerSaveReq
 
 
 @router.post("/responses/{session_token}/complete", response_model=PublicResponseStatusResponse, dependencies=[Depends(public_write_limit)])
-async def complete_response_endpoint(session_token: str, session: AsyncSession = Depends(get_db_session)) -> PublicResponseStatusResponse:
+async def complete_response_endpoint(session_token: str, payload: PublicResponseCompletionRequest, session: AsyncSession = Depends(get_db_session)) -> PublicResponseStatusResponse:
     response = await complete_response(session, await session_response_or_404(session, session_token))
     return PublicResponseStatusResponse(status=response.status, completed_at=response.completed_at)

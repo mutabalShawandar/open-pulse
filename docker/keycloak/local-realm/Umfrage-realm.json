@@ -1,0 +1,102 @@
+{
+  "realm": "Umfrage",
+  "enabled": true,
+  "displayName": "Praxisumfrage (lokal)",
+  "displayNameHtml": "Praxisumfrage (lokal)",
+  "attributes": {
+    "frontendUrl": "http://localhost:8081"
+  },
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "verifyEmail": true,
+  "bruteForceProtected": true,
+  "failureFactor": 10,
+  "passwordPolicy": "hashAlgorithm(argon2) and length(10) and notUsername and notEmail and passwordHistory(5)",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["de"],
+  "defaultLocale": "de",
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "auth": "false",
+    "starttls": "false",
+    "ssl": "false",
+    "from": "noreply@local.test",
+    "fromDisplayName": "Praxisumfrage (lokal)"
+  },
+  "clients": [
+    {
+      "clientId": "umfrage-api",
+      "name": "Umfrage API",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [],
+      "webOrigins": []
+    },
+    {
+      "clientId": "umfrage-frontend",
+      "name": "Umfrage Frontend (lokal)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/auth/callback",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": ["http://localhost:3000"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3000/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "umfrage-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "umfrage-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "umfrage-backend-admin",
+      "name": "Umfrage Backend Administration (lokal)",
+      "description": "Service account for backend user provisioning.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "redirectUris": [],
+      "webOrigins": []
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-umfrage-backend-admin",
+      "enabled": true,
+      "serviceAccountClientId": "umfrage-backend-admin",
+      "realmRoles": ["default-roles-umfrage"],
+      "clientRoles": {
+        "realm-management": ["manage-users"]
+      }
+    }
+  ]
+}

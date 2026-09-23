@@ -26,6 +26,7 @@ from app.schemas.clinic import (
 )
 from app.schemas.user import UserResponse
 from app.services.clinic_service import remove_clinic_member, update_clinic
+from app.services.audit_service import add_audit_event
 from app.services.storage_service import save_clinic_logo
 from app.services.keycloak_admin import KeycloakAdminClient
 from app.services.user_service import (

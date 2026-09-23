@@ -1,21 +1,21 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { SaveIcon } from "lucide-react";
+import { ImagePlusIcon, SaveIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import type { ClinicInput } from "@/lib/api/types";
 
 type ClinicFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   clinic?: ClinicInput;
   submitLabel: string;
-  showLogoUrl?: boolean;
 };
 
-export function ClinicForm({ action, clinic, submitLabel, showLogoUrl = true }: ClinicFormProps) {
+export function ClinicForm({ action, clinic, submitLabel }: ClinicFormProps) {
   return (
     <form action={action}>
       <FieldGroup>
@@ -26,23 +26,24 @@ export function ClinicForm({ action, clinic, submitLabel, showLogoUrl = true }: 
           </Field>
           <Field>
             <FieldLabel htmlFor="slug">Interne Kennung</FieldLabel>
-            <Input
-              id="slug"
-              name="slug"
-              defaultValue={clinic?.slug}
-              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-              required
-            />
+            <Input id="slug" name="slug" defaultValue={clinic?.slug} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required />
             <FieldDescription>Nur Kleinbuchstaben, Zahlen und Bindestriche.</FieldDescription>
           </Field>
         </div>
-        {showLogoUrl ? (
-          <Field>
-            <FieldLabel htmlFor="logoUrl">Logo-URL</FieldLabel>
-            <Input id="logoUrl" name="logoUrl" type="url" defaultValue={clinic?.logo_url ?? ""} />
-            <FieldDescription>Optional. Eine öffentlich erreichbare Bildadresse.</FieldDescription>
-          </Field>
-        ) : null}
+        <Field>
+          <FieldLabel htmlFor="logo">Kliniklogo</FieldLabel>
+          <div className="flex items-center gap-4 rounded-xl border bg-muted/30 p-3">
+            {clinic?.logo_url ? (
+              <img src={clinic.logo_url} alt="Aktuelles Kliniklogo" className="size-14 rounded-lg bg-white object-contain p-1" />
+            ) : (
+              <div className="flex size-14 items-center justify-center rounded-lg bg-background text-muted-foreground">
+                <ImagePlusIcon className="size-5" />
+              </div>
+            )}
+            <Input id="logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp" className="max-w-sm bg-background" />
+          </div>
+          <FieldDescription>Optional: PNG, JPG oder WebP, maximal 2 MB. Das Logo wird sicher gespeichert und für Umfragen und Kampagnen verwendet.</FieldDescription>
+        </Field>
         <div className="border-t pt-5">
           <p className="font-medium">Standort</p>
           <p className="mt-1 text-sm text-muted-foreground">Diese Angaben können später für die Umfrageausspielung verwendet werden.</p>
@@ -54,14 +55,7 @@ export function ClinicForm({ action, clinic, submitLabel, showLogoUrl = true }: 
           </Field>
           <Field>
             <FieldLabel htmlFor="hausnummer">Hausnummer</FieldLabel>
-            <Input
-              id="hausnummer"
-              name="hausnummer"
-              type="number"
-              min="1"
-              step="1"
-              defaultValue={clinic?.hausnummer ?? ""}
-            />
+            <Input id="hausnummer" name="hausnummer" type="number" min="1" step="1" defaultValue={clinic?.hausnummer ?? ""} />
           </Field>
         </div>
         <div className="grid gap-5 sm:grid-cols-[9rem_minmax(0,1fr)]">
@@ -85,7 +79,7 @@ function SubmitButton({ label }: { label: string }) {
 
   return (
     <Button type="submit" disabled={pending} className="w-full sm:w-fit">
-      <SaveIcon data-icon="inline-start" />
+      {pending ? <Spinner data-icon="inline-start" /> : <SaveIcon data-icon="inline-start" />}
       {pending ? "Wird gespeichert …" : label}
     </Button>
   );

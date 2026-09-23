@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 function toLocalInputValue(value: string | null): string {
   if (!value) return "";
@@ -25,7 +27,15 @@ export function CampaignEndDateForm({ endsAt, action }: { endsAt: string | null;
         <Input id="campaign-ends-at" type="datetime-local" value={localEndDate} onChange={(event) => setLocalEndDate(event.target.value)} />
         <FieldDescription>Die Kampagne wird zu diesem Zeitpunkt automatisch abgeschlossen. Laufende oder neue Antworten sind danach nicht mehr möglich.</FieldDescription>
       </Field>
-      <div className="flex gap-2"><Button type="submit">Enddatum speichern</Button>{localEndDate ? <Button type="button" variant="outline" onClick={() => setLocalEndDate("")}>Enddatum entfernen</Button> : null}</div>
+      <div className="flex gap-2">
+        <SaveEndDateButton />
+        {localEndDate ? <Button type="button" variant="outline" onClick={() => setLocalEndDate("")}>Enddatum entfernen</Button> : null}
+      </div>
     </form>
   );
+}
+
+function SaveEndDateButton() {
+  const { pending } = useFormStatus();
+  return <Button type="submit" disabled={pending} aria-busy={pending}>{pending ? <Spinner data-icon="inline-start" /> : null}{pending ? "Wird gespeichert …" : "Enddatum speichern"}</Button>;
 }

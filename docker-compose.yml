@@ -36,6 +36,8 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
       AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
+    ports:
+      - "127.0.0.1:9333:9333"
     volumes:
       - minio_data:/data
 
@@ -80,7 +82,7 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.1
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       # Browser-facing base URL. Internal services use KEYCLOAK_INTERNAL_URL instead.
       KC_HOSTNAME: ${KEYCLOAK_URL}
@@ -93,6 +95,8 @@ services:
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "8081:8080"
+    volumes:
+      - ./docker/keycloak/local-realm:/opt/keycloak/data/import:ro
     depends_on:
       postgres:
         condition: service_healthy

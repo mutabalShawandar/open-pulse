@@ -1,0 +1,108 @@
+{
+  "realm": "Umfrage-staging",
+  "enabled": true,
+  "displayName": "Praxisumfrage – Staging",
+  "displayNameHtml": "Praxisumfrage – Staging",
+  "attributes": {
+    "frontendUrl": "${KEYCLOAK_URL}"
+  },
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "verifyEmail": true,
+  "bruteForceProtected": true,
+  "failureFactor": 10,
+  "passwordPolicy": "hashAlgorithm(argon2) and length(10) and notUsername and notEmail and passwordHistory(5)",
+  "revokeRefreshToken": true,
+  "accessCodeLifespan": 60,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["de"],
+  "defaultLocale": "de",
+  "smtpServer": {
+    "password": "${KEYCLOAK_SMTP_PASSWORD}",
+    "starttls": "${KEYCLOAK_SMTP_STARTTLS}",
+    "auth": "${KEYCLOAK_SMTP_AUTH}",
+    "port": "${KEYCLOAK_SMTP_PORT}",
+    "host": "${KEYCLOAK_SMTP_HOST}",
+    "replyTo": "${KEYCLOAK_SMTP_REPLY_TO}",
+    "from": "${KEYCLOAK_SMTP_FROM}",
+    "fromDisplayName": "${KEYCLOAK_SMTP_FROM_DISPLAY_NAME}",
+    "envelopeFrom": "${KEYCLOAK_SMTP_ENVELOPE_FROM}",
+    "ssl": "${KEYCLOAK_SMTP_SSL}",
+    "user": "${KEYCLOAK_SMTP_USERNAME}"
+  },
+  "clients": [
+    {
+      "clientId": "umfrage-api",
+      "name": "Umfrage API (staging)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [],
+      "webOrigins": []
+    },
+    {
+      "clientId": "umfrage-frontend",
+      "name": "Umfrage Frontend (staging)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "${APP_URL}/auth/callback",
+        "${APP_URL}/*"
+      ],
+      "webOrigins": ["${APP_URL}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${APP_URL}/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "umfrage-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "umfrage-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "umfrage-backend-admin",
+      "name": "Umfrage Backend Administration (staging)",
+      "description": "Service account for backend user provisioning.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "secret": "${KEYCLOAK_ADMIN_CLIENT_SECRET}",
+      "redirectUris": [],
+      "webOrigins": []
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-umfrage-backend-admin",
+      "enabled": true,
+      "serviceAccountClientId": "umfrage-backend-admin",
+      "clientRoles": {
+        "realm-management": ["manage-users"]
+      }
+    }
+  ]
+}

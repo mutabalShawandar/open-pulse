@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -102,6 +103,8 @@ class PublicSectionResponse(BaseModel):
 class PublicCampaignResponse(BaseModel):
     title: str
     description: str | None
+    clinic_name: str
+    logo_url: str | None
     branding: dict | None
     response_identity_mode: ResponseIdentityMode
     sections: list[PublicSectionResponse]
@@ -133,3 +136,7 @@ class PublicAnswerSaveRequest(BaseModel):
 class PublicResponseStatusResponse(BaseModel):
     status: ResponseStatus
     completed_at: datetime | None
+
+
+class PublicResponseCompletionRequest(BaseModel):
+    legal_accepted: Literal[True]

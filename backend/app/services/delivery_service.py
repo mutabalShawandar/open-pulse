@@ -1,5 +1,6 @@
 """Durable, privacy-safe campaign mail delivery orchestration."""
 
+import html
 import json
 import re
 import smtplib
@@ -19,6 +20,7 @@ from app.models.campaign import CampaignStatus, generate_response_token, hash_re
 from app.services.audit_service import add_audit_event
 from app.services.campaign_service import assign_public_path
 from app.services.smtp_service import get_smtp_configuration, send_campaign_email
+from app.services.storage_service import read_clinic_logo
 
 QUEUE_NAME = "campaign-deliveries"
 TOKEN_KEY_PREFIX = "campaign-delivery-token:"
@@ -39,6 +41,24 @@ def render_template(value: str, variables: dict[str, str]) -> str:
     for key, replacement in variables.items():
         value = value.replace(key, replacement)
     return value
+
+
+async def email_clinic_logo(clinic: Clinic | None) -> tuple[bytes, str] | None:
+    if clinic is None or not clinic.logo_storage_key:
+        return None
+    try:
+        return await read_clinic_logo(clinic.logo_storage_key)
+    except HTTPException:
+        # A missing logo must not block delivery of a survey invitation.
+        return None
+
+
+def with_clinic_logo(html_body: str, clinic: Clinic | None, inline_logo: tuple[bytes, str] | None) -> str:
+    """Add a CID-referenced clinic logo outside the editable email template."""
+    if clinic is None or inline_logo is None:
+        return html_body
+    clinic_name = html.escape(clinic.name, quote=True)
+    return f'<div style="padding:0 0 20px"><img src="cid:clinic-logo" alt="{clinic_name}" style="display:block;max-width:180px;max-height:80px;width:auto;height:auto" /></div>{html_body}'
 
 
 def _safe_error(error: Exception) -> str:
@@ -198,7 +218,9 @@ async def process_delivery_job(session: AsyncSession, delivery_id: UUID, raw_tok
     link = build_public_survey_url(clinic.slug if clinic else "umfrage", campaign.public_path or campaign.public_slug, raw_token)
     variables = {"{{recipient_name}}": recipient.display_name or "", "{{survey_link}}": link, "{{clinic_name}}": clinic.name if clinic else "", "{{campaign_title}}": campaign.title}
     try:
-        await send_campaign_email(session, recipient.email, render_template(template.subject, variables), render_template(template.html_body, variables), render_template(template.text_body, variables), sender_name=template.sender_name, reply_to=template.reply_to)
+        inline_logo = await email_clinic_logo(clinic)
+        html_body = with_clinic_logo(render_template(template.html_body, variables), clinic, inline_logo)
+        await send_campaign_email(session, recipient.email, render_template(template.subject, variables), html_body, render_template(template.text_body, variables), sender_name=template.sender_name, reply_to=template.reply_to, inline_logo=inline_logo)
     except Exception as error:
         delivery = await session.get(CampaignDelivery, delivery_id)
         campaign_recipient = await session.get(CampaignRecipient, delivery.campaign_recipient_id) if delivery else None

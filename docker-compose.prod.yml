@@ -1,0 +1,179 @@
+# Production-like Compose stack. It deliberately does not reuse the local
+# docker-compose.yml, which is a development stack with public debug ports and
+# Keycloak development mode.
+#
+# Run with an environment file that exists only on the target machine:
+#   docker compose --project-name umfrage-prod --env-file .env.production \
+#     -f docker-compose.prod.yml up -d
+#
+# A staging stack uses the same file, a different project name and a separate
+# .env.staging file. Docker then creates completely separate named volumes.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${APP_POSTGRES_DB}
+      POSTGRES_USER: ${APP_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${APP_POSTGRES_PASSWORD}
+      KEYCLOAK_POSTGRES_DB: ${KEYCLOAK_POSTGRES_DB}
+      KEYCLOAK_POSTGRES_USER: ${KEYCLOAK_POSTGRES_USER}
+      KEYCLOAK_POSTGRES_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/prod-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  storage:
+    image: chrislusf/seaweedfs:latest
+    restart: unless-stopped
+    command: server -dir=/data -s3 -s3.port=8333
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
+    volumes:
+      - storage_data:/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1
+    restart: unless-stopped
+    command:
+      - start
+      - --http-enabled=true
+      - --hostname=${KEYCLOAK_URL}
+      - --proxy-headers=xforwarded
+      - --proxy-trusted-addresses=${KEYCLOAK_PROXY_TRUSTED_ADDRESSES}
+      - --import-realm
+    environment:
+      # Needed only for first startup. Remove both values after the permanent
+      # master-realm administrator has been created and verified.
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${KEYCLOAK_POSTGRES_DB}
+      KC_DB_USERNAME: ${KEYCLOAK_POSTGRES_USER}
+      KC_DB_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD}
+      KC_HEALTH_ENABLED: "true"
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+      KEYCLOAK_SMTP_AUTH: ${KEYCLOAK_SMTP_AUTH}
+      KEYCLOAK_SMTP_ENVELOPE_FROM: ${KEYCLOAK_SMTP_ENVELOPE_FROM}
+      KEYCLOAK_SMTP_FROM: ${KEYCLOAK_SMTP_FROM}
+      KEYCLOAK_SMTP_FROM_DISPLAY_NAME: ${KEYCLOAK_SMTP_FROM_DISPLAY_NAME}
+      KEYCLOAK_SMTP_HOST: ${KEYCLOAK_SMTP_HOST}
+      KEYCLOAK_SMTP_PASSWORD: ${KEYCLOAK_SMTP_PASSWORD}
+      KEYCLOAK_SMTP_PORT: ${KEYCLOAK_SMTP_PORT}
+      KEYCLOAK_SMTP_REPLY_TO: ${KEYCLOAK_SMTP_REPLY_TO}
+      KEYCLOAK_SMTP_SSL: ${KEYCLOAK_SMTP_SSL}
+      KEYCLOAK_SMTP_STARTTLS: ${KEYCLOAK_SMTP_STARTTLS}
+      KEYCLOAK_SMTP_USERNAME: ${KEYCLOAK_SMTP_USERNAME}
+    ports:
+      - "127.0.0.1:${KEYCLOAK_HOST_PORT}:8080"
+    volumes:
+      - ./docker/keycloak/${KEYCLOAK_REALM_IMPORT_DIR}:/opt/keycloak/data/import:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  migrate:
+    build:
+      context: ./backend
+    profiles: ["migration"]
+    restart: "no"
+    env_file:
+      - ${DEPLOY_ENV_FILE}
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${APP_POSTGRES_USER}:${APP_POSTGRES_PASSWORD}@postgres:5432/${APP_POSTGRES_DB}
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      REDIS_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: http://storage:8333
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ${DEPLOY_ENV_FILE}
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${APP_POSTGRES_USER}:${APP_POSTGRES_PASSWORD}@postgres:5432/${APP_POSTGRES_DB}
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      REDIS_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: http://storage:8333
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+
+  worker:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ${DEPLOY_ENV_FILE}
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${APP_POSTGRES_USER}:${APP_POSTGRES_PASSWORD}@postgres:5432/${APP_POSTGRES_DB}
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      REDIS_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: http://storage:8333
+    command: ["python", "-m", "app.workers.worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        NEXT_PUBLIC_ROOT_DOMAIN: ${NEXT_PUBLIC_ROOT_DOMAIN}
+        APP_URL: ${APP_URL}
+        KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER}
+        KEYCLOAK_FRONTEND_CLIENT_ID: ${KEYCLOAK_FRONTEND_CLIENT_ID}
+    restart: unless-stopped
+    env_file:
+      - ${DEPLOY_ENV_FILE}
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+      NEXT_PUBLIC_ROOT_DOMAIN: ${NEXT_PUBLIC_ROOT_DOMAIN}
+      APP_URL: ${APP_URL}
+      KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER}
+      KEYCLOAK_FRONTEND_CLIENT_ID: ${KEYCLOAK_FRONTEND_CLIENT_ID}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+    ports:
+      - "127.0.0.1:${FRONTEND_HOST_PORT}:3000"
+
+volumes:
+  postgres_data:
+  storage_data:
+
+# Set a different subnet in each environment file when staging and production
+# share one VPS. The gateway is the trusted source seen by Keycloak when the
+# host Nginx proxy reaches the localhost-published Keycloak port.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: ${COMPOSE_SUBNET}

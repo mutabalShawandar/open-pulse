@@ -88,6 +88,7 @@ class SurveyResponse(Base):
     identity_mode_snapshot: Mapped[ResponseIdentityMode] = mapped_column(Enum(ResponseIdentityMode, name="response_identity_mode_snapshot", values_callable=_enum_values), nullable=False)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    legal_accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class ResponseSession(Base):

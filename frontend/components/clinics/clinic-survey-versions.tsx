@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Spinner } from "@/components/ui/spinner";
 import type {
   ClinicSurveyVersionAssignment,
   PublishedSurveyVersionOption,
@@ -118,7 +119,7 @@ function AssignButton() {
 
   return (
     <Button type="submit" disabled={pending} className="w-full">
-      <LinkIcon data-icon="inline-start" />
+      {pending ? <Spinner data-icon="inline-start" /> : <LinkIcon data-icon="inline-start" />}
       {pending ? "Wird zugeordnet …" : "Version zuordnen"}
     </Button>
   );

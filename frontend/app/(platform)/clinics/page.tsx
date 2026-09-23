@@ -57,9 +57,13 @@ export default async function ClinicsPage() {
                 <Card className="h-full transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:ring-primary/35">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex size-10 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
-                        <Building2Icon className="size-5" />
-                      </div>
+                      {clinic.logo_url ? (
+                        <img src={clinic.logo_url} alt={`${clinic.name} Logo`} className="size-10 rounded-xl bg-white object-contain p-1 ring-1 ring-border" />
+                      ) : (
+                        <div className="flex size-10 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
+                          <Building2Icon className="size-5" />
+                        </div>
+                      )}
                       <ChevronRightIcon className="mt-1 size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
                     </div>
                     <CardTitle className="mt-5">{clinic.name}</CardTitle>

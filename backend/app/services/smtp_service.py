@@ -59,7 +59,7 @@ async def save_smtp_configuration(session: AsyncSession, payload: SmtpConfigurat
     return configuration
 
 
-def _send_message_sync(configuration: SmtpConfiguration, recipient_email: str, subject: str, html_body: str, text_body: str, *, sender_name: str | None = None, reply_to: str | None = None) -> None:
+def _send_message_sync(configuration: SmtpConfiguration, recipient_email: str, subject: str, html_body: str, text_body: str, *, sender_name: str | None = None, reply_to: str | None = None, inline_logo: tuple[bytes, str] | None = None) -> None:
     message = EmailMessage()
     message["Subject"] = subject
     message["From"] = formataddr((sender_name or configuration.sender_name, configuration.sender_email))
@@ -68,6 +68,12 @@ def _send_message_sync(configuration: SmtpConfiguration, recipient_email: str, s
         message["Reply-To"] = reply_to
     message.set_content(text_body)
     message.add_alternative(html_body, subtype="html")
+    if inline_logo is not None:
+        logo_data, media_type = inline_logo
+        maintype, _, subtype = media_type.partition("/")
+        if not subtype:
+            maintype, subtype = "application", "octet-stream"
+        message.get_payload()[-1].add_related(logo_data, maintype=maintype, subtype=subtype, cid="clinic-logo", filename=f"clinic-logo.{subtype}", disposition="inline")
     context = ssl.create_default_context()
     client: smtplib.SMTP | smtplib.SMTP_SSL
     client = smtplib.SMTP_SSL(configuration.host, configuration.port, timeout=20, context=context) if configuration.use_ssl else smtplib.SMTP(configuration.host, configuration.port, timeout=20)
@@ -89,23 +95,23 @@ def _send_message_sync(configuration: SmtpConfiguration, recipient_email: str, s
             client.close()
 
 
-async def send_campaign_email(session: AsyncSession, recipient_email: str, subject: str, html_body: str, text_body: str, *, sender_name: str | None = None, reply_to: str | None = None) -> None:
+async def send_campaign_email(session: AsyncSession, recipient_email: str, subject: str, html_body: str, text_body: str, *, sender_name: str | None = None, reply_to: str | None = None, inline_logo: tuple[bytes, str] | None = None) -> None:
     configuration = await get_smtp_configuration(session)
     if configuration is None:
         raise RuntimeError("SMTP configuration is missing")
-    await asyncio.to_thread(_send_message_sync, configuration, recipient_email, subject, html_body, text_body, sender_name=sender_name, reply_to=reply_to)
+    await asyncio.to_thread(_send_message_sync, configuration, recipient_email, subject, html_body, text_body, sender_name=sender_name, reply_to=reply_to, inline_logo=inline_logo)
 
 
-async def send_rendered_email(session: AsyncSession, recipient_email: str, subject: str, html_body: str, text_body: str) -> None:
+async def send_rendered_email(session: AsyncSession, recipient_email: str, subject: str, html_body: str, text_body: str, *, inline_logo: tuple[bytes, str] | None = None) -> None:
     try:
-        await send_campaign_email(session, recipient_email, subject, html_body, text_body)
+        await send_campaign_email(session, recipient_email, subject, html_body, text_body, inline_logo=inline_logo)
     except (OSError, smtplib.SMTPException, RuntimeError) as error:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="The SMTP server rejected the test email") from error
 
 
 async def send_smtp_test_email(session: AsyncSession, recipient_email: str, actor_user_id) -> None:
     try:
-        await send_campaign_email(session, recipient_email, "Test der E-Mail-Konfiguration – B-O-W Umfragen", "<p>Die SMTP-Konfiguration von B-O-W Umfragen funktioniert.</p>", "Die SMTP-Konfiguration von B-O-W Umfragen funktioniert. Diese Nachricht wurde als Verbindungstest versendet.")
+        await send_campaign_email(session, recipient_email, "Test der E-Mail-Konfiguration – Praxisumfragen", "<p>Die SMTP-Konfiguration von Praxisumfragen funktioniert.</p>", "Die SMTP-Konfiguration von Praxisumfragen funktioniert. Diese Nachricht wurde als Verbindungstest versendet.")
     except (OSError, smtplib.SMTPException, RuntimeError) as error:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="The SMTP server rejected the test email") from error
     configuration = await get_smtp_configuration(session)

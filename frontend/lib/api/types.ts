@@ -26,7 +26,7 @@ export type ClinicDetail = Clinic & {
 export type ClinicInput = {
   name: string;
   slug: string;
-  logo_url: string | null;
+  logo_url?: string | null;
   street: string | null;
   hausnummer: number | null;
   city: string | null;

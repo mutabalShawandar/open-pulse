@@ -12,6 +12,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
+import { Spinner } from "@/components/ui/spinner";
 import { defaultEmailHtmlBody, defaultEmailSubject, defaultEmailTextBody, EmailTemplateFields } from "@/components/campaigns/email-template-fields";
 import type { PublishedSurveyVersionOption, Recipient } from "@/lib/api/types";
 
@@ -153,7 +154,7 @@ export function CampaignWizard({ clinicId, initialRecipients, surveyVersionOptio
               ))}
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={addManualRow}><PlusIcon data-icon="inline-start" />Weitere Zeile</Button>
-                <Button type="button" size="sm" disabled={isPending} onClick={importManualRecipients}>Importieren</Button>
+                <Button type="button" size="sm" disabled={isPending} onClick={importManualRecipients}>{isPending ? <Spinner data-icon="inline-start" /> : null}{isPending ? "Wird importiert …" : "Importieren"}</Button>
               </div>
             </div>
             <Field>
@@ -218,7 +219,7 @@ export function CampaignWizard({ clinicId, initialRecipients, surveyVersionOptio
         {step < 4 ? (
           <Button type="button" disabled={!canGoNext} onClick={() => setStep((current) => (current + 1) as Step)}>Weiter</Button>
         ) : (
-          <Button type="button" disabled={isPending || !surveyVersionId} onClick={submit}>{isPending ? "Wird erstellt …" : "Kampagne erstellen"}</Button>
+          <Button type="button" disabled={isPending || !surveyVersionId} onClick={submit} aria-busy={isPending}>{isPending ? <Spinner data-icon="inline-start" /> : null}{isPending ? "Wird erstellt …" : "Kampagne erstellen"}</Button>
         )}
       </div>
     </div>

@@ -20,7 +20,6 @@ class ClinicMemberResponse(BaseModel):
 class ClinicCreateRequest(BaseModel):
     name: str
     slug: str
-    logo_url: str | None = None
     street: str | None = None
     hausnummer: int | None = None
     city: str | None = None
@@ -30,7 +29,6 @@ class ClinicCreateRequest(BaseModel):
 class ClinicUpdateRequest(BaseModel):
     name: str | None = None
     slug: str | None = None
-    logo_url: str | None = None
     street: str | None = None
     hausnummer: int | None = None
     city: str | None = None

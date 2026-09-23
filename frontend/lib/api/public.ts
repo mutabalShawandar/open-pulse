@@ -11,6 +11,8 @@ export type PublicQuestionType =
 export type PublicCampaign = {
   title: string;
   description: string | null;
+  clinic_name: string;
+  logo_url: string | null;
   branding: { accent_color?: string } | null;
   sections: Array<{
     id: string;

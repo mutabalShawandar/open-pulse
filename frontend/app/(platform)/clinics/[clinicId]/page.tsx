@@ -103,9 +103,13 @@ export default async function ClinicDetailPage({
       </Button>
       <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div className="flex items-start gap-4">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/15">
-            <Building2Icon className="size-6" />
-          </div>
+          {clinic.logo_url ? (
+            <img src={clinic.logo_url} alt={`${clinic.name} Logo`} className="size-12 rounded-2xl bg-white object-contain p-1 shadow-lg shadow-primary/15" />
+          ) : (
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/15">
+              <Building2Icon className="size-6" />
+            </div>
+          )}
           <div>
             <p className="text-sm font-medium text-muted-foreground">Klinikprofil</p>
             <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">{clinic.name}</h1>

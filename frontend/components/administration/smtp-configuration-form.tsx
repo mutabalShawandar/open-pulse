@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Spinner } from "@/components/ui/spinner";
 import type { SmtpConfiguration } from "@/lib/api/types";
 
 export function SmtpConfigurationForm({ configuration }: { configuration: SmtpConfiguration | null }) {
@@ -21,7 +22,7 @@ export function SmtpConfigurationForm({ configuration }: { configuration: SmtpCo
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="senderName">Absendername</FieldLabel>
-            <Input id="senderName" name="senderName" required defaultValue={configuration?.sender_name ?? "B-O-W Umfragen"} />
+            <Input id="senderName" name="senderName" required defaultValue={configuration?.sender_name ?? "Praxisumfragen"} />
           </Field>
           <Field>
             <FieldLabel htmlFor="senderEmail">Absender-E-Mail-Adresse</FieldLabel>
@@ -64,10 +65,10 @@ export function SmtpConfigurationForm({ configuration }: { configuration: SmtpCo
 
 function SaveButton() {
   const { pending } = useFormStatus();
-  return <Button type="submit" disabled={pending}><SaveIcon data-icon="inline-start" />{pending ? "Wird gespeichert \u2026" : "SMTP-Konfiguration speichern"}</Button>;
+  return <Button type="submit" disabled={pending}>{pending ? <Spinner data-icon="inline-start" /> : <SaveIcon data-icon="inline-start" />}{pending ? "Wird gespeichert \u2026" : "SMTP-Konfiguration speichern"}</Button>;
 }
 
 function TestButton() {
   const { pending } = useFormStatus();
-  return <Button type="submit" variant="outline" disabled={pending}><SendIcon data-icon="inline-start" />{pending ? "Wird gesendet \u2026" : "Test-E-Mail senden"}</Button>;
+  return <Button type="submit" variant="outline" disabled={pending}>{pending ? <Spinner data-icon="inline-start" /> : <SendIcon data-icon="inline-start" />}{pending ? "Wird gesendet \u2026" : "Test-E-Mail senden"}</Button>;
 }

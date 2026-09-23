@@ -11,6 +11,7 @@ import {
   optOutRecipient,
   unassignSurveyVersionFromClinic,
   updateClinic,
+  uploadClinicLogo,
 } from "@/lib/api/client";
 import type { ClinicInput } from "@/lib/api/types";
 import { getAccessToken } from "@/lib/auth/session";
@@ -34,12 +35,16 @@ function clinicInputFrom(formData: FormData): ClinicInput | null {
   return {
     name,
     slug,
-    logo_url: optionalValue(formData, "logoUrl"),
     street: optionalValue(formData, "street"),
     hausnummer,
     city: optionalValue(formData, "city"),
     postal_code: optionalValue(formData, "postalCode"),
   };
+}
+
+function uploadedLogo(formData: FormData): File | null {
+  const logo = formData.get("logo");
+  return logo instanceof File && logo.size > 0 ? logo : null;
 }
 
 export async function createClinicAction(formData: FormData) {
@@ -52,6 +57,8 @@ export async function createClinicAction(formData: FormData) {
   let clinicSlug: string;
   try {
     const clinic = await createClinic(accessToken, payload);
+    const logo = uploadedLogo(formData);
+    if (logo) await uploadClinicLogo(accessToken, clinic.id, logo);
     clinicSlug = clinic.slug;
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
@@ -74,6 +81,8 @@ export async function updateClinicAction(clinicSlug: string, formData: FormData)
   try {
     const clinic = await resolveClinicBySlug(accessToken, clinicSlug);
     const updated = await updateClinic(accessToken, clinic.id, payload);
+    const logo = uploadedLogo(formData);
+    if (logo) await uploadClinicLogo(accessToken, clinic.id, logo);
     updatedSlug = updated.slug;
     revalidatePath("/");
     revalidatePath("/clinics");

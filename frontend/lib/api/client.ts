@@ -526,6 +526,19 @@ export function updateClinic(
   return writeClinic(accessToken, `/api/v1/clinics/${clinicId}`, "PATCH", payload);
 }
 
+export async function uploadClinicLogo(accessToken: string, clinicId: string, logo: File): Promise<Clinic> {
+  const body = new FormData();
+  body.append("logo", logo);
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/clinics/${clinicId}/logo`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body,
+    cache: "no-store",
+  });
+  if (!response.ok) throw new ApiError(response.status, await readErrorDetail(response));
+  return response.json() as Promise<Clinic>;
+}
+
 export async function createPlatformUser(
   accessToken: string,
   payload: Pick<PlatformUser, "email" | "display_name">,

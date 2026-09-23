@@ -47,7 +47,7 @@ export default async function NewClinicPage({
           <CardDescription>Name und interne Kennung werden für die Organisation der Plattform benötigt.</CardDescription>
         </CardHeader>
         <CardContent className="pt-5">
-          <ClinicForm action={createClinicAction} submitLabel="Klinik anlegen" showLogoUrl={false} />
+          <ClinicForm action={createClinicAction} submitLabel="Klinik anlegen" />
         </CardContent>
       </Card>
     </div>

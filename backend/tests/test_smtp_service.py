@@ -39,7 +39,7 @@ def payload(**overrides) -> SmtpConfigurationUpsertRequest:
         "use_ssl": False,
         "username": "mailer",
         "password": "secret-value",
-        "sender_name": "B-O-W Umfragen",
+        "sender_name": "Praxisumfragen",
         "sender_email": "mailer@example.test",
     }
     values.update(overrides)
@@ -72,7 +72,7 @@ class SmtpServiceTests(unittest.TestCase):
             use_ssl=False,
             username="mailer",
             password_encrypted=None,
-            sender_name="B-O-W Umfragen",
+            sender_name="Praxisumfragen",
             sender_email="mailer@example.test",
             id=uuid4(),
             updated_by_user_id=None,

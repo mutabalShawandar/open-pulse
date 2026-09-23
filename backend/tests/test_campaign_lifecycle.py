@@ -1,8 +1,10 @@
 from datetime import UTC, datetime, timedelta
 import unittest
 
+from pydantic import ValidationError
+
 from app.models.campaign import Campaign, CampaignStatus
-from app.schemas.campaign import CampaignCreateRequest
+from app.schemas.campaign import CampaignCreateRequest, PublicResponseCompletionRequest
 from app.services.campaign_service import _is_publicly_open, campaign_has_ended
 
 
@@ -29,3 +31,8 @@ class CampaignLifecycleTests(unittest.TestCase):
                 title="Test",
                 ends_at=datetime(2026, 9, 22, 12),
             )
+
+    def test_response_completion_requires_legal_acceptance(self) -> None:
+        self.assertTrue(PublicResponseCompletionRequest(legal_accepted=True).legal_accepted)
+        with self.assertRaises(ValidationError):
+            PublicResponseCompletionRequest(legal_accepted=False)
