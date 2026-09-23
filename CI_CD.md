@@ -38,8 +38,8 @@ supports environment protection rules.
 
 ## Bulk-upload secrets without pasting values
 
-Run these commands in PowerShell from the repository after `gh auth login`.
-They upload the complete environment file as one encrypted secret per GitHub
+Run the helper script in PowerShell from the repository after `gh auth login`.
+It uploads the complete environment file as one encrypted secret per GitHub
 environment; no secret value is pasted into the GitHub website.
 
 Create the environment files first. This needs no OpenSSL installation; the
@@ -47,30 +47,16 @@ script uses Windows PowerShell's built-in cryptography and prompts only for the
 Kasserver mailbox address and password:
 
 ```powershell
-.\scripts\Initialize-DeploymentEnvironment.ps1 -Target staging -Domain "yourdomain.de"
-.\scripts\Initialize-DeploymentEnvironment.ps1 -Target production -Domain "yourdomain.de"
+.\scripts\init_prod_env.ps1 -Target staging -Domain "yourdomain.de"
+.\scripts\init_prod_env.ps1 -Target production -Domain "yourdomain.de"
 ```
 
 ```powershell
-$repo = "bowdev2025/umfrage"
-$stagingEnv = [Convert]::ToBase64String([IO.File]::ReadAllBytes(".env.staging"))
-$stagingEnv | gh secret set DEPLOY_ENV_FILE_B64 --env staging --repo $repo
-$productionEnv = [Convert]::ToBase64String([IO.File]::ReadAllBytes(".env.production"))
-$productionEnv | gh secret set DEPLOY_ENV_FILE_B64 --env production --repo $repo
+.\scripts\git_secrets.ps1 -VpsHost "85.215.165.178"
 ```
 
-Use the same pattern for the dedicated deployment key and pinned host key:
-
-```powershell
-$key = Get-Content -Raw "$env:USERPROFILE\.ssh\umfrage_github_actions"
-$key | gh secret set VPS_SSH_PRIVATE_KEY --env staging --repo $repo
-$key | gh secret set VPS_SSH_PRIVATE_KEY --env production --repo $repo
-ssh-keyscan -H 85.215.165.178 | gh secret set VPS_KNOWN_HOSTS --env staging --repo $repo
-ssh-keyscan -H 85.215.165.178 | gh secret set VPS_KNOWN_HOSTS --env production --repo $repo
-```
-
-Set the non-sensitive `VPS_HOST`, `VPS_USER`, and `VPS_DEPLOY_PATH` once per
-environment with `gh secret set <NAME> --env <environment> --repo $repo`.
+The script uploads the environment file, dedicated deployment key, pinned VPS
+host key, host, user, and deployment path to both GitHub Environments.
 
 ## Deployment behavior
 
