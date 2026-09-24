@@ -1,11 +1,15 @@
 from datetime import UTC, datetime, timedelta
+import asyncio
 import unittest
+from uuid import uuid4
 
+from fastapi import HTTPException
 from pydantic import ValidationError
 
 from app.models.campaign import Campaign, CampaignStatus
-from app.schemas.campaign import CampaignCreateRequest, PublicResponseCompletionRequest
-from app.services.campaign_service import _is_publicly_open, campaign_has_ended
+from app.models.survey import QuestionType, SurveyQuestion
+from app.schemas.campaign import CampaignCreateRequest, PublicAnswerRequest, PublicResponseCompletionRequest
+from app.services.campaign_service import _is_publicly_open, _validate_answer, campaign_has_ended
 
 
 class CampaignLifecycleTests(unittest.TestCase):
@@ -36,3 +40,16 @@ class CampaignLifecycleTests(unittest.TestCase):
         self.assertTrue(PublicResponseCompletionRequest(legal_accepted=True).legal_accepted)
         with self.assertRaises(ValidationError):
             PublicResponseCompletionRequest(legal_accepted=False)
+
+    def test_required_multiple_choice_rejects_an_empty_selection(self) -> None:
+        question = SurveyQuestion(
+            id=uuid4(),
+            question_type=QuestionType.MULTIPLE_CHOICE,
+            is_required=True,
+        )
+        answer = PublicAnswerRequest(question_id=question.id)
+
+        with self.assertRaises(HTTPException) as error:
+            asyncio.run(_validate_answer(None, question, answer))
+
+        self.assertEqual(error.exception.status_code, 422)

@@ -53,6 +53,8 @@ services:
       KEYCLOAK_INTERNAL_URL: http://keycloak:8080
       REDIS_URL: redis://redis:6379/0
       MINIO_ENDPOINT: http://storage:8333
+      # The local reverse proxy is the only trusted source of forwarded client IPs.
+      FORWARDED_ALLOW_IPS: 172.17.0.1
     ports:
       - "8000:8000"
     depends_on:

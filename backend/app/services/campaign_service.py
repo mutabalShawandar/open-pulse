@@ -233,8 +233,9 @@ async def _validate_answer(session: AsyncSession, question: SurveyQuestion, answ
         if answer.boolean_value is None or answer.text_value is not None or answer.option_ids:
             raise HTTPException(status_code=422, detail="Yes/no question requires boolean_value")
     elif question.question_type in CHOICE_TYPES:
-        required_count = 1 if question.question_type == QuestionType.SINGLE_CHOICE else 0
-        if len(answer.option_ids) < required_count or answer.text_value is not None or answer.number_value is not None or answer.date_value is not None or answer.boolean_value is not None:
+        has_other_answer = bool(answer.other_text and answer.other_text.strip())
+        has_selection = bool(answer.option_ids) or has_other_answer
+        if (question.is_required and not has_selection) or answer.text_value is not None or answer.number_value is not None or answer.date_value is not None or answer.boolean_value is not None:
             raise HTTPException(status_code=422, detail="Choice question requires selected options")
         option_count = await session.scalar(select(func.count(SurveyQuestionOption.id)).where(SurveyQuestionOption.question_id == question.id, SurveyQuestionOption.id.in_(answer.option_ids)))
         if option_count != len(answer.option_ids):
@@ -261,9 +262,10 @@ async def _validate_answer(session: AsyncSession, question: SurveyQuestion, answ
         if "max_date" in rules and answer.date_value > date.fromisoformat(rules["max_date"]):
             raise HTTPException(status_code=422, detail="Date answer is after the permitted range")
     if question.question_type == QuestionType.MULTIPLE_CHOICE:
-        if "min_selections" in rules and len(answer.option_ids) < rules["min_selections"]:
+        selection_count = len(answer.option_ids) + (1 if answer.other_text and answer.other_text.strip() else 0)
+        if "min_selections" in rules and selection_count < rules["min_selections"]:
             raise HTTPException(status_code=422, detail="Too few options selected")
-        if "max_selections" in rules and len(answer.option_ids) > rules["max_selections"]:
+        if "max_selections" in rules and selection_count > rules["max_selections"]:
             raise HTTPException(status_code=422, detail="Too many options selected")
 
 
@@ -289,9 +291,18 @@ async def save_answers(session: AsyncSession, response: SurveyResponse, answers:
 async def complete_response(session: AsyncSession, response: SurveyResponse) -> SurveyResponse:
     if response.status == ResponseStatus.COMPLETED:
         return response
-    required_ids = set(await session.scalars(select(SurveyQuestion.id).join(SurveySection).where(SurveySection.survey_version_id == response.survey_version_id, SurveyQuestion.is_required.is_(True))))
+    required_questions = list(await session.scalars(select(SurveyQuestion).join(SurveySection).where(SurveySection.survey_version_id == response.survey_version_id, SurveyQuestion.is_required.is_(True))))
     answered_ids = set(await session.scalars(select(ResponseAnswer.question_id).where(ResponseAnswer.response_id == response.id)))
-    if missing := required_ids - answered_ids:
+    missing = {question.id for question in required_questions} - answered_ids
+    # Reject legacy/incomplete choice rows too; an answer row alone is not an answer.
+    for question in required_questions:
+        if question.question_type not in CHOICE_TYPES or question.id in missing:
+            continue
+        answer = await session.scalar(select(ResponseAnswer).where(ResponseAnswer.response_id == response.id, ResponseAnswer.question_id == question.id))
+        option_count = await session.scalar(select(func.count(ResponseAnswerOption.option_id)).where(ResponseAnswerOption.answer_id == answer.id)) if answer else 0
+        if not option_count and not (answer and answer.other_text and answer.other_text.strip()):
+            missing.add(question.id)
+    if missing:
         raise HTTPException(status_code=422, detail="Required questions are missing", headers={"X-Missing-Question-Count": str(len(missing))})
     response.status = ResponseStatus.COMPLETED; response.completed_at = datetime.now(UTC); response.legal_accepted_at = response.completed_at
     campaign = await session.get(Campaign, response.campaign_id)

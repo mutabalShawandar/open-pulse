@@ -121,6 +121,8 @@ services:
       KEYCLOAK_INTERNAL_URL: http://keycloak:8080
       REDIS_URL: redis://redis:6379/0
       MINIO_ENDPOINT: http://storage:8333
+      # Nginx reaches Docker through this gateway; only it may set X-Forwarded-For.
+      FORWARDED_ALLOW_IPS: ${KEYCLOAK_PROXY_TRUSTED_ADDRESSES}
     ports:
       - "127.0.0.1:${BACKEND_HOST_PORT}:8000"
     depends_on:
