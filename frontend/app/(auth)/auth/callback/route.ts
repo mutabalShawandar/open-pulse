@@ -7,7 +7,7 @@ import { sessionCookieOptions, sessionCookies } from "@/lib/auth/session";
 const stateCookie = "umfrage_oauth_state";
 const verifierCookie = "umfrage_pkce_verifier";
 
-type TokenResponse = { access_token: string; refresh_token?: string; expires_in?: number };
+type TokenResponse = { access_token: string; refresh_token?: string; expires_in?: number; refresh_expires_in?: number };
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
   const response = clearTemporaryCookies(NextResponse.redirect(appUrl("/")));
   response.cookies.set(sessionCookies.accessTokenCookie, tokens.access_token, sessionCookieOptions(tokens.expires_in));
-  if (tokens.refresh_token) response.cookies.set(sessionCookies.refreshTokenCookie, tokens.refresh_token, sessionCookieOptions(60 * 60 * 24 * 14));
+  if (tokens.refresh_token) response.cookies.set(sessionCookies.refreshTokenCookie, tokens.refresh_token, sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14));
   return response;
 }
 
