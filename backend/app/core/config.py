@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import re
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
@@ -42,5 +43,13 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         )
+
+    @property
+    def effective_cors_origin_regex(self) -> str | None:
+        """Allow the configured origins plus clinic survey subdomains over HTTPS."""
+        patterns = [f"(?:{self.cors_origin_regex})"] if self.cors_origin_regex else []
+        if self.public_root_domain:
+            patterns.append(rf"https://[a-z0-9-]+\.{re.escape(self.public_root_domain)}")
+        return f"^(?:{'|'.join(patterns)})$" if patterns else None
 
 settings = Settings()

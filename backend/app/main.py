@@ -56,7 +56,7 @@ app.include_router(campaign_recipients_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()],
-    allow_origin_regex=settings.cors_origin_regex,
+    allow_origin_regex=settings.effective_cors_origin_regex,
     allow_methods=["GET", "POST", "PUT", "OPTIONS"],
     allow_headers=["Content-Type"],
 )
