@@ -55,11 +55,11 @@ class Campaign(Base):
     __tablename__ = "campaigns"
     __table_args__ = (
         CheckConstraint("starts_at IS NULL OR ends_at IS NULL OR starts_at < ends_at", name="ck_campaigns_valid_date_window"),
-        Index("ix_campaigns_clinic_status", "clinic_id", "status"),
+        Index("ix_campaigns_workspace_status", "workspace_id", "status"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    clinic_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("clinics.id", ondelete="RESTRICT"), nullable=False, index=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="RESTRICT"), nullable=False, index=True)
     survey_version_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("survey_versions.id", ondelete="RESTRICT"), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)

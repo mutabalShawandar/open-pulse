@@ -40,7 +40,7 @@ async def campaign_export_endpoint(
     add_audit_event(
         session,
         actor_user_id=actor.id,
-        clinic_id=clinic_id,
+        workspace_id=clinic_id,
         action="campaign.export",
         entity_type="campaign",
         entity_id=campaign_id,

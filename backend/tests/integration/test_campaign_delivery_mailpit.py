@@ -7,7 +7,7 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-from app.models import Campaign, CampaignDelivery, CampaignEmailTemplate, CampaignRecipient, CampaignRecipientStatus, CampaignStatus, Clinic, Recipient, RecipientStatus, SmtpConfiguration, Survey, SurveyStatus, SurveyVersion, SurveyVersionStatus
+from app.models import Campaign, CampaignDelivery, CampaignEmailTemplate, CampaignRecipient, CampaignRecipientStatus, CampaignStatus, Organization, Workspace, Recipient, RecipientStatus, SmtpConfiguration, Survey, SurveyStatus, SurveyVersion, SurveyVersionStatus
 from app.models.campaign import hash_response_token
 from app.services.delivery_service import process_delivery_job
 
@@ -25,15 +25,18 @@ class CampaignDeliveryMailpitTests(unittest.IsolatedAsyncioTestCase):
             transaction = await connection.begin()
             session = AsyncSession(bind=connection, expire_on_commit=False)
             try:
-                clinic = Clinic(name="Mailpit Klinik", slug=f"mailpit-{uuid4()}")
+                organization = Organization(name="Mailpit Organization", slug=f"mailpit-org-{uuid4()}")
+                session.add(organization)
+                await session.flush()
+                clinic = Workspace(name="Mailpit Klinik", slug=f"mailpit-{uuid4()}", organization_id=organization.id)
                 survey = Survey(title="Mailpit survey", status=SurveyStatus.PUBLISHED)
                 session.add_all([clinic, survey])
                 await session.flush()
                 version = SurveyVersion(survey_id=survey.id, version_number=1, status=SurveyVersionStatus.PUBLISHED, published_at=datetime.now(UTC))
                 session.add(version)
                 await session.flush()
-                campaign = Campaign(clinic_id=clinic.id, survey_version_id=version.id, title="Mailpit Kampagne", status=CampaignStatus.SCHEDULED)
-                recipient = Recipient(clinic_id=clinic.id, display_name="Max Mustermann", email=email, email_normalized=email, status=RecipientStatus.ACTIVE)
+                campaign = Campaign(workspace_id=clinic.id, survey_version_id=version.id, title="Mailpit Kampagne", status=CampaignStatus.SCHEDULED)
+                recipient = Recipient(workspace_id=clinic.id, display_name="Max Mustermann", email=email, email_normalized=email, status=RecipientStatus.ACTIVE)
                 session.add_all([campaign, recipient])
                 await session.flush()
                 campaign_recipient = CampaignRecipient(campaign_id=campaign.id, recipient_id=recipient.id, token_hash=hash_response_token(raw_token), status=CampaignRecipientStatus.QUEUED)

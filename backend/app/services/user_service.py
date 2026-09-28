@@ -56,7 +56,7 @@ async def create_platform_user(
         add_audit_event(
             session,
             actor_user_id=actor_user_id,
-            clinic_id=None,
+            workspace_id=None,
             action="user.provisioned",
             entity_type="user",
             entity_id=user.id,
@@ -69,7 +69,7 @@ async def create_platform_user(
             add_audit_event(
                 session,
                 actor_user_id=actor_user_id,
-                clinic_id=None,
+                workspace_id=None,
                 action="user.platform_admin_granted",
                 entity_type="user",
                 entity_id=user.id,
@@ -131,7 +131,7 @@ async def grant_platform_admin(
     add_audit_event(
         session,
         actor_user_id=actor_user_id,
-        clinic_id=None,
+        workspace_id=None,
         action="user.platform_admin_granted",
         entity_type="user",
         entity_id=user.id,
@@ -178,7 +178,7 @@ async def deactivate_platform_user(
     add_audit_event(
         session,
         actor_user_id=actor_user_id,
-        clinic_id=None,
+        workspace_id=None,
         action="user.deactivated",
         entity_type="user",
         entity_id=user.id,
@@ -225,7 +225,7 @@ async def reactivate_platform_user(
     add_audit_event(
         session,
         actor_user_id=actor_user_id,
-        clinic_id=None,
+        workspace_id=None,
         action="user.reactivated",
         entity_type="user",
         entity_id=user.id,
@@ -301,7 +301,7 @@ async def permanently_delete_platform_user(
     add_audit_event(
         session,
         actor_user_id=actor_user_id,
-        clinic_id=None,
+        workspace_id=None,
         action="user.permanently_deleted",
         entity_type="user",
         entity_id=user.id,

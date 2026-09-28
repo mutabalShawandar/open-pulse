@@ -6,7 +6,7 @@ from datetime import UTC, date, datetime, timedelta
 from sqlalchemy import select
 
 from app.db.session import async_session_factory
-from app.models import Campaign, CampaignStatus, Clinic, QuestionType, ResponseAnswer, ResponseAnswerOption, ResponseIdentityMode, ResponseStatus, Survey, SurveyQuestion, SurveyQuestionOption, SurveyResponse, SurveySection, SurveyStatus, SurveyVersion, SurveyVersionClinic, SurveyVersionStatus, User
+from app.models import Campaign, CampaignStatus, Workspace, QuestionType, ResponseAnswer, ResponseAnswerOption, ResponseIdentityMode, ResponseStatus, Survey, SurveyQuestion, SurveyQuestionOption, SurveyResponse, SurveySection, SurveyStatus, SurveyVersion, SurveyVersionWorkspace, SurveyVersionStatus, User
 
 
 async def seed() -> None:
@@ -14,11 +14,11 @@ async def seed() -> None:
         if await session.scalar(select(Campaign).where(Campaign.public_slug == "analytics-suite-1")):
             print("Analytics suite already exists."); return
         actor = await session.scalar(select(User).where(User.is_active.is_(True)).limit(1))
-        clinic = await session.scalar(select(Clinic).where(Clinic.slug == "demo-klinik"))
+        clinic = await session.scalar(select(Workspace).where(Workspace.slug == "demo-klinik"))
         if actor is None or clinic is None: raise RuntimeError("Run seed_phase3_demo first")
         survey = Survey(title="Vollständige Demo-Auswertung", status=SurveyStatus.PUBLISHED, created_by_user_id=actor.id); session.add(survey); await session.flush()
         version = SurveyVersion(survey_id=survey.id, version_number=1, status=SurveyVersionStatus.PUBLISHED, published_at=datetime.now(UTC), created_by_user_id=actor.id); session.add(version); await session.flush()
-        session.add(SurveyVersionClinic(survey_version_id=version.id, clinic_id=clinic.id, assigned_by_user_id=actor.id))
+        session.add(SurveyVersionWorkspace(survey_version_id=version.id, workspace_id=clinic.id, assigned_by_user_id=actor.id))
         section = SurveySection(survey_version_id=version.id, title="Alle Fragetypen", position=0); session.add(section); await session.flush()
         types = [(QuestionType.SINGLE_CHOICE, "Wie bewerten Sie den Empfang?"), (QuestionType.MULTIPLE_CHOICE, "Was war Ihnen wichtig?"), (QuestionType.YES_NO, "Würden Sie wiederkommen?"), (QuestionType.RATING, "Gesamtbewertung"), (QuestionType.SHORT_TEXT, "Ein kurzes Stichwort"), (QuestionType.LONG_TEXT, "Ihr ausführliches Feedback"), (QuestionType.NUMBER, "Wartezeit in Minuten"), (QuestionType.DATE, "Datum Ihres Besuchs")]
         questions = []
@@ -33,7 +33,7 @@ async def seed() -> None:
         await session.flush()
         names = ["Januar", "Februar", "März", "April", "Mai"]
         for campaign_index, name in enumerate(names):
-            campaign = Campaign(clinic_id=clinic.id, survey_version_id=version.id, title=f"{name} – Qualitätsumfrage", public_slug=f"analytics-suite-{campaign_index + 1}", status=CampaignStatus.ACTIVE if campaign_index == 4 else CampaignStatus.COMPLETED, response_identity_mode=ResponseIdentityMode.ANONYMOUS, created_by_user_id=actor.id); session.add(campaign); await session.flush()
+            campaign = Campaign(workspace_id=clinic.id, survey_version_id=version.id, title=f"{name} – Qualitätsumfrage", public_slug=f"analytics-suite-{campaign_index + 1}", status=CampaignStatus.ACTIVE if campaign_index == 4 else CampaignStatus.COMPLETED, response_identity_mode=ResponseIdentityMode.ANONYMOUS, created_by_user_id=actor.id); session.add(campaign); await session.flush()
             for response_index in range(12):
                 response = SurveyResponse(campaign_id=campaign.id, survey_version_id=version.id, status=ResponseStatus.COMPLETED, identity_mode_snapshot=ResponseIdentityMode.ANONYMOUS, completed_at=datetime.now(UTC) - timedelta(days=response_index)); session.add(response); await session.flush()
                 single = ResponseAnswer(response_id=response.id, question_id=questions[0].id); multi = ResponseAnswer(response_id=response.id, question_id=questions[1].id); session.add_all([single, multi]); await session.flush()

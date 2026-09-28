@@ -15,12 +15,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.links import build_public_survey_url
-from app.models import Campaign, CampaignDelivery, CampaignEmailTemplate, CampaignRecipient, CampaignRecipientStatus, Clinic, Recipient, RecipientStatus
+from app.models import Campaign, CampaignDelivery, CampaignEmailTemplate, CampaignRecipient, CampaignRecipientStatus, Workspace, Recipient, RecipientStatus
 from app.models.campaign import CampaignStatus, generate_response_token, hash_response_token
 from app.services.audit_service import add_audit_event
 from app.services.campaign_service import assign_public_path
 from app.services.smtp_service import get_smtp_configuration, send_campaign_email
-from app.services.storage_service import read_clinic_logo
+from app.services.storage_service import read_workspace_logo
 
 QUEUE_NAME = "campaign-deliveries"
 TOKEN_KEY_PREFIX = "campaign-delivery-token:"
@@ -43,22 +43,22 @@ def render_template(value: str, variables: dict[str, str]) -> str:
     return value
 
 
-async def email_clinic_logo(clinic: Clinic | None) -> tuple[bytes, str] | None:
-    if clinic is None or not clinic.logo_storage_key:
+async def email_workspace_logo(workspace: Workspace | None) -> tuple[bytes, str] | None:
+    if workspace is None or not workspace.logo_storage_key:
         return None
     try:
-        return await read_clinic_logo(clinic.logo_storage_key)
+        return await read_workspace_logo(workspace.logo_storage_key)
     except HTTPException:
         # A missing logo must not block delivery of a survey invitation.
         return None
 
 
-def with_clinic_logo(html_body: str, clinic: Clinic | None, inline_logo: tuple[bytes, str] | None) -> str:
-    """Add a CID-referenced clinic logo outside the editable email template."""
-    if clinic is None or inline_logo is None:
+def with_workspace_logo(html_body: str, workspace: Workspace | None, inline_logo: tuple[bytes, str] | None) -> str:
+    """Add a CID-referenced workspace logo outside the editable email template."""
+    if workspace is None or inline_logo is None:
         return html_body
-    clinic_name = html.escape(clinic.name, quote=True)
-    return f'<div style="padding:0 0 20px"><img src="cid:clinic-logo" alt="{clinic_name}" style="display:block;max-width:180px;max-height:80px;width:auto;height:auto" /></div>{html_body}'
+    clinic_name = html.escape(workspace.name, quote=True)
+    return f'<div style="padding:0 0 20px"><img src="cid:workspace-logo" alt="{clinic_name}" style="display:block;max-width:180px;max-height:80px;width:auto;height:auto" /></div>{html_body}'
 
 
 def _safe_error(error: Exception) -> str:
@@ -134,7 +134,7 @@ async def queue_campaign_deliveries(session: AsyncSession, campaign_id: UUID, ac
     # to active (never back to draft/scheduled — enforced in update_campaign).
     if jobs:
         campaign.status = CampaignStatus.ACTIVE
-    add_audit_event(session, actor_user_id=actor_user_id, clinic_id=campaign.clinic_id, action="campaign.deliveries_queued", entity_type="campaign", entity_id=campaign.id, metadata={"queued_count": len(jobs), "skipped_count": skipped})
+    add_audit_event(session, actor_user_id=actor_user_id, workspace_id=campaign.workspace_id, action="campaign.deliveries_queued", entity_type="campaign", entity_id=campaign.id, metadata={"queued_count": len(jobs), "skipped_count": skipped})
     await session.commit()
     await enqueue_delivery_jobs(jobs)
     return {"queued_count": len(jobs), "skipped_count": skipped}
@@ -174,7 +174,7 @@ async def retry_failed_deliveries(session: AsyncSession, campaign_id: UUID, acto
                 jobs.append((delivery.id, raw_token))
     finally:
         await redis.aclose()
-    add_audit_event(session, actor_user_id=actor_user_id, clinic_id=campaign.clinic_id, action="campaign.deliveries_requeued", entity_type="campaign", entity_id=campaign.id, metadata={"requeued_count": len(jobs), "skipped_count": len(rows) - len(jobs)})
+    add_audit_event(session, actor_user_id=actor_user_id, workspace_id=campaign.workspace_id, action="campaign.deliveries_requeued", entity_type="campaign", entity_id=campaign.id, metadata={"requeued_count": len(jobs), "skipped_count": len(rows) - len(jobs)})
     await session.commit()
     await enqueue_delivery_jobs(jobs)
     return {"requeued_count": len(jobs), "skipped_count": len(rows) - len(jobs)}
@@ -214,12 +214,12 @@ async def process_delivery_job(session: AsyncSession, delivery_id: UUID, raw_tok
     delivery.last_error = None
     await session.commit()
 
-    clinic = await session.get(Clinic, campaign.clinic_id)
-    link = build_public_survey_url(clinic.slug if clinic else "umfrage", campaign.public_path or campaign.public_slug, raw_token)
-    variables = {"{{recipient_name}}": recipient.display_name or "", "{{survey_link}}": link, "{{clinic_name}}": clinic.name if clinic else "", "{{campaign_title}}": campaign.title}
+    workspace = await session.get(Workspace, campaign.workspace_id)
+    link = build_public_survey_url(workspace.slug if workspace else "umfrage", campaign.public_path or campaign.public_slug, raw_token)
+    variables = {"{{recipient_name}}": recipient.display_name or "", "{{survey_link}}": link, "{{clinic_name}}": workspace.name if workspace else "", "{{campaign_title}}": campaign.title}
     try:
-        inline_logo = await email_clinic_logo(clinic)
-        html_body = with_clinic_logo(render_template(template.html_body, variables), clinic, inline_logo)
+        inline_logo = await email_workspace_logo(workspace)
+        html_body = with_workspace_logo(render_template(template.html_body, variables), workspace, inline_logo)
         await send_campaign_email(session, recipient.email, render_template(template.subject, variables), html_body, render_template(template.text_body, variables), sender_name=template.sender_name, reply_to=template.reply_to, inline_logo=inline_logo)
     except Exception as error:
         delivery = await session.get(CampaignDelivery, delivery_id)
@@ -231,7 +231,7 @@ async def process_delivery_job(session: AsyncSession, delivery_id: UUID, raw_tok
         delivery.status = "queued" if can_retry else "failed"
         campaign_recipient.status = CampaignRecipientStatus.QUEUED if can_retry else CampaignRecipientStatus.FAILED
         campaign_recipient.last_error = delivery.last_error
-        add_audit_event(session, actor_user_id=None, clinic_id=campaign.clinic_id, action="campaign.delivery_retry_scheduled" if can_retry else "campaign.delivery_failed", entity_type="campaign_delivery", entity_id=delivery.id, metadata={"attempt_count": delivery.attempt_count})
+        add_audit_event(session, actor_user_id=None, workspace_id=campaign.workspace_id, action="campaign.delivery_retry_scheduled" if can_retry else "campaign.delivery_failed", entity_type="campaign_delivery", entity_id=delivery.id, metadata={"attempt_count": delivery.attempt_count})
         await session.commit()
         return delivery.attempt_count if can_retry else 0
     delivery = await session.get(CampaignDelivery, delivery_id)
@@ -245,7 +245,7 @@ async def process_delivery_job(session: AsyncSession, delivery_id: UUID, raw_tok
     campaign_recipient.status = CampaignRecipientStatus.SENT
     campaign_recipient.sent_at = now
     campaign_recipient.last_error = None
-    add_audit_event(session, actor_user_id=None, clinic_id=campaign.clinic_id, action="campaign.delivery_sent", entity_type="campaign_delivery", entity_id=delivery.id, metadata={"attempt_count": delivery.attempt_count})
+    add_audit_event(session, actor_user_id=None, workspace_id=campaign.workspace_id, action="campaign.delivery_sent", entity_type="campaign_delivery", entity_id=delivery.id, metadata={"attempt_count": delivery.attempt_count})
     await session.commit()
     redis = Redis.from_url(settings.redis_url, decode_responses=True)
     try:

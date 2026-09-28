@@ -5,12 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.future import select
 
-from app.models import User, ClinicMember, OrganizationMember, Permission, Role, RolePermission, UserRole
+from app.models import User, WorkspaceMember, OrganizationMember, Permission, Role, RolePermission, UserRole
 
 
 async def require_clinic_permission(
-    session: AsyncSession, 
-    user: User, 
+    session: AsyncSession,
+    user: User,
     clinic_id: UUID,
     permission_name: str
 ) -> None:
@@ -42,12 +42,12 @@ async def require_clinic_permission(
     
     try:
         permission_id = await session.scalar(
-            select(Permission.id).select_from(ClinicMember)
-            .join(RolePermission, RolePermission.role_id == ClinicMember.role_id)
+            select(Permission.id).select_from(WorkspaceMember)
+            .join(RolePermission, RolePermission.role_id == WorkspaceMember.role_id)
             .join(Permission, Permission.id == RolePermission.permission_id)
             .where(
-                ClinicMember.user_id == user.id,
-                ClinicMember.clinic_id == clinic_id,
+                WorkspaceMember.user_id == user.id,
+                WorkspaceMember.workspace_id == clinic_id,
                 Permission.name == permission_name,
             )
             .limit(1)

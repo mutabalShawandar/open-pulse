@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-from app.models import AuditEvent, Clinic, ClinicMember, Permission, Role, User
+from app.models import AuditEvent, Organization, Workspace, WorkspaceMember, Permission, Role, User
 from app.core.config import settings
 from app.services.authorization_service import require_clinic_permission
 from app.services.audit_service import add_audit_event
@@ -44,26 +44,34 @@ class PostgresAuthorizationTests(unittest.IsolatedAsyncioTestCase):
                     display_name="Other User",
                     is_active=True,
                 )
-                clinic = Clinic(
+                organization = Organization(
+                    name="Integration Organization",
+                    slug=f"integration-org-{uuid4()}",
+                )
+                session.add(organization)
+                await session.flush()
+                clinic = Workspace(
                     name="Integration Clinic",
                     slug=f"integration-{uuid4()}",
+                    organization_id=organization.id,
                 )
-                other_clinic = Clinic(
+                other_clinic = Workspace(
                     name="Other Integration Clinic",
                     slug=f"integration-other-{uuid4()}",
+                    organization_id=organization.id,
                 )
                 session.add_all([user, other_user, clinic, other_clinic])
                 await session.flush()
                 session.add_all(
                     [
-                        ClinicMember(
+                        WorkspaceMember(
                             user_id=user.id,
-                            clinic_id=clinic.id,
+                            workspace_id=clinic.id,
                             role_id=role.id,
                         ),
-                        ClinicMember(
+                        WorkspaceMember(
                             user_id=other_user.id,
-                            clinic_id=other_clinic.id,
+                            workspace_id=other_clinic.id,
                             role_id=role.id,
                         ),
                     ]
@@ -83,7 +91,7 @@ class PostgresAuthorizationTests(unittest.IsolatedAsyncioTestCase):
                 event = add_audit_event(
                     session,
                     actor_user_id=user.id,
-                    clinic_id=clinic.id,
+                    workspace_id=clinic.id,
                     action="integration.checked",
                     entity_type="clinic",
                     entity_id=clinic.id,

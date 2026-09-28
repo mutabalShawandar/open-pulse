@@ -5,84 +5,84 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Clinic, ClinicMember, Role, User
-from app.schemas.clinic import ClinicCreateRequest, ClinicMemberCreateRequest, ClinicUpdateRequest
+from app.models import Workspace, WorkspaceMember, Role, User
+from app.schemas.workspace import WorkspaceCreateRequest, WorkspaceMemberCreateRequest, WorkspaceUpdateRequest
 from app.services.audit_service import add_audit_event
 
 
-async def create_clinic(
+async def create_workspace(
     session: AsyncSession,
-    payload: ClinicCreateRequest,
+    payload: WorkspaceCreateRequest,
     actor_user_id: UUID,
-) -> Clinic:
-    clinic = Clinic(**payload.model_dump())
-    session.add(clinic)
+) -> Workspace:
+    workspace = Workspace(**payload.model_dump())
+    session.add(workspace)
     try:
         await session.flush()
         add_audit_event(
             session,
             actor_user_id=actor_user_id,
-            clinic_id=clinic.id,
+            workspace_id=workspace.id,
             action="clinic.created",
             entity_type="clinic",
-            entity_id=clinic.id,
-            metadata={"slug": clinic.slug},
+            entity_id=workspace.id,
+            metadata={"slug": workspace.slug},
         )
         await session.commit()
-        await session.refresh(clinic)
+        await session.refresh(workspace)
     except IntegrityError as error:
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="A clinic with this slug already exists",
         ) from error
-    return clinic
+    return workspace
 
 
-async def update_clinic(
+async def update_workspace(
     session: AsyncSession,
-    clinic_id: UUID,
-    payload: ClinicUpdateRequest,
+    workspace_id: UUID,
+    payload: WorkspaceUpdateRequest,
     actor_user_id: UUID,
-) -> Clinic:
-    clinic = await session.scalar(select(Clinic).where(Clinic.id == clinic_id))
-    if clinic is None:
+) -> Workspace:
+    workspace = await session.scalar(select(Workspace).where(Workspace.id == workspace_id))
+    if workspace is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Clinic not found")
 
     for field, value in payload.model_dump(exclude_unset=True).items():
-        setattr(clinic, field, value)
+        setattr(workspace, field, value)
 
     try:
         await session.flush()
         add_audit_event(
             session,
             actor_user_id=actor_user_id,
-            clinic_id=clinic.id,
+            workspace_id=workspace.id,
             action="clinic.updated",
             entity_type="clinic",
-            entity_id=clinic.id,
+            entity_id=workspace.id,
         )
         await session.commit()
-        await session.refresh(clinic)
+        await session.refresh(workspace)
     except IntegrityError as error:
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="A clinic with this slug already exists",
         ) from error
-    return clinic
+    return workspace
 
 
-async def remove_clinic_member(
+async def remove_workspace_member(
     session: AsyncSession,
-    clinic_id: UUID,
+    workspace_id: UUID,
     user_id: UUID,
     actor_user_id: UUID,
 ) -> None:
     membership = await session.scalar(
-        select(ClinicMember).where(
-            ClinicMember.clinic_id == clinic_id,
-            ClinicMember.user_id == user_id,
+        select(WorkspaceMember).where(
+            WorkspaceMember.workspace_id == workspace_id,
+            WorkspaceMember.user_id == user_id,
         )
     )
     if membership is None:
@@ -92,7 +92,7 @@ async def remove_clinic_member(
     add_audit_event(
         session,
         actor_user_id=actor_user_id,
-        clinic_id=clinic_id,
+        workspace_id=workspace_id,
         action="clinic.member_removed",
         entity_type="clinic_member",
         entity_id=user_id,
@@ -100,13 +100,13 @@ async def remove_clinic_member(
     await session.commit()
 
 
-async def add_clinic_member(
+async def add_workspace_member(
     session: AsyncSession,
-    clinic_id: UUID,
-    payload: ClinicMemberCreateRequest,
+    workspace_id: UUID,
+    payload: WorkspaceMemberCreateRequest,
     actor_user_id: UUID,
-) -> ClinicMember:
-    if await session.scalar(select(Clinic).where(Clinic.id == clinic_id)) is None:
+) -> WorkspaceMember:
+    if await session.scalar(select(Workspace).where(Workspace.id == workspace_id)) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Clinic not found")
 
     user = await session.scalar(select(User).where(User.id == payload.user_id))
@@ -117,9 +117,9 @@ async def add_clinic_member(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
 
     if await session.scalar(
-        select(ClinicMember).where(
-            ClinicMember.user_id == payload.user_id,
-            ClinicMember.clinic_id == clinic_id,
+        select(WorkspaceMember).where(
+            WorkspaceMember.user_id == payload.user_id,
+            WorkspaceMember.workspace_id == workspace_id,
         )
     ) is not None:
         raise HTTPException(
@@ -127,9 +127,9 @@ async def add_clinic_member(
             detail="User is already a member of this clinic",
         )
 
-    membership = ClinicMember(
+    membership = WorkspaceMember(
         user_id=payload.user_id,
-        clinic_id=clinic_id,
+        workspace_id=workspace_id,
         role_id=payload.role_id,
     )
     session.add(membership)
@@ -138,7 +138,7 @@ async def add_clinic_member(
         add_audit_event(
             session,
             actor_user_id=actor_user_id,
-            clinic_id=clinic_id,
+            workspace_id=workspace_id,
             action="clinic.member_added",
             entity_type="clinic_member",
             entity_id=payload.user_id,

@@ -6,19 +6,19 @@ from uuid import uuid4
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 
-from app.schemas.clinic import ClinicCreateRequest, ClinicMemberCreateRequest, ClinicUpdateRequest
-from app.services.clinic_service import add_clinic_member, create_clinic, remove_clinic_member, update_clinic
+from app.schemas.workspace import WorkspaceCreateRequest, WorkspaceMemberCreateRequest, WorkspaceUpdateRequest
+from app.services.workspace_service import add_workspace_member, create_workspace, remove_workspace_member, update_workspace
 
 
-class ClinicServiceTests(unittest.TestCase):
+class WorkspaceServiceTests(unittest.TestCase):
     def test_missing_clinic_is_rejected(self) -> None:
         session = SequenceSession([None])
         with self.assertRaises(HTTPException) as error:
             asyncio.run(
-                add_clinic_member(
+                add_workspace_member(
                     session,
                     uuid4(),
-                    ClinicMemberCreateRequest(user_id=uuid4(), role_id=uuid4()),
+                    WorkspaceMemberCreateRequest(user_id=uuid4(), role_id=uuid4()),
                     uuid4(),
                 )
             )
@@ -31,10 +31,10 @@ class ClinicServiceTests(unittest.TestCase):
         ])
         with self.assertRaises(HTTPException) as error:
             asyncio.run(
-                add_clinic_member(
+                add_workspace_member(
                     session,
                     uuid4(),
-                    ClinicMemberCreateRequest(user_id=uuid4(), role_id=uuid4()),
+                    WorkspaceMemberCreateRequest(user_id=uuid4(), role_id=uuid4()),
                     uuid4(),
                 )
             )
@@ -48,10 +48,10 @@ class ClinicServiceTests(unittest.TestCase):
         ])
         with self.assertRaises(HTTPException) as error:
             asyncio.run(
-                add_clinic_member(
+                add_workspace_member(
                     session,
                     uuid4(),
-                    ClinicMemberCreateRequest(user_id=uuid4(), role_id=uuid4()),
+                    WorkspaceMemberCreateRequest(user_id=uuid4(), role_id=uuid4()),
                     uuid4(),
                 )
             )
@@ -66,10 +66,10 @@ class ClinicServiceTests(unittest.TestCase):
         ])
         with self.assertRaises(HTTPException) as error:
             asyncio.run(
-                add_clinic_member(
+                add_workspace_member(
                     session,
                     uuid4(),
-                    ClinicMemberCreateRequest(user_id=uuid4(), role_id=uuid4()),
+                    WorkspaceMemberCreateRequest(user_id=uuid4(), role_id=uuid4()),
                     uuid4(),
                 )
             )
@@ -79,9 +79,9 @@ class ClinicServiceTests(unittest.TestCase):
         session = CommitFailingSession()
         with self.assertRaises(HTTPException) as error:
             asyncio.run(
-                create_clinic(
+                create_workspace(
                     session,
-                    ClinicCreateRequest(name="Clinic", slug="clinic"),
+                    WorkspaceCreateRequest(name="Clinic", slug="clinic", organization_id=uuid4()),
                     uuid4(),
                 )
             )
@@ -91,7 +91,7 @@ class ClinicServiceTests(unittest.TestCase):
     def test_missing_membership_cannot_be_removed(self) -> None:
         session = SequenceSession([None])
         with self.assertRaises(HTTPException) as error:
-            asyncio.run(remove_clinic_member(session, uuid4(), uuid4(), uuid4()))
+            asyncio.run(remove_workspace_member(session, uuid4(), uuid4(), uuid4()))
         self.assertEqual(error.exception.status_code, 404)
 
     def test_membership_can_be_removed_and_is_audited(self) -> None:
@@ -116,13 +116,13 @@ class ClinicServiceTests(unittest.TestCase):
                 self.commit_count += 1
 
         session = RemovalSession()
-        asyncio.run(remove_clinic_member(session, uuid4(), membership.user_id, uuid4()))
+        asyncio.run(remove_workspace_member(session, uuid4(), membership.user_id, uuid4()))
         self.assertIs(session.deleted, membership)
         self.assertEqual(session.commit_count, 1)
         self.assertEqual(session.added[0].action, "clinic.member_removed")
 
     def test_clinic_update_persists_changes_and_is_audited(self) -> None:
-        clinic = SimpleNamespace(id=uuid4(), name="Before", slug="before")
+        workspace = SimpleNamespace(id=uuid4(), name="Before", slug="before")
 
         class UpdateSession:
             def __init__(self) -> None:
@@ -130,7 +130,7 @@ class ClinicServiceTests(unittest.TestCase):
                 self.commit_count = 0
 
             async def scalar(self, _statement):
-                return clinic
+                return workspace
 
             async def flush(self) -> None:
                 pass
@@ -146,15 +146,15 @@ class ClinicServiceTests(unittest.TestCase):
 
         session = UpdateSession()
         updated = asyncio.run(
-            update_clinic(
+            update_workspace(
                 session,
-                clinic.id,
-                ClinicUpdateRequest(name="After"),
+                workspace.id,
+                WorkspaceUpdateRequest(name="After"),
                 uuid4(),
             )
         )
-        self.assertIs(updated, clinic)
-        self.assertEqual(clinic.name, "After")
+        self.assertIs(updated, workspace)
+        self.assertEqual(workspace.name, "After")
         self.assertEqual(session.commit_count, 1)
         self.assertEqual(session.added[0].action, "clinic.updated")
 

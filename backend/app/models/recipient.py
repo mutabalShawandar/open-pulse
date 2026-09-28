@@ -30,9 +30,9 @@ class Recipient(Base):
     __tablename__ = "recipients"
     __table_args__ = (
         UniqueConstraint(
-            "clinic_id",
+            "workspace_id",
             "email_normalized",
-            name="uq_recipients_clinic_email_normalized"
+            name="uq_recipients_workspace_email_normalized"
         ),
     )
 
@@ -42,9 +42,9 @@ class Recipient(Base):
         default=uuid.uuid4
     )
 
-    clinic_id: Mapped[uuid.UUID] = mapped_column(
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("clinics.id", ondelete="CASCADE"),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
@@ -84,6 +84,11 @@ class Recipient(Base):
     )
 
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    @property
+    def clinic_id(self) -> uuid.UUID:
+        """Kept for the stable `clinic_id` API/schema field name; the column is `workspace_id`."""
+        return self.workspace_id
 
 
 class CampaignRecipient(Base):

@@ -6,11 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_permission
 from app.db.session import get_db_session
-from app.models import CampaignEmailTemplate, CampaignStatus, Clinic, User
+from app.models import CampaignEmailTemplate, CampaignStatus, Workspace, User
 from app.schemas.email import CampaignDeliveryQueueResponse, CampaignDeliveryResponse, CampaignEmailTemplateRequest, CampaignEmailTemplateResponse, CampaignEmailTemplateTestRequest
 from app.schemas.campaign import CampaignCreateRequest, CampaignResponse, CampaignUpdateRequest
 from app.services.campaign_service import campaign_response_data, create_campaign, delete_campaign, get_campaign_or_404, list_campaigns, update_campaign
-from app.services.delivery_service import email_clinic_logo, list_deliveries, queue_campaign_deliveries, retry_failed_deliveries, validate_template_variables, with_clinic_logo
+from app.services.delivery_service import email_workspace_logo, list_deliveries, queue_campaign_deliveries, retry_failed_deliveries, validate_template_variables, with_workspace_logo
 from app.services.smtp_service import send_rendered_email
 
 
@@ -45,11 +45,11 @@ async def test_email_template(campaign_id: UUID, payload: CampaignEmailTemplateT
     template = await session.get(CampaignEmailTemplate, campaign_id)
     campaign = await get_campaign_or_404(session, campaign_id)
     if template is None: raise HTTPException(status_code=409, detail="Save an email template before sending a test")
-    clinic = await session.get(Clinic, campaign.clinic_id)
-    values = {"{{recipient_name}}": "Max Mustermann", "{{survey_link}}": "https://example.invalid/umfrage", "{{clinic_name}}": clinic.name if clinic else "", "{{campaign_title}}": campaign.title}
+    workspace = await session.get(Workspace, campaign.workspace_id)
+    values = {"{{recipient_name}}": "Max Mustermann", "{{survey_link}}": "https://example.invalid/umfrage", "{{clinic_name}}": workspace.name if workspace else "", "{{campaign_title}}": campaign.title}
     render = lambda value: __import__("functools").reduce(lambda text, pair: text.replace(*pair), values.items(), value)
-    inline_logo = await email_clinic_logo(clinic)
-    await send_rendered_email(session, payload.recipient_email, render(template.subject), with_clinic_logo(render(template.html_body), clinic, inline_logo), render(template.text_body), inline_logo=inline_logo)
+    inline_logo = await email_workspace_logo(workspace)
+    await send_rendered_email(session, payload.recipient_email, render(template.subject), with_workspace_logo(render(template.html_body), workspace, inline_logo), render(template.text_body), inline_logo=inline_logo)
 
 
 @router.post("", response_model=CampaignResponse, status_code=status.HTTP_201_CREATED)

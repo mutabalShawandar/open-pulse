@@ -7,11 +7,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from app.core.config import settings
-from app.models import Clinic, ClinicMember, Role, Survey, SurveyStatus, SurveyVersion, SurveyVersionStatus, User
+from app.models import Organization, Workspace, WorkspaceMember, Role, Survey, SurveyStatus, SurveyVersion, SurveyVersionStatus, User
 from app.services.survey_service import (
-    assign_version_to_clinic,
-    list_clinic_version_assignments,
-    unassign_version_from_clinic,
+    assign_version_to_workspace,
+    list_workspace_version_assignments,
+    unassign_version_from_workspace,
 )
 
 
@@ -34,11 +34,14 @@ class SurveyVersionAssignmentTests(unittest.IsolatedAsyncioTestCase):
                     display_name="Assignment Test",
                     is_active=True,
                 )
-                clinic = Clinic(name="Assignment Clinic", slug=f"assignment-{uuid4()}")
+                organization = Organization(name="Assignment Organization", slug=f"assignment-org-{uuid4()}")
+                session.add(organization)
+                await session.flush()
+                clinic = Workspace(name="Assignment Clinic", slug=f"assignment-{uuid4()}", organization_id=organization.id)
                 session.add_all([actor, clinic])
                 await session.flush()
                 session.add(
-                    ClinicMember(user_id=actor.id, clinic_id=clinic.id, role_id=role.id)
+                    WorkspaceMember(user_id=actor.id, workspace_id=clinic.id, role_id=role.id)
                 )
                 survey = Survey(
                     title="Assigned survey",
@@ -57,18 +60,18 @@ class SurveyVersionAssignmentTests(unittest.IsolatedAsyncioTestCase):
                 session.add(version)
                 await session.flush()
 
-                assignment = await assign_version_to_clinic(session, clinic.id, version.id, actor)
-                self.assertEqual(assignment.clinic_id, clinic.id)
+                assignment = await assign_version_to_workspace(session, clinic.id, version.id, actor)
+                self.assertEqual(assignment.workspace_id, clinic.id)
                 self.assertEqual(assignment.survey_version_id, version.id)
                 self.assertIsNone(assignment.unassigned_at)
                 self.assertEqual(
-                    len(await list_clinic_version_assignments(session, clinic.id, actor)), 1
+                    len(await list_workspace_version_assignments(session, clinic.id, actor)), 1
                 )
 
-                await unassign_version_from_clinic(session, clinic.id, version.id, actor)
-                await unassign_version_from_clinic(session, clinic.id, version.id, actor)
+                await unassign_version_from_workspace(session, clinic.id, version.id, actor)
+                await unassign_version_from_workspace(session, clinic.id, version.id, actor)
                 self.assertEqual(
-                    len(await list_clinic_version_assignments(session, clinic.id, actor)), 0
+                    len(await list_workspace_version_assignments(session, clinic.id, actor)), 0
                 )
             finally:
                 await session.close()

@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 
 from app.db.session import async_session_factory
-from app.models import Campaign, CampaignStatus, Clinic, QuestionType, ResponseAnswer, ResponseAnswerOption, ResponseIdentityMode, ResponseStatus, Survey, SurveyQuestion, SurveyQuestionOption, SurveyResponse, SurveySection, SurveyStatus, SurveyVersion, SurveyVersionClinic, SurveyVersionStatus, User
+from app.models import Campaign, CampaignStatus, Organization, Workspace, QuestionType, ResponseAnswer, ResponseAnswerOption, ResponseIdentityMode, ResponseStatus, Survey, SurveyQuestion, SurveyQuestionOption, SurveyResponse, SurveySection, SurveyStatus, SurveyVersion, SurveyVersionWorkspace, SurveyVersionStatus, User
 
 
 async def seed() -> None:
@@ -21,12 +21,16 @@ async def seed() -> None:
         actor = await session.scalar(select(User).where(User.is_active.is_(True)).limit(1))
         if actor is None:
             raise RuntimeError("Create a platform user before seeding demo data")
-        clinic = Clinic(name="Demo Klinik", slug="demo-klinik")
+        organization = await session.scalar(select(Organization).where(Organization.slug == "demo-organization"))
+        if organization is None:
+            organization = Organization(name="Demo Organization", slug="demo-organization")
+            session.add(organization); await session.flush()
+        clinic = Workspace(name="Demo Klinik", slug="demo-klinik", organization_id=organization.id)
         survey = Survey(title="Patientenzufriedenheit", description="Demo für Auswertungen", status=SurveyStatus.PUBLISHED, created_by_user_id=actor.id)
         session.add_all([clinic, survey]); await session.flush()
         version = SurveyVersion(survey_id=survey.id, version_number=1, status=SurveyVersionStatus.PUBLISHED, published_at=datetime.now(UTC), created_by_user_id=actor.id)
         session.add(version); await session.flush()
-        session.add(SurveyVersionClinic(survey_version_id=version.id, clinic_id=clinic.id, assigned_by_user_id=actor.id))
+        session.add(SurveyVersionWorkspace(survey_version_id=version.id, workspace_id=clinic.id, assigned_by_user_id=actor.id))
         section = SurveySection(survey_version_id=version.id, title="Ihre Erfahrung", position=0)
         session.add(section); await session.flush()
         rating = SurveyQuestion(section_id=section.id, question_type=QuestionType.RATING, title="Wie zufrieden waren Sie insgesamt?", is_required=True, position=0)
@@ -37,7 +41,7 @@ async def seed() -> None:
         maybe = SurveyQuestionOption(question_id=choice.id, label="Vielleicht", value="maybe", position=1)
         no = SurveyQuestionOption(question_id=choice.id, label="Nein", value="no", position=2)
         session.add_all([yes, maybe, no]); await session.flush()
-        campaign = Campaign(clinic_id=clinic.id, survey_version_id=version.id, title="September Zufriedenheitsumfrage", public_slug="demo-analytics", status=CampaignStatus.ACTIVE, response_identity_mode=ResponseIdentityMode.ANONYMOUS, created_by_user_id=actor.id)
+        campaign = Campaign(workspace_id=clinic.id, survey_version_id=version.id, title="September Zufriedenheitsumfrage", public_slug="demo-analytics", status=CampaignStatus.ACTIVE, response_identity_mode=ResponseIdentityMode.ANONYMOUS, created_by_user_id=actor.id)
         session.add(campaign); await session.flush()
         values = [(5, yes, "Sehr freundliches Team."), (4, yes, "Kurze Wartezeit, alles gut."), (4, maybe, "Die Parkplatzsituation könnte besser sein."), (3, maybe, "Der Empfang war etwas voll."), (5, yes, "Vielen Dank!"), (2, no, "Lange Wartezeit.")]
         for number, option, text in values:

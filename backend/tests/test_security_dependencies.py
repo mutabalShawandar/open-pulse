@@ -11,7 +11,7 @@ from app.api import deps
 
 def _token(
     *,
-    audience: str = "umfrage-api",
+    audience: str = "openpulse-api",
     issuer: str | None = None,
     expires_at: int | None = None,
 ) -> tuple[str, dict]:
@@ -101,7 +101,7 @@ class SecurityDependencyTests(unittest.TestCase):
         token, key_data = _token()
         other_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         token = jwt.encode(
-            {"sub": "subject-1", "iss": deps.settings.keycloak_issuer, "aud": "umfrage-api"},
+            {"sub": "subject-1", "iss": deps.settings.keycloak_issuer, "aud": "openpulse-api"},
             other_key,
             algorithm="RS256",
             headers={"kid": "test-key"},
