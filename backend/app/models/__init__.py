@@ -1,8 +1,10 @@
 from app.models.user import User
 from app.models.identity import ExternalIdentityLink
 from app.models.clinic import Clinic
+from app.models.organization import Organization
 from app.models.authorization import (
     ClinicMember,
+    OrganizationMember,
     Permission,
     Role,
     RolePermission,
@@ -39,11 +41,13 @@ __all__ = [
     "User", 
     "ExternalIdentityLink",
     "Clinic",
+    "Organization",
     "Role",
     "Permission",
     "RolePermission",
     "UserRole",
     "ClinicMember",
+    "OrganizationMember",
     "AuditEvent",
     "SmtpConfiguration",
     "CampaignEmailTemplate",
