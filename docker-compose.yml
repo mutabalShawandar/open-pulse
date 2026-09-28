@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: survey-postgres
+    container_name: openpulse-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -20,7 +20,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: survey-redis
+    container_name: openpulse-redis
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -30,7 +30,7 @@ services:
 
   storage:
     image: chrislusf/seaweedfs:latest
-    container_name: survey-storage
+    container_name: openpulse-storage
     restart: unless-stopped
     command: server -dir=/data -s3 -s3.port=8333
     environment:
@@ -41,10 +41,27 @@ services:
     volumes:
       - minio_data:/data
 
+  migrate:
+    build:
+      context: ./backend
+    container_name: openpulse-migrate
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      REDIS_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: http://storage:8333
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   backend:
     build:
       context: ./backend
-    container_name: survey-backend
+    container_name: openpulse-backend
     restart: unless-stopped
     env_file:
       - .env
@@ -58,8 +75,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       keycloak:
         condition: service_started
       redis:
@@ -68,7 +85,7 @@ services:
   worker:
     build:
       context: ./backend
-    container_name: survey-worker
+    container_name: openpulse-worker
     restart: unless-stopped
     env_file:
       - .env
@@ -79,11 +96,45 @@ services:
       MINIO_ENDPOINT: http://storage:8333
     command: ["python", "-m", "app.workers.worker"]
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
 
+  bootstrap-admin:
+    build:
+      context: ./backend
+    container_name: openpulse-bootstrap-admin
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      REDIS_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: http://storage:8333
+    # Keycloak's realm import finishes some time after the container reports
+    # "started", so retry until the admin API and the seeded user are ready.
+    command:
+      - sh
+      - -c
+      - |
+        for attempt in $$(seq 1 30); do
+          python scripts/bootstrap_platform_admin.py --email "$${SEED_ADMIN_EMAIL:-admin@openpulse.local}" && exit 0
+          echo "Waiting for Keycloak to accept admin API requests (attempt $$attempt/30)..."
+          sleep 3
+        done
+        echo "Failed to bootstrap the local platform administrator after 30 attempts."
+        exit 1
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_started
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.1
+    container_name: openpulse-keycloak
     command: start-dev --import-realm
     environment:
       # Browser-facing base URL. Internal services use KEYCLOAK_INTERNAL_URL instead.
@@ -103,9 +154,37 @@ services:
       postgres:
         condition: service_healthy
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        NEXT_PUBLIC_ROOT_DOMAIN: ${NEXT_PUBLIC_ROOT_DOMAIN:-}
+        APP_URL: ${APP_URL}
+        KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER}
+        KEYCLOAK_FRONTEND_CLIENT_ID: ${KEYCLOAK_FRONTEND_CLIENT_ID}
+    container_name: openpulse-frontend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+      NEXT_PUBLIC_ROOT_DOMAIN: ${NEXT_PUBLIC_ROOT_DOMAIN:-}
+      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-}
+      APP_URL: ${APP_URL}
+      KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER}
+      KEYCLOAK_INTERNAL_ISSUER: ${KEYCLOAK_INTERNAL_ISSUER:-}
+      KEYCLOAK_FRONTEND_CLIENT_ID: ${KEYCLOAK_FRONTEND_CLIENT_ID}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_started
+
   mailpit:
     image: axllent/mailpit:v1.27.4
-    container_name: survey-mailpit
+    container_name: openpulse-mailpit
     restart: unless-stopped
     environment:
       MP_DATABASE: /data/mailpit.db

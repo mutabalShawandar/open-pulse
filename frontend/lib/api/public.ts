@@ -32,7 +32,10 @@ export type PublicCampaign = {
 };
 
 function publicApiBaseUrl(): string {
-  const value = process.env.NEXT_PUBLIC_API_BASE_URL;
+  // Runs server-side (Server Component). INTERNAL_API_BASE_URL lets the
+  // container reach the backend over the Docker network (e.g. "http://backend:8000")
+  // when it differs from the browser-facing NEXT_PUBLIC_API_BASE_URL.
+  const value = process.env.INTERNAL_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!value) throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured");
   return value.replace(/\/$/, "");
 }
