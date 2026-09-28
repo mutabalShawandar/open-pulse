@@ -43,3 +43,7 @@ tmp/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Private implementation handoff
+CLAUDE_HANDOFF.md
+MIGRATION_PLAN.md
