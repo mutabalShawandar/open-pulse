@@ -22,7 +22,7 @@ export function SmtpConfigurationForm({ configuration }: { configuration: SmtpCo
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="senderName">Absendername</FieldLabel>
-            <Input id="senderName" name="senderName" required defaultValue={configuration?.sender_name ?? "Praxisumfragen"} />
+            <Input id="senderName" name="senderName" required defaultValue={configuration?.sender_name ?? "OpenPulse"} />
           </Field>
           <Field>
             <FieldLabel htmlFor="senderEmail">Absender-E-Mail-Adresse</FieldLabel>

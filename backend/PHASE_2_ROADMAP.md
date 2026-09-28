@@ -19,7 +19,7 @@ Phase 2 excludes campaigns, public response links, recipients, email delivery, a
 Run backend commands from:
 
 ~~~powershell
-cd C:\Users\OmarTrabulsi\umfrage_reintjes\backend
+cd C:\Users\you\open-pulse-work\backend
 uv run <command>
 ~~~
 

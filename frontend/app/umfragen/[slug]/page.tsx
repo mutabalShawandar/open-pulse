@@ -37,9 +37,9 @@ export default async function PublicSurveyPage(props: PageProps<"/umfragen/[slug
         <footer className="flex flex-col items-center gap-3 py-8 text-center text-xs text-muted-foreground">
           <p>Diese Umfrage wird anonym verarbeitet.</p>
           <nav aria-label="Rechtliche Informationen" className="flex flex-wrap justify-center gap-x-4 gap-y-2">
-            <a className="underline underline-offset-4 hover:text-foreground" href="https://reintjes.de/impressum/" target="_blank" rel="noreferrer">Impressum</a>
-            <a className="underline underline-offset-4 hover:text-foreground" href="https://reintjes.de/datenschutz/" target="_blank" rel="noreferrer">Datenschutz</a>
-            <a className="underline underline-offset-4 hover:text-foreground" href="https://reintjes.de/agb/" target="_blank" rel="noreferrer">AGB</a>
+            <a className="underline underline-offset-4 hover:text-foreground" href="https://example.com/impressum/" target="_blank" rel="noreferrer">Impressum</a>
+            <a className="underline underline-offset-4 hover:text-foreground" href="https://example.com/datenschutz/" target="_blank" rel="noreferrer">Datenschutz</a>
+            <a className="underline underline-offset-4 hover:text-foreground" href="https://example.com/agb/" target="_blank" rel="noreferrer">AGB</a>
           </nav>
         </footer>
       </div>

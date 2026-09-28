@@ -111,7 +111,7 @@ async def send_rendered_email(session: AsyncSession, recipient_email: str, subje
 
 async def send_smtp_test_email(session: AsyncSession, recipient_email: str, actor_user_id) -> None:
     try:
-        await send_campaign_email(session, recipient_email, "Test der E-Mail-Konfiguration – Praxisumfragen", "<p>Die SMTP-Konfiguration von Praxisumfragen funktioniert.</p>", "Die SMTP-Konfiguration von Praxisumfragen funktioniert. Diese Nachricht wurde als Verbindungstest versendet.")
+        await send_campaign_email(session, recipient_email, "Test der E-Mail-Konfiguration – OpenPulse", "<p>Die SMTP-Konfiguration von OpenPulse funktioniert.</p>", "Die SMTP-Konfiguration von OpenPulse funktioniert. Diese Nachricht wurde als Verbindungstest versendet.")
     except (OSError, smtplib.SMTPException, RuntimeError) as error:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="The SMTP server rejected the test email") from error
     configuration = await get_smtp_configuration(session)

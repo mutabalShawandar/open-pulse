@@ -138,8 +138,8 @@ Request:
 
 ```json
 {
-  "name": "Praxis Reintjes",
-  "slug": "praxis-reintjes",
+  "name": "Example Workspace",
+  "slug": "example-workspace",
   "logo_url": null,
   "street": "Hauptstraße",
   "hausnummer": 10,

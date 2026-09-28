@@ -14,7 +14,7 @@ This checklist takes the backend from the current local FastAPI setup to a secur
 Use this command pattern from the backend directory:
 
 ~~~powershell
-cd C:\Users\OmarTrabulsi\umfrage_reintjes\backend
+cd C:\Users\you\open-pulse-work\backend
 uv run <command>
 ~~~
 
@@ -165,7 +165,7 @@ The root docker-compose.yml should define postgres with:
 ### Check
 
 ~~~powershell
-cd C:\Users\OmarTrabulsi\umfrage_reintjes
+cd C:\Users\you\open-pulse-work
 docker compose config
 docker compose up -d postgres
 docker compose ps
@@ -385,7 +385,7 @@ Do not merge new domain functionality while security tests are failing.
 Start implemented services from the repository root:
 
 ~~~powershell
-cd C:\Users\OmarTrabulsi\umfrage_reintjes
+cd C:\Users\you\open-pulse-work
 docker compose config
 docker compose up -d
 docker compose ps

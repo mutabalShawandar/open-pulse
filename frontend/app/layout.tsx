@@ -3,11 +3,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Praxisumfrage",
+  title: "OpenPulse",
   description: "Umfrage Verwaltungs App",
   icons: {
-    icon: [{ url: "/cropped-Reintjes_favicon-32x32.webp", type: "image/webp", sizes: "32x32" }],
-    shortcut: "/cropped-Reintjes_favicon-32x32.webp",
+    icon: [{ url: "/favicon.png", type: "image/png" }],
+    shortcut: "/favicon.png",
   },
 };
 
