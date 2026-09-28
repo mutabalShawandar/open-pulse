@@ -1,12 +1,12 @@
 {
-  "realm": "Umfrage-staging",
+  "realm": "openpulse",
   "enabled": true,
-  "displayName": "Praxisumfrage – Staging",
-  "displayNameHtml": "Praxisumfrage – Staging",
+  "displayName": "OpenPulse (local)",
+  "displayNameHtml": "OpenPulse (local)",
   "attributes": {
-    "frontendUrl": "${KEYCLOAK_URL}"
+    "frontendUrl": "http://localhost:8081"
   },
-  "sslRequired": "external",
+  "sslRequired": "none",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
@@ -15,28 +15,22 @@
   "bruteForceProtected": true,
   "failureFactor": 10,
   "passwordPolicy": "hashAlgorithm(argon2) and length(10) and notUsername and notEmail and passwordHistory(5)",
-  "revokeRefreshToken": true,
-  "accessCodeLifespan": 60,
   "internationalizationEnabled": true,
   "supportedLocales": ["de"],
   "defaultLocale": "de",
   "smtpServer": {
-    "password": "${KEYCLOAK_SMTP_PASSWORD}",
-    "starttls": "${KEYCLOAK_SMTP_STARTTLS}",
-    "auth": "${KEYCLOAK_SMTP_AUTH}",
-    "port": "${KEYCLOAK_SMTP_PORT}",
-    "host": "${KEYCLOAK_SMTP_HOST}",
-    "replyTo": "${KEYCLOAK_SMTP_REPLY_TO}",
-    "from": "${KEYCLOAK_SMTP_FROM}",
-    "fromDisplayName": "${KEYCLOAK_SMTP_FROM_DISPLAY_NAME}",
-    "envelopeFrom": "${KEYCLOAK_SMTP_ENVELOPE_FROM}",
-    "ssl": "${KEYCLOAK_SMTP_SSL}",
-    "user": "${KEYCLOAK_SMTP_USERNAME}"
+    "host": "mailpit",
+    "port": "1025",
+    "auth": "false",
+    "starttls": "false",
+    "ssl": "false",
+    "from": "noreply@local.test",
+    "fromDisplayName": "OpenPulse (local)"
   },
   "clients": [
     {
-      "clientId": "umfrage-api",
-      "name": "Umfrage API (staging)",
+      "clientId": "openpulse-api",
+      "name": "OpenPulse API",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": true,
@@ -47,8 +41,8 @@
       "webOrigins": []
     },
     {
-      "clientId": "umfrage-frontend",
-      "name": "Umfrage Frontend (staging)",
+      "clientId": "openpulse-frontend",
+      "name": "OpenPulse Frontend (local)",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": true,
@@ -56,22 +50,22 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "redirectUris": [
-        "${APP_URL}/auth/callback",
-        "${APP_URL}/*"
+        "http://localhost:3000/auth/callback",
+        "http://localhost:3000/*"
       ],
-      "webOrigins": ["${APP_URL}"],
+      "webOrigins": ["http://localhost:3000"],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "${APP_URL}/*"
+        "post.logout.redirect.uris": "http://localhost:3000/*"
       },
       "protocolMappers": [
         {
-          "name": "umfrage-api-audience",
+          "name": "openpulse-api-audience",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "umfrage-api",
+            "included.client.audience": "openpulse-api",
             "access.token.claim": "true",
             "id.token.claim": "false",
             "introspection.token.claim": "true"
@@ -80,8 +74,8 @@
       ]
     },
     {
-      "clientId": "umfrage-backend-admin",
-      "name": "Umfrage Backend Administration (staging)",
+      "clientId": "openpulse-backend-admin",
+      "name": "OpenPulse Backend Administration (local)",
       "description": "Service account for backend user provisioning.",
       "enabled": true,
       "protocol": "openid-connect",
@@ -90,19 +84,36 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
       "fullScopeAllowed": true,
-      "secret": "${KEYCLOAK_ADMIN_CLIENT_SECRET}",
+      "secret": "openpulse-dev-admin-secret",
       "redirectUris": [],
       "webOrigins": []
     }
   ],
   "users": [
     {
-      "username": "service-account-umfrage-backend-admin",
+      "username": "service-account-openpulse-backend-admin",
       "enabled": true,
-      "serviceAccountClientId": "umfrage-backend-admin",
+      "serviceAccountClientId": "openpulse-backend-admin",
+      "realmRoles": ["default-roles-openpulse"],
       "clientRoles": {
         "realm-management": ["manage-users"]
       }
+    },
+    {
+      "username": "admin",
+      "email": "admin@openpulse.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "OpenPulse",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "openpulse-dev-admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["default-roles-openpulse"]
     }
   ]
 }

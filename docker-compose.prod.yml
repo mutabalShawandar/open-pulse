@@ -3,7 +3,7 @@
 # Keycloak development mode.
 #
 # Run with an environment file that exists only on the target machine:
-#   docker compose --project-name umfrage-prod --env-file .env.production \
+#   docker compose --project-name openpulse-prod --env-file .env.production \
 #     -f docker-compose.prod.yml up -d
 #
 # A staging stack uses the same file, a different project name and a separate

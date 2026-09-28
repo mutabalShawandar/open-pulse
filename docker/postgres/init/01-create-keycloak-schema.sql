@@ -1,1 +1,1 @@
-CREATE SCHEMA keycloak AUTHORIZATION umfrage_user;
+CREATE SCHEMA keycloak AUTHORIZATION openpulse_user;

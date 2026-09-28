@@ -85,7 +85,7 @@ $isStaging = $Target -eq "staging"
 $appHost = if ($isStaging) { "staging-app.$Domain" } else { "app.$Domain" }
 $apiHost = if ($isStaging) { "staging-api.$Domain" } else { "api.$Domain" }
 $authHost = if ($isStaging) { "staging-auth.$Domain" } else { "auth.$Domain" }
-$realm = if ($isStaging) { "Umfrage-staging" } else { "Umfrage" }
+$realm = if ($isStaging) { "openpulse-staging" } else { "openpulse" }
 $importDirectory = if ($isStaging) { "realm-staging" } else { "realm" }
 $domainForRegex = $Domain.Replace(".", "\.")
 $corsOriginRegex = if ($isStaging) { "https://staging-[a-z0-9-]+\.$domainForRegex" } else { "https://([a-z0-9-]+\.)?$domainForRegex" }
@@ -102,7 +102,7 @@ Set-Value "KEYCLOAK_URL" "https://$authHost"
 Set-Value "KEYCLOAK_ISSUER" "https://$authHost/realms/$realm"
 Set-Value "KEYCLOAK_REALM" $realm
 Set-Value "KEYCLOAK_REALM_IMPORT_DIR" $importDirectory
-Set-Value "KEYCLOAK_AUDIENCE" "umfrage-api"
+Set-Value "KEYCLOAK_AUDIENCE" "openpulse-api"
 
 foreach ($name in @(
     "APP_POSTGRES_PASSWORD",

@@ -1,8 +1,8 @@
 {
   "id": "f7328abb-ffd0-4d11-9aec-7d7515ba29a0",
-  "realm": "Umfrage",
-  "displayName": "Praxisumfrage",
-  "displayNameHtml": "Praxisumfrage",
+  "realm": "openpulse",
+  "displayName": "OpenPulse",
+  "displayNameHtml": "OpenPulse",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": true,
@@ -70,7 +70,7 @@
       },
       {
         "id": "451a10e5-7305-4dae-a33e-66447bf62919",
-        "name": "default-roles-umfrage",
+        "name": "default-roles-openpulse",
         "description": "${role_default-roles}",
         "composite": true,
         "composites": {
@@ -91,7 +91,7 @@
       }
     ],
     "client": {
-      "umfrage-api": [],
+      "openpulse-api": [],
       "realm-management": [
         {
           "id": "74ff455b-9bae-41b0-a672-cd416ed61996",
@@ -305,11 +305,11 @@
         }
       ],
       "security-admin-console": [],
-      "umfrage-admin": [],
+      "openpulse-admin": [],
       "admin-cli": [],
-      "umfrage-dev": [],
+      "openpulse-dev": [],
       "account-console": [],
-      "umfrage-frontend": [],
+      "openpulse-frontend": [],
       "broker": [
         {
           "id": "631cfecf-69da-4d6e-b041-024f41dc588e",
@@ -414,7 +414,7 @@
   "groups": [],
   "defaultRole": {
     "id": "451a10e5-7305-4dae-a33e-66447bf62919",
-    "name": "default-roles-umfrage",
+    "name": "default-roles-openpulse",
     "description": "${role_default-roles}",
     "composite": true,
     "clientRole": false,
@@ -467,16 +467,16 @@
   "users": [
     {
       "id": "cca641de-27a0-4046-b8b4-7b8c5681b34e",
-      "username": "service-account-umfrage-backend-admin",
+      "username": "service-account-openpulse-backend-admin",
       "emailVerified": false,
       "createdTimestamp": 1788869721380,
       "enabled": true,
       "totp": false,
-      "serviceAccountClientId": "umfrage-backend-admin",
+      "serviceAccountClientId": "openpulse-backend-admin",
       "disableableCredentialTypes": [],
       "requiredActions": [],
       "realmRoles": [
-        "default-roles-umfrage"
+        "default-roles-openpulse"
       ],
       "clientRoles": {
         "realm-management": [
@@ -512,13 +512,13 @@
       "clientId": "account",
       "name": "${client_account}",
       "rootUrl": "${authBaseUrl}",
-      "baseUrl": "/realms/Umfrage/account/",
+      "baseUrl": "/realms/openpulse/account/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/realms/Umfrage/account/*"
+        "/realms/openpulse/account/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
@@ -559,13 +559,13 @@
       "clientId": "account-console",
       "name": "${client_account-console}",
       "rootUrl": "${authBaseUrl}",
-      "baseUrl": "/realms/Umfrage/account/",
+      "baseUrl": "/realms/openpulse/account/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/realms/Umfrage/account/*"
+        "/realms/openpulse/account/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
@@ -744,13 +744,13 @@
       "clientId": "security-admin-console",
       "name": "${client_security-admin-console}",
       "rootUrl": "${authAdminUrl}",
-      "baseUrl": "/admin/Umfrage/console/",
+      "baseUrl": "/admin/openpulse/console/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/admin/Umfrage/console/*"
+        "/admin/openpulse/console/*"
       ],
       "webOrigins": [
         "+"
@@ -810,8 +810,8 @@
     },
     {
       "id": "9b54f8ae-23af-4022-bb91-f264252c85ba",
-      "clientId": "umfrage-backend-admin",
-      "name": "Umfrage Backend Administration",
+      "clientId": "openpulse-backend-admin",
+      "name": "OpenPulse Backend Administration",
       "description": "Service account for backend user provisioning.",
       "rootUrl": "",
       "adminUrl": "",
@@ -863,8 +863,8 @@
     },
     {
       "id": "3cb9de3f-96c0-4814-b193-eb520803e935",
-      "clientId": "umfrage-api",
-      "name": "Umfrage API",
+      "clientId": "openpulse-api",
+      "name": "OpenPulse API",
       "description": "",
       "rootUrl": "",
       "adminUrl": "",
@@ -900,7 +900,7 @@
       "defaultClientScopes": [
         "web-origins",
         "acr",
-        "umfrage-api-audience",
+        "openpulse-api-audience",
         "profile",
         "roles",
         "basic",
@@ -916,8 +916,8 @@
     },
     {
       "id": "7de79d24-6b56-46e7-8b65-20f5e46338a1",
-      "clientId": "umfrage-dev",
-      "name": "Umfrage Dev",
+      "clientId": "openpulse-dev",
+      "name": "OpenPulse Dev",
       "description": "",
       "rootUrl": "",
       "adminUrl": "",
@@ -955,7 +955,7 @@
       "defaultClientScopes": [
         "web-origins",
         "acr",
-        "umfrage-api-audience",
+        "openpulse-api-audience",
         "profile",
         "roles",
         "basic",
@@ -971,22 +971,22 @@
     },
     {
       "id": "b2067ac2-e3bf-405b-ab03-bdf9188769a7",
-      "clientId": "umfrage-frontend",
-      "name": "Umfrage Frontend",
+      "clientId": "openpulse-frontend",
+      "name": "OpenPulse Frontend",
       "description": "",
-      "rootUrl": "https://app.praxisumfrage.online",
-      "adminUrl": "https://app.praxisumfrage.online",
-      "baseUrl": "https://app.praxisumfrage.online",
+      "rootUrl": "https://app.example.com",
+      "adminUrl": "https://app.example.com",
+      "baseUrl": "https://app.example.com",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "https://app.praxisumfrage.online/auth/callback",
-        "https://app.praxisumfrage.online/*"
+        "https://app.example.com/auth/callback",
+        "https://app.example.com/*"
       ],
       "webOrigins": [
-        "https://app.praxisumfrage.online"
+        "https://app.example.com"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -1003,7 +1003,7 @@
         "oidc.ciba.grant.enabled": "false",
         "backchannel.logout.session.required": "true",
         "frontchannel.logout.session.required": "true",
-        "post.logout.redirect.uris": "https://app.praxisumfrage.online/*",
+        "post.logout.redirect.uris": "https://app.example.com/*",
         "display.on.consent.screen": "false",
         "oauth2.device.authorization.grant.enabled": "false",
         "backchannel.logout.revoke.offline.tokens": "false"
@@ -1014,12 +1014,12 @@
       "protocolMappers": [
         {
           "id": "3571d7ce-010c-4c92-9573-c7eb6ed4c601",
-          "name": "umfrage-api-audience",
+          "name": "openpulse-api-audience",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "umfrage-api",
+            "included.client.audience": "openpulse-api",
             "id.token.claim": "false",
             "lightweight.claim": "false",
             "access.token.claim": "true",
@@ -1556,7 +1556,7 @@
     },
     {
       "id": "a685b17d-6562-4ca5-8eb9-ff15480d0d19",
-      "name": "umfrage-api-audience",
+      "name": "openpulse-api-audience",
       "description": "",
       "protocol": "openid-connect",
       "attributes": {
@@ -1568,12 +1568,12 @@
       "protocolMappers": [
         {
           "id": "7cca57c4-f260-4426-b39e-f80491d0b956",
-          "name": "umfrage-api",
+          "name": "openpulse-api",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "umfrage-api",
+            "included.client.audience": "openpulse-api",
             "id.token.claim": "false",
             "lightweight.claim": "false",
             "access.token.claim": "true",
@@ -2718,7 +2718,7 @@
     "oauth2DeviceCodeLifespan": "36000",
     "parRequestUriLifespan": "60",
     "clientSessionMaxLifespan": "0",
-    "frontendUrl": "https://auth.praxisumfrage.online",
+    "frontendUrl": "https://auth.example.com",
     "acr.loa.map": "{}",
     "shortVerificationUri": "",
     "actionTokenGeneratedByUserLifespan.reset-credentials": "",

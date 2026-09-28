@@ -45,10 +45,10 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test
           KEYCLOAK_URL: http://localhost:8081
           KEYCLOAK_INTERNAL_URL: http://localhost:8081
-          KEYCLOAK_REALM: Umfrage
-          KEYCLOAK_CLIENT_ID: umfrage-frontend
-          KEYCLOAK_AUDIENCE: umfrage-api
-          KEYCLOAK_ISSUER: http://localhost:8081/realms/Umfrage
+          KEYCLOAK_REALM: openpulse
+          KEYCLOAK_CLIENT_ID: openpulse-frontend
+          KEYCLOAK_AUDIENCE: openpulse-api
+          KEYCLOAK_ISSUER: http://localhost:8081/realms/openpulse
         run: |
           uv sync --frozen --all-groups
           uv run pytest tests --ignore=tests/integration
@@ -65,8 +65,8 @@ jobs:
           NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
           NEXT_PUBLIC_ROOT_DOMAIN: localhost
           APP_URL: http://localhost:3000
-          KEYCLOAK_ISSUER: http://localhost:8081/realms/Umfrage
-          KEYCLOAK_FRONTEND_CLIENT_ID: umfrage-frontend
+          KEYCLOAK_ISSUER: http://localhost:8081/realms/openpulse
+          KEYCLOAK_FRONTEND_CLIENT_ID: openpulse-frontend
         run: |
           npm ci
           npm run lint
@@ -133,8 +133,8 @@ jobs:
           ssh "$VPS_USER@$VPS_HOST" "
             set -eu
             cd '$VPS_DEPLOY_PATH'
-            docker compose --project-name umfrage-$DEPLOY_TARGET --env-file .env.$DEPLOY_TARGET -f docker-compose.prod.yml up -d --build postgres redis storage keycloak
-            docker compose --project-name umfrage-$DEPLOY_TARGET --env-file .env.$DEPLOY_TARGET -f docker-compose.prod.yml --profile migration run --rm migrate
-            docker compose --project-name umfrage-$DEPLOY_TARGET --env-file .env.$DEPLOY_TARGET -f docker-compose.prod.yml up -d --build backend worker frontend
-            docker compose --project-name umfrage-$DEPLOY_TARGET --env-file .env.$DEPLOY_TARGET -f docker-compose.prod.yml ps
+            docker compose --project-name openpulse-$DEPLOY_TARGET --env-file .env.$DEPLOY_TARGET -f docker-compose.prod.yml up -d --build postgres redis storage keycloak
+            docker compose --project-name openpulse-$DEPLOY_TARGET --env-file .env.$DEPLOY_TARGET -f docker-compose.prod.yml --profile migration run --rm migrate
+            docker compose --project-name openpulse-$DEPLOY_TARGET --env-file .env.$DEPLOY_TARGET -f docker-compose.prod.yml up -d --build backend worker frontend
+            docker compose --project-name openpulse-$DEPLOY_TARGET --env-file .env.$DEPLOY_TARGET -f docker-compose.prod.yml ps
           "

@@ -1,15 +1,15 @@
 [CmdletBinding()]
 param(
-    [string]$Repository = "bowdev2025/umfrage",
+    [string]$Repository = "YOUR_GITHUB_USERNAME/open-pulse",
 
     [Parameter(Mandatory)]
     [string]$VpsHost,
 
     [string]$VpsUser = "deploy",
 
-    [string]$VpsDeployPath = "/home/deploy/apps/umfrage",
+    [string]$VpsDeployPath = "/home/deploy/apps/openpulse",
 
-    [string]$SshKeyPath = (Join-Path $env:USERPROFILE ".ssh\umfrage_github_actions"),
+    [string]$SshKeyPath = (Join-Path $env:USERPROFILE ".ssh\openpulse_github_actions"),
 
     [ValidateSet("staging", "production", "all")]
     [string]$Target = "all"
