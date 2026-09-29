@@ -11,7 +11,7 @@ from app.models import Organization, OrganizationMember, Role, User
 from app.schemas.organization import OrganizationRegisterRequest
 from app.schemas.workspace import WorkspaceCreateRequest
 from app.services.authorization_service import require_organization_permission
-from app.services.organization_service import register_organization
+from app.services.organization_service import get_organization_by_slug, register_organization
 from app.services.workspace_service import create_workspace
 
 
@@ -73,6 +73,12 @@ class OrganizationRegistrationTests(unittest.IsolatedAsyncioTestCase):
                     owner.id,
                 )
                 self.assertEqual(workspace.organization_id, organization.id)
+
+                found = await get_organization_by_slug(session, organization.slug)
+                self.assertIsNotNone(found)
+                assert found is not None
+                self.assertEqual(found.id, organization.id)
+                self.assertIsNone(await get_organization_by_slug(session, f"no-such-org-{uuid4()}"))
             finally:
                 await session.close()
                 await transaction.rollback()

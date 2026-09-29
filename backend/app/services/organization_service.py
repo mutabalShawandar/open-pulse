@@ -129,3 +129,7 @@ async def register_organization(
 async def is_slug_available(session: AsyncSession, slug: str) -> bool:
     existing = await session.scalar(select(Organization.id).where(Organization.slug == slug))
     return existing is None
+
+
+async def get_organization_by_slug(session: AsyncSession, slug: str) -> Organization | None:
+    return await session.scalar(select(Organization).where(Organization.slug == slug))

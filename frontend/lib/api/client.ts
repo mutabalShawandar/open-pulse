@@ -85,6 +85,16 @@ export async function checkOrganizationSlugAvailable(slug: string): Promise<bool
   return body.available;
 }
 
+export async function getOrganizationBySlug(accessToken: string, slug: string): Promise<Organization | null> {
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/organizations/by-slug/${encodeURIComponent(slug)}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new ApiError(response.status, await readErrorDetail(response));
+  return response.json() as Promise<Organization>;
+}
+
 export function getSmtpConfiguration(accessToken: string): Promise<SmtpConfiguration | null> {
   return apiFetch<SmtpConfiguration | null>("/api/v1/administration/smtp", accessToken);
 }
