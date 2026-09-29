@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-python@v7
         with:
@@ -37,8 +39,8 @@ jobs:
           KEYCLOAK_AUDIENCE: openpulse-api
           KEYCLOAK_ISSUER: http://localhost:8081/realms/openpulse
         run: |
-          uv sync --frozen --all-groups
-          uv run pytest tests --ignore=tests/integration
+          uv sync --locked --all-groups
+          uv run --no-sync pytest tests --ignore=tests/integration
 
       - uses: actions/setup-node@v7
         with:

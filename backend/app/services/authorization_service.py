@@ -155,23 +155,29 @@ async def list_permitted_organization_ids(
     (every organization), rather than an explicit (and easily misread as
     "none") empty list.
     """
-    is_platform_admin = await session.scalar(
-        select(Role.id)
-        .join(UserRole, UserRole.role_id == Role.id)
-        .where(UserRole.user_id == user.id, Role.name == "platform_admin")
-        .limit(1)
-    )
-    if is_platform_admin is not None:
-        return None
+    try:
+        is_platform_admin = await session.scalar(
+            select(Role.id)
+            .join(UserRole, UserRole.role_id == Role.id)
+            .where(UserRole.user_id == user.id, Role.name == "platform_admin")
+            .limit(1)
+        )
+        if is_platform_admin is not None:
+            return None
 
-    result = await session.scalars(
-        select(OrganizationMember.organization_id)
-        .join(RolePermission, RolePermission.role_id == OrganizationMember.role_id)
-        .join(Permission, Permission.id == RolePermission.permission_id)
-        .where(OrganizationMember.user_id == user.id, Permission.name == permission_name)
-        .distinct()
-    )
-    return list(result)
+        result = await session.scalars(
+            select(OrganizationMember.organization_id)
+            .join(RolePermission, RolePermission.role_id == OrganizationMember.role_id)
+            .join(Permission, Permission.id == RolePermission.permission_id)
+            .where(OrganizationMember.user_id == user.id, Permission.name == permission_name)
+            .distinct()
+        )
+        return list(result)
+    except SQLAlchemyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authorization storage is unavailable",
+        ) from error
 
 
 async def list_permitted_workspace_ids(
@@ -182,27 +188,33 @@ async def list_permitted_workspace_ids(
     workspace's organization (see require_clinic_permission's fallback).
     Returns None for a platform_admin (unrestricted).
     """
-    is_platform_admin = await session.scalar(
-        select(Role.id)
-        .join(UserRole, UserRole.role_id == Role.id)
-        .where(UserRole.user_id == user.id, Role.name == "platform_admin")
-        .limit(1)
-    )
-    if is_platform_admin is not None:
-        return None
+    try:
+        is_platform_admin = await session.scalar(
+            select(Role.id)
+            .join(UserRole, UserRole.role_id == Role.id)
+            .where(UserRole.user_id == user.id, Role.name == "platform_admin")
+            .limit(1)
+        )
+        if is_platform_admin is not None:
+            return None
 
-    via_workspace = await session.scalars(
-        select(WorkspaceMember.workspace_id)
-        .join(RolePermission, RolePermission.role_id == WorkspaceMember.role_id)
-        .join(Permission, Permission.id == RolePermission.permission_id)
-        .where(WorkspaceMember.user_id == user.id, Permission.name == permission_name)
-    )
-    via_organization = await session.scalars(
-        select(Workspace.id)
-        .join(OrganizationMember, OrganizationMember.organization_id == Workspace.organization_id)
-        .join(RolePermission, RolePermission.role_id == OrganizationMember.role_id)
-        .join(Permission, Permission.id == RolePermission.permission_id)
-        .where(OrganizationMember.user_id == user.id, Permission.name == permission_name)
-    )
-    return list({*via_workspace, *via_organization})
+        via_workspace = await session.scalars(
+            select(WorkspaceMember.workspace_id)
+            .join(RolePermission, RolePermission.role_id == WorkspaceMember.role_id)
+            .join(Permission, Permission.id == RolePermission.permission_id)
+            .where(WorkspaceMember.user_id == user.id, Permission.name == permission_name)
+        )
+        via_organization = await session.scalars(
+            select(Workspace.id)
+            .join(OrganizationMember, OrganizationMember.organization_id == Workspace.organization_id)
+            .join(RolePermission, RolePermission.role_id == OrganizationMember.role_id)
+            .join(Permission, Permission.id == RolePermission.permission_id)
+            .where(OrganizationMember.user_id == user.id, Permission.name == permission_name)
+        )
+        return list({*via_workspace, *via_organization})
+    except SQLAlchemyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authorization storage is unavailable",
+        ) from error
 
