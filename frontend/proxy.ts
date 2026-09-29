@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { authConfig, authEndpoints } from "@/lib/auth/config";
+import { authConfig, authEndpoints, isCanonicalPlatformHost, isOrganizationAppHost } from "@/lib/auth/config";
 import { sessionCookieOptions, sessionCookies } from "@/lib/auth/session";
 
 type TokenResponse = { access_token: string; refresh_token?: string; expires_in?: number; refresh_expires_in?: number };
@@ -16,31 +16,40 @@ export async function proxy(request: NextRequest) {
   const hostname = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
   const url = request.nextUrl.clone();
   const isRootDomain = !rootDomain || hostname === rootDomain || hostname === `www.${rootDomain}`;
-  const isPlatformHost = Boolean(rootDomain) && (
-    hostname === `app.${rootDomain}` || hostname === `staging-app.${rootDomain}`
-  );
+  const organizationSlug = isOrganizationAppHost(hostname);
+  const isPlatformHost = isCanonicalPlatformHost(hostname) || organizationSlug !== null;
   const isSubdomainSurvey = Boolean(rootDomain) && !isRootDomain && !isPlatformHost && hostname.endsWith(`.${rootDomain}`);
   const isPlatformSurvey = url.pathname.startsWith("/umfragen/");
 
+  // Carried on the *request* headers (not response headers) so Server
+  // Components can read it via next/headers on every "app.{org-slug}.{root}"
+  // request; every return path below must forward it explicitly, since
+  // NextResponse.next()/rewrite() only propagate request header changes when
+  // passed a `{ request: { headers } }` override.
+  const forwardedHeaders = new Headers(request.headers);
+  if (organizationSlug) forwardedHeaders.set("x-organization-slug", organizationSlug);
+
   // Keycloak access tokens are deliberately short lived. Renew them server-side
   // before they expire, preserving the HTTP-only rotating refresh token too.
+  // The session cookie is domain-wide (see lib/auth/session.ts) once
+  // NEXT_PUBLIC_ROOT_DOMAIN is set, so this runs identically on the canonical
+  // "app.{root}" host and on every "app.{org-slug}.{root}" host.
   if (isPlatformHost && !url.pathname.startsWith("/auth/") && shouldRefresh(request.cookies.get(sessionCookies.accessTokenCookie)?.value)) {
     const refreshToken = request.cookies.get(sessionCookies.refreshTokenCookie)?.value;
     const tokens = refreshToken ? await refreshAccessToken(refreshToken) : null;
     if (tokens) {
-      const headers = new Headers(request.headers);
       const cookies = request.cookies.getAll().filter((cookie) => cookie.name !== sessionCookies.accessTokenCookie && cookie.name !== sessionCookies.refreshTokenCookie);
       cookies.push({ name: sessionCookies.accessTokenCookie, value: tokens.access_token });
       if (tokens.refresh_token) cookies.push({ name: sessionCookies.refreshTokenCookie, value: tokens.refresh_token });
-      headers.set("cookie", cookies.map((cookie) => `${encodeURIComponent(cookie.name)}=${encodeURIComponent(cookie.value)}`).join("; "));
+      forwardedHeaders.set("cookie", cookies.map((cookie) => `${encodeURIComponent(cookie.name)}=${encodeURIComponent(cookie.value)}`).join("; "));
 
-      const response = NextResponse.next({ request: { headers } });
+      const response = NextResponse.next({ request: { headers: forwardedHeaders } });
       response.cookies.set(sessionCookies.accessTokenCookie, tokens.access_token, sessionCookieOptions(tokens.expires_in));
       if (tokens.refresh_token) response.cookies.set(sessionCookies.refreshTokenCookie, tokens.refresh_token, sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14));
       return response;
     }
   }
-  if (!isSubdomainSurvey && !isPlatformSurvey) return NextResponse.next();
+  if (!isSubdomainSurvey && !isPlatformSurvey) return NextResponse.next({ request: { headers: forwardedHeaders } });
 
   const recipientToken = url.searchParams.get("token");
   if (recipientToken) {

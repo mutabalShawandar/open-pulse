@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { authConfig, authEndpoints } from "@/lib/auth/config";
+import { authConfig, authEndpoints, isCanonicalPlatformHost, isOrganizationAppHost } from "@/lib/auth/config";
 import { getCurrentUser } from "@/lib/api/client";
-import { sessionCookieOptions, sessionCookies } from "@/lib/auth/session";
+import { returnToCookie, sessionCookieOptions, sessionCookies } from "@/lib/auth/session";
 
 const stateCookie = "umfrage_oauth_state";
 const verifierCookie = "umfrage_pkce_verifier";
@@ -39,14 +39,32 @@ export async function GET(request: NextRequest) {
     return clearTemporaryCookies(NextResponse.redirect(appUrl("/access-denied")));
   }
 
-  const response = clearTemporaryCookies(NextResponse.redirect(appUrl("/")));
+  const response = clearTemporaryCookies(NextResponse.redirect(resolveReturnTo(request) ?? appUrl("/")));
   response.cookies.set(sessionCookies.accessTokenCookie, tokens.access_token, sessionCookieOptions(tokens.expires_in));
   if (tokens.refresh_token) response.cookies.set(sessionCookies.refreshTokenCookie, tokens.refresh_token, sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14));
+  response.cookies.delete(returnToCookie);
   return response;
 }
 
 function appUrl(path: string): URL {
   return new URL(path, authConfig.appUrl);
+}
+
+// return_to is attacker-influenceable in principle (it's a cookie the browser
+// sends), so it's only ever honored when it parses as an http(s) URL whose
+// host is the canonical platform host or a real "app.{org-slug}.{root}" host
+// — never an arbitrary redirect target.
+function resolveReturnTo(request: NextRequest): URL | null {
+  const value = request.cookies.get(returnToCookie)?.value;
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (isCanonicalPlatformHost(url.hostname) || isOrganizationAppHost(url.hostname)) return url;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 function clearTemporaryCookies(response: NextResponse) {
