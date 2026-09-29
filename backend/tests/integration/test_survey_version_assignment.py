@@ -3,6 +3,7 @@ import unittest
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
@@ -44,6 +45,7 @@ class SurveyVersionAssignmentTests(unittest.IsolatedAsyncioTestCase):
                     WorkspaceMember(user_id=actor.id, workspace_id=clinic.id, role_id=role.id)
                 )
                 survey = Survey(
+                    organization_id=organization.id,
                     title="Assigned survey",
                     status=SurveyStatus.PUBLISHED,
                     created_by_user_id=actor.id,
@@ -73,6 +75,64 @@ class SurveyVersionAssignmentTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(
                     len(await list_workspace_version_assignments(session, clinic.id, actor)), 0
                 )
+            finally:
+                await session.close()
+                await transaction.rollback()
+        await engine.dispose()
+
+    async def test_assignment_is_rejected_across_organizations(self) -> None:
+        database_url = os.getenv("TEST_DATABASE_URL", settings.database_url)
+        engine = create_async_engine(database_url)
+        async with engine.connect() as connection:
+            transaction = await connection.begin()
+            session = AsyncSession(bind=connection, expire_on_commit=False)
+            try:
+                role = await session.scalar(select(Role).where(Role.name == "clinic_manager"))
+                assert role is not None
+                actor = User(
+                    email=f"cross-org-{uuid4()}@example.test",
+                    display_name="Cross Org Test",
+                    is_active=True,
+                )
+                survey_organization = Organization(
+                    name="Survey Organization", slug=f"survey-org-{uuid4()}"
+                )
+                other_organization = Organization(
+                    name="Other Organization", slug=f"other-org-{uuid4()}"
+                )
+                session.add_all([survey_organization, other_organization])
+                await session.flush()
+                other_workspace = Workspace(
+                    name="Other Org Workspace",
+                    slug=f"other-org-workspace-{uuid4()}",
+                    organization_id=other_organization.id,
+                )
+                session.add_all([actor, other_workspace])
+                await session.flush()
+                session.add(
+                    WorkspaceMember(user_id=actor.id, workspace_id=other_workspace.id, role_id=role.id)
+                )
+                survey = Survey(
+                    organization_id=survey_organization.id,
+                    title="Org-scoped survey",
+                    status=SurveyStatus.PUBLISHED,
+                    created_by_user_id=actor.id,
+                )
+                session.add(survey)
+                await session.flush()
+                version = SurveyVersion(
+                    survey_id=survey.id,
+                    version_number=1,
+                    status=SurveyVersionStatus.PUBLISHED,
+                    published_at=datetime.now(UTC),
+                    created_by_user_id=actor.id,
+                )
+                session.add(version)
+                await session.flush()
+
+                with self.assertRaises(HTTPException) as error:
+                    await assign_version_to_workspace(session, other_workspace.id, version.id, actor)
+                self.assertEqual(error.exception.status_code, 422)
             finally:
                 await session.close()
                 await transaction.rollback()

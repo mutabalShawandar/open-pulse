@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
+    Organization,
     Survey,
     QuestionType,
     SurveyQuestion,
@@ -17,6 +18,7 @@ from app.models import (
     SurveyVersion,
     SurveyVersionWorkspace,
     SurveyVersionStatus,
+    Workspace,
 )
 from app.schemas.survey import (
     SurveyCreateRequest,
@@ -51,8 +53,15 @@ async def create_survey(
     payload: SurveyCreateRequest,
     actor_user_id: UUID,
 ) -> tuple[Survey, SurveyVersion]:
-    """Create an agency catalogue survey with one explicitly labelled draft."""
+    """Create an organization catalogue survey with one explicitly labelled draft."""
+    organization = await session.scalar(
+        select(Organization).where(Organization.id == payload.organization_id)
+    )
+    if organization is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+
     survey = Survey(
+        organization_id=payload.organization_id,
         title=payload.title,
         description=payload.description,
         created_by_user_id=actor_user_id,
@@ -105,6 +114,13 @@ async def get_survey_or_404(session: AsyncSession, survey_id: UUID) -> Survey:
     if survey is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey not found")
     return survey
+
+
+async def get_survey_organization_id_or_404(session: AsyncSession, survey_id: UUID) -> UUID:
+    organization_id = await session.scalar(select(Survey.organization_id).where(Survey.id == survey_id))
+    if organization_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey not found")
+    return organization_id
 
 
 async def update_survey(
@@ -331,6 +347,7 @@ async def copy_survey(
         session, source_survey_id, payload.source_version_id
     )
     survey = Survey(
+        organization_id=source_survey.organization_id,
         title=payload.title or f"{source_survey.title} (Kopie)",
         description=payload.description if payload.description is not None else source_survey.description,
         status=SurveyStatus.DRAFT,
@@ -512,6 +529,15 @@ async def assign_version_to_workspace(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Archived surveys cannot be assigned to workspaces",
+        )
+
+    workspace = await session.scalar(select(Workspace).where(Workspace.id == workspace_id))
+    if workspace is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found")
+    if workspace.organization_id != survey.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Survey versions can only be assigned to workspaces within the survey's organization",
         )
 
     assignment = await session.scalar(

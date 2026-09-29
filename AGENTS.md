@@ -25,21 +25,25 @@ This project is a German-language, multi-clinic survey platform for creating reu
 
 ## Current Progress
 
-Phases 1–3 are complete. Phase 4 is in progress and currently has uncommitted work; do not describe its unfinished delivery workflow as released.
+Phases 1–4 are complete. The project is now mid-way through a private→OSS rebrand/refactor (Organization → Workspace model; tracked in the gitignored `MIGRATION_PLAN.md`), plus Phase 6 production hardening, neither of which is finished.
 
-Phase 1 delivered FastAPI health/readiness endpoints, PostgreSQL and Alembic setup, local Keycloak Compose configuration, Keycloak JWT extraction and validation, issuer/expiry/signature/audience checks, JWKS caching with timeouts, and a protected `/api/v1/me` endpoint. The local authorization schema includes `roles`, `permissions`, `role_permissions`, `user_roles`, and `clinic_members`; protected platform-user and clinic-management workflows, audit events, clinic-scoped authorization, and automated unit/integration tests are also in place.
+Phase 1 delivered FastAPI health/readiness endpoints, PostgreSQL and Alembic setup, local Keycloak Compose configuration, Keycloak JWT extraction and validation, issuer/expiry/signature/audience checks, JWKS caching with timeouts, and a protected `/api/v1/me` endpoint. The local authorization schema includes `roles`, `permissions`, `role_permissions`, `user_roles`, and workspace (formerly clinic) membership; protected platform-user and workspace-management workflows, audit events, workspace-scoped authorization, and automated unit/integration tests are also in place.
 
-Phase 2 delivered the agency survey catalogue and builder. Surveys are reusable agency-wide records rather than clinic-owned records. The backend supports multiple editable drafts, deep-copying drafts and whole surveys, immutable published versions, sections, typed questions, choice options, validation rules, ordering, archive/restore, published-version reads, and assigning published versions to clinics. A campaign in later phases must bind to one exact assigned `survey_version_id`, never to a mutable draft or “latest” version.
+Phase 2 delivered the agency survey catalogue and builder. Surveys are reusable, organization-owned records rather than workspace-owned records. The backend supports multiple editable drafts, deep-copying drafts and whole surveys, immutable published versions, sections, typed questions, choice options, validation rules, ordering, archive/restore, published-version reads, and assigning published versions to workspaces. A campaign must bind to one exact assigned `survey_version_id`, never to a mutable draft or "latest" version.
 
-Phase 3 delivered campaign branding and clinic-to-published-version binding, non-guessable public campaign links, secure anonymous response sessions and typed answer persistence, immutable-version validation/completion, public-endpoint payload limits and rate limiting, audit events, and automated tests.
+Phase 3 delivered campaign branding and workspace-to-published-version binding, non-guessable public campaign links, secure anonymous response sessions and typed answer persistence, immutable-version validation/completion, public-endpoint payload limits and rate limiting, audit events, and automated tests.
 
-Current limitations: identified response mode is not implemented; public responses are anonymous only. Phase 4 recipient import, campaign-recipient selection, SMTP configuration, templates, and delivery work is in progress and must be completed, tested, and committed before it is treated as available. Production hardening remains incomplete: encrypted automated backups, monitoring/error reporting, retention/deletion jobs, security/load testing, and a production VPS deployment and recovery runbook are required. Do not treat the current setup as production-ready.
+Phase 4 delivered recipient import, campaign-recipient selection, SMTP configuration, delivery templates, and durable delivery/retry/delivery-status workflows (`recipient_service.py`, `smtp_service.py`, `delivery_service.py`), with integration test coverage including Mailpit-based delivery tests.
 
-Next work order: complete Phase 4, then perform Phase 6 production hardening.
+Current limitations: identified response mode is not implemented; public responses are anonymous only — still an open decision for first public release. Production hardening remains incomplete: encrypted automated backups, monitoring/error reporting, retention/deletion jobs, security/load testing, and a production VPS deployment and recovery runbook are required. Do not treat the current setup as production-ready.
 
-1. Complete and commit recipient, template, durable delivery, retry, and delivery-status workflows.
-2. Decide whether identified response mode is required for the first public release and implement it if so.
-3. Verify campaign analytics and PDF/Excel export workflows against real completed responses.
+The rebrand/refactor (Organization/Workspace model, deleting client-identifying leaks, English-language UI, new visual identity, publication prep) is in progress with uncommitted work; see `MIGRATION_PLAN.md` for step-by-step status. Do not describe rebrand steps beyond what that file marks complete as finished.
+
+Next work order: finish the rebrand/refactor, then perform Phase 6 production hardening.
+
+1. Decide whether identified response mode is required for the first public release and implement it if so.
+2. Verify campaign analytics and PDF/Excel export workflows against real completed responses.
+3. Complete the Organization/Workspace rebrand per `MIGRATION_PLAN.md` (cross-org authorization tests, Compose/env updates, UI/frontend rebrand + translation, docs/publication prep).
 4. Add production deployment, backup/restore, monitoring, retention, security, and load-test evidence before release.
 
 ## Documentation

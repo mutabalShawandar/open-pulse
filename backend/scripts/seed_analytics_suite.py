@@ -16,7 +16,7 @@ async def seed() -> None:
         actor = await session.scalar(select(User).where(User.is_active.is_(True)).limit(1))
         clinic = await session.scalar(select(Workspace).where(Workspace.slug == "demo-klinik"))
         if actor is None or clinic is None: raise RuntimeError("Run seed_phase3_demo first")
-        survey = Survey(title="Vollständige Demo-Auswertung", status=SurveyStatus.PUBLISHED, created_by_user_id=actor.id); session.add(survey); await session.flush()
+        survey = Survey(organization_id=clinic.organization_id, title="Vollständige Demo-Auswertung", status=SurveyStatus.PUBLISHED, created_by_user_id=actor.id); session.add(survey); await session.flush()
         version = SurveyVersion(survey_id=survey.id, version_number=1, status=SurveyVersionStatus.PUBLISHED, published_at=datetime.now(UTC), created_by_user_id=actor.id); session.add(version); await session.flush()
         session.add(SurveyVersionWorkspace(survey_version_id=version.id, workspace_id=clinic.id, assigned_by_user_id=actor.id))
         section = SurveySection(survey_version_id=version.id, title="Alle Fragetypen", position=0); session.add(section); await session.flush()

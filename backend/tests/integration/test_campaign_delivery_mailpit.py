@@ -29,7 +29,7 @@ class CampaignDeliveryMailpitTests(unittest.IsolatedAsyncioTestCase):
                 session.add(organization)
                 await session.flush()
                 clinic = Workspace(name="Mailpit Klinik", slug=f"mailpit-{uuid4()}", organization_id=organization.id)
-                survey = Survey(title="Mailpit survey", status=SurveyStatus.PUBLISHED)
+                survey = Survey(organization_id=organization.id, title="Mailpit survey", status=SurveyStatus.PUBLISHED)
                 session.add_all([clinic, survey])
                 await session.flush()
                 version = SurveyVersion(survey_id=survey.id, version_number=1, status=SurveyVersionStatus.PUBLISHED, published_at=datetime.now(UTC))

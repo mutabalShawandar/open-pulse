@@ -7,6 +7,7 @@ from app.models.survey import QuestionType, SurveyStatus, SurveyVersionStatus
 
 
 class SurveyCreateRequest(BaseModel):
+    organization_id: UUID
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=10_000)
     initial_draft_label: str | None = Field(default=None, min_length=1, max_length=255)
@@ -68,6 +69,7 @@ class SurveySummaryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    organization_id: UUID
     title: str
     description: str | None
     status: SurveyStatus

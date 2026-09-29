@@ -26,7 +26,7 @@ async def seed() -> None:
             organization = Organization(name="Demo Organization", slug="demo-organization")
             session.add(organization); await session.flush()
         clinic = Workspace(name="Demo Klinik", slug="demo-klinik", organization_id=organization.id)
-        survey = Survey(title="Patientenzufriedenheit", description="Demo für Auswertungen", status=SurveyStatus.PUBLISHED, created_by_user_id=actor.id)
+        survey = Survey(organization_id=organization.id, title="Patientenzufriedenheit", description="Demo für Auswertungen", status=SurveyStatus.PUBLISHED, created_by_user_id=actor.id)
         session.add_all([clinic, survey]); await session.flush()
         version = SurveyVersion(survey_id=survey.id, version_number=1, status=SurveyVersionStatus.PUBLISHED, published_at=datetime.now(UTC), created_by_user_id=actor.id)
         session.add(version); await session.flush()
