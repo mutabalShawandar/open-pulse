@@ -12,7 +12,7 @@ import { MegaphoneIcon } from "lucide-react";
 import { campaignStatusLabels } from "@/lib/campaign-status";
 import type { Campaign } from "@/lib/api/types";
 
-export function CampaignsList({ clinicId, campaigns }: { clinicId: string; campaigns: Campaign[] }) {
+export function CampaignsList({ workspaceId, campaigns }: { workspaceId: string; campaigns: Campaign[] }) {
   const [showCompleted, setShowCompleted] = useState(false);
   const completedCount = useMemo(() => campaigns.filter((campaign) => campaign.status === "completed").length, [campaigns]);
   const visible = showCompleted ? campaigns : campaigns.filter((campaign) => campaign.status !== "completed");
@@ -28,7 +28,7 @@ export function CampaignsList({ clinicId, campaigns }: { clinicId: string; campa
       {visible.length ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((campaign) => (
-            <Link key={campaign.id} href={`/clinics/${clinicId}/campaigns/${campaign.id}`}>
+            <Link key={campaign.id} href={`/workspaces/${workspaceId}/campaigns/${campaign.id}`}>
               <Card>
                 <CardHeader>
                   <Badge variant={campaign.status === "active" ? "default" : "secondary"}>{campaignStatusLabels[campaign.status]}</Badge>

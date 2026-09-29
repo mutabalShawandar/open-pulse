@@ -6,9 +6,9 @@ import { sessionCookieOptions, sessionCookies } from "@/lib/auth/session";
 type TokenResponse = { access_token: string; refresh_token?: string; expires_in?: number; refresh_expires_in?: number };
 
 // When NEXT_PUBLIC_ROOT_DOMAIN is set (e.g. "domain.de"), a request to
-// "{clinic-slug}.domain.de/{public_slug}" is rewritten internally to
-// "/umfragen/{public_slug}", so recipients answer surveys under a
-// clinic-branded subdomain instead of the platform's own domain.
+// "{workspace-slug}.domain.de/{public_slug}" is rewritten internally to
+// "/respond/{public_slug}", so recipients answer surveys under a
+// workspace-branded subdomain instead of the platform's own domain.
 // Locally this also works out of the box via "*.localhost" when
 // NEXT_PUBLIC_ROOT_DOMAIN=localhost.
 export async function proxy(request: NextRequest) {
@@ -19,7 +19,7 @@ export async function proxy(request: NextRequest) {
   const organizationSlug = isOrganizationAppHost(hostname);
   const isPlatformHost = isCanonicalPlatformHost(hostname) || organizationSlug !== null;
   const isSubdomainSurvey = Boolean(rootDomain) && !isRootDomain && !isPlatformHost && hostname.endsWith(`.${rootDomain}`);
-  const isPlatformSurvey = url.pathname.startsWith("/umfragen/");
+  const isPlatformSurvey = url.pathname.startsWith("/respond/");
 
   // Carried on the *request* headers (not response headers) so Server
   // Components can read it via next/headers on every "app.{org-slug}.{root}"
@@ -69,8 +69,8 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  if (isSubdomainSurvey && !url.pathname.startsWith("/umfragen/")) {
-    url.pathname = `/umfragen${url.pathname}`;
+  if (isSubdomainSurvey && !url.pathname.startsWith("/respond/")) {
+    url.pathname = `/respond${url.pathname}`;
   }
   return NextResponse.rewrite(url);
 }

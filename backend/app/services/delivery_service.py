@@ -215,7 +215,7 @@ async def process_delivery_job(session: AsyncSession, delivery_id: UUID, raw_tok
     await session.commit()
 
     workspace = await session.get(Workspace, campaign.workspace_id)
-    link = build_public_survey_url(workspace.slug if workspace else "umfrage", campaign.public_path or campaign.public_slug, raw_token)
+    link = build_public_survey_url(workspace.slug if workspace else "survey", campaign.public_path or campaign.public_slug, raw_token)
     variables = {"{{recipient_name}}": recipient.display_name or "", "{{survey_link}}": link, "{{clinic_name}}": workspace.name if workspace else "", "{{campaign_title}}": campaign.title}
     try:
         inline_logo = await email_workspace_logo(workspace)

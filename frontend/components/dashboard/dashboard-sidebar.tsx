@@ -14,7 +14,7 @@ import { userDisplayName, userInitials } from "@/lib/user-display";
 const navigation = [
   { label: "Übersicht", icon: LayoutDashboardIcon, href: "/" },
   { label: "Umfragen", icon: ClipboardListIcon, href: "/surveys" },
-  { label: "Kliniken", icon: Building2Icon, href: "/clinics" },
+  { label: "Kliniken", icon: Building2Icon, href: "/workspaces" },
   {
     label: "Administration",
     icon: ShieldCheckIcon,

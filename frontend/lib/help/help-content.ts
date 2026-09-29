@@ -155,7 +155,7 @@ const helpEntries: HelpEntry[] = [
     },
   },
   {
-    test: (path) => path === "/clinics",
+    test: (path) => path === "/workspaces",
     topic: {
       title: "Kliniken",
       steps: [
@@ -176,7 +176,7 @@ const helpEntries: HelpEntry[] = [
     },
   },
   {
-    test: (path) => path === "/clinics/new",
+    test: (path) => path === "/workspaces/new",
     topic: {
       title: "Neue Klinik anlegen",
       steps: [
@@ -193,7 +193,7 @@ const helpEntries: HelpEntry[] = [
     },
   },
   {
-    test: (path) => /^\/clinics\/[^/]+\/edit$/.test(path),
+    test: (path) => /^\/workspaces\/[^/]+\/edit$/.test(path),
     topic: {
       title: "Klinik bearbeiten",
       steps: [
@@ -209,7 +209,7 @@ const helpEntries: HelpEntry[] = [
     },
   },
   {
-    test: (path) => /^\/clinics\/[^/]+\/campaigns\/new$/.test(path),
+    test: (path) => /^\/workspaces\/[^/]+\/campaigns\/new$/.test(path),
     topic: {
       title: "Kampagne erstellen",
       steps: [
@@ -235,7 +235,7 @@ const helpEntries: HelpEntry[] = [
     },
   },
   {
-    test: (path) => /^\/clinics\/[^/]+\/campaigns\/[^/]+$/.test(path),
+    test: (path) => /^\/workspaces\/[^/]+\/campaigns\/[^/]+$/.test(path),
     topic: {
       title: "Kampagnendetails",
       steps: [
@@ -255,7 +255,7 @@ const helpEntries: HelpEntry[] = [
     },
   },
   {
-    test: (path) => /^\/clinics\/[^/]+\/campaigns$/.test(path),
+    test: (path) => /^\/workspaces\/[^/]+\/campaigns$/.test(path),
     topic: {
       title: "Kampagnen der Klinik",
       steps: [
@@ -272,7 +272,7 @@ const helpEntries: HelpEntry[] = [
     },
   },
   {
-    test: (path) => /^\/clinics\/[^/]+\/recipients$/.test(path),
+    test: (path) => /^\/workspaces\/[^/]+\/recipients$/.test(path),
     topic: {
       title: "Empfänger",
       steps: [
@@ -288,7 +288,7 @@ const helpEntries: HelpEntry[] = [
     },
   },
   {
-    test: (path) => /^\/clinics\/[^/]+\/analytics$/.test(path),
+    test: (path) => /^\/workspaces\/[^/]+\/analytics$/.test(path),
     topic: {
       title: "Analytics",
       steps: [
@@ -304,7 +304,7 @@ const helpEntries: HelpEntry[] = [
     },
   },
   {
-    test: (path) => /^\/clinics\/[^/]+$/.test(path),
+    test: (path) => /^\/workspaces\/[^/]+$/.test(path),
     topic: {
       title: "Klinikübersicht",
       steps: [

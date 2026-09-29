@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { ArrowRightIcon, Building2Icon, ClipboardListIcon, ShieldCheckIcon } from "lucide-react";
 
-import type { Clinic, CurrentUser, Survey } from "@/lib/api/types";
+import type { Workspace, CurrentUser, Survey } from "@/lib/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { userDisplayName } from "@/lib/user-display";
 
-export function PlatformWelcome({ clinics, surveys, user }: { clinics: Clinic[]; surveys: Survey[]; user: CurrentUser }) {
+export function PlatformWelcome({ workspaces, surveys, user }: { workspaces: Workspace[]; surveys: Survey[]; user: CurrentUser }) {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
       <section>
@@ -32,10 +32,10 @@ export function PlatformWelcome({ clinics, surveys, user }: { clinics: Clinic[];
           </CardHeader>
           <CardContent className="flex items-end justify-between gap-4">
             <div>
-              <p className="font-heading text-4xl font-semibold tracking-tight">{clinics.length}</p>
+              <p className="font-heading text-4xl font-semibold tracking-tight">{workspaces.length}</p>
               <p className="mt-1 text-sm text-muted-foreground">verfügbare Kliniken</p>
             </div>
-            <Button nativeButton={false} render={<Link href="/clinics" />}>
+            <Button nativeButton={false} render={<Link href="/workspaces" />}>
               Kliniken öffnen
               <ArrowRightIcon data-icon="inline-end" />
             </Button>

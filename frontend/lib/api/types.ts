@@ -21,7 +21,7 @@ export type OrganizationRegisterInput = {
   owner_display_name: string;
 };
 
-export type Clinic = {
+export type Workspace = {
   id: string;
   organization_id: string;
   name: string;
@@ -33,12 +33,12 @@ export type Clinic = {
   postal_code: string | null;
 };
 
-export type ClinicDetail = Clinic & {
+export type WorkspaceDetail = Workspace & {
   created_at: string;
   updated_at: string;
 };
 
-export type ClinicInput = {
+export type WorkspaceInput = {
   name: string;
   slug: string;
   logo_url?: string | null;
@@ -48,7 +48,7 @@ export type ClinicInput = {
   postal_code: string | null;
 };
 
-export type ClinicMember = {
+export type WorkspaceMember = {
   user_id: string;
   clinic_id: string;
   role_id: string;
@@ -165,7 +165,7 @@ export type SurveyVersion = {
   updated_at: string;
 };
 
-export type ClinicSurveyVersionAssignment = {
+export type WorkspaceSurveyVersionAssignment = {
   id: string;
   survey_version_id: string;
   clinic_id: string;

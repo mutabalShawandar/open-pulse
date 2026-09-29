@@ -1,23 +1,23 @@
 import { PlatformWelcome } from "@/components/platform/platform-welcome";
-import { ApiError, listClinics, listSurveys } from "@/lib/api/client";
+import { ApiError, listWorkspaces, listSurveys } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
 import { requireUser } from "@/lib/auth/require-user";
-import type { Clinic, Survey } from "@/lib/api/types";
+import type { Workspace, Survey } from "@/lib/api/types";
 import { redirect } from "next/navigation";
 
 export default async function PlatformHomePage() {
   const user = await requireUser();
   const accessToken = await getAccessToken();
-  let clinics: Clinic[] = [];
+  let workspaces: Workspace[] = [];
   let surveys: Survey[] = [];
   if (accessToken) {
     try {
-      [clinics, surveys] = await Promise.all([listClinics(accessToken), listSurveys(accessToken)]);
+      [workspaces, surveys] = await Promise.all([listWorkspaces(accessToken), listSurveys(accessToken)]);
     } catch (error) {
       if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
       throw error;
     }
   }
 
-  return <PlatformWelcome clinics={clinics} surveys={surveys} user={user} />;
+  return <PlatformWelcome workspaces={workspaces} surveys={surveys} user={user} />;
 }

@@ -3,8 +3,8 @@ export function campaignSlugFromPath(path: string): string {
   return separator === -1 ? path : path.slice(separator + 1);
 }
 
-export function buildPublicSurveyUrl(clinicSlug: string, publicPath: string): string {
+export function buildPublicSurveyUrl(workspaceSlug: string, publicPath: string): string {
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
-  if (rootDomain) return `https://${clinicSlug}.${rootDomain}/${publicPath}`;
-  return `/umfragen/${publicPath}`;
+  if (rootDomain) return `https://${workspaceSlug}.${rootDomain}/${publicPath}`;
+  return `/respond/${publicPath}`;
 }

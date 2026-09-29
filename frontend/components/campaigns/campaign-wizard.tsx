@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
-import { importWizardRecipientsAction, submitCampaignWizardAction } from "@/app/(platform)/clinics/[clinicId]/campaigns/actions";
+import { importWizardRecipientsAction, submitCampaignWizardAction } from "@/app/(platform)/workspaces/[workspaceId]/campaigns/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +27,7 @@ const stepLabels: Record<Step, string> = {
 
 type ManualRow = { id: number; name: string; email: string };
 
-export function CampaignWizard({ clinicId, initialRecipients, surveyVersionOptions }: { clinicId: string; initialRecipients: Recipient[]; surveyVersionOptions: PublishedSurveyVersionOption[] }) {
+export function CampaignWizard({ workspaceId, initialRecipients, surveyVersionOptions }: { workspaceId: string; initialRecipients: Recipient[]; surveyVersionOptions: PublishedSurveyVersionOption[] }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [isPending, startTransition] = useTransition();
@@ -65,7 +65,7 @@ export function CampaignWizard({ clinicId, initialRecipients, surveyVersionOptio
     if (!toImport.length) return;
     setImportMessage(null);
     startTransition(async () => {
-      const result = await importWizardRecipientsAction(clinicId, toImport);
+      const result = await importWizardRecipientsAction(workspaceId, toImport);
       if (!result.ok) { setImportMessage(result.error); return; }
       setRecipients(result.recipients);
       setSelectedRecipientIds((current) => {
@@ -88,7 +88,7 @@ export function CampaignWizard({ clinicId, initialRecipients, surveyVersionOptio
         return { display_name: displayName.trim() || null, email: email.trim() };
       }).filter((row) => row.email && row.email.toLowerCase() !== "email" && row.email.toLowerCase() !== "e-mail");
       if (!toImport.length) { setImportMessage("Die Datei enthielt keine gültigen E-Mail-Adressen."); return; }
-      const result = await importWizardRecipientsAction(clinicId, toImport);
+      const result = await importWizardRecipientsAction(workspaceId, toImport);
       if (!result.ok) { setImportMessage(result.error); return; }
       setRecipients(result.recipients);
       setSelectedRecipientIds((current) => {
@@ -105,7 +105,7 @@ export function CampaignWizard({ clinicId, initialRecipients, surveyVersionOptio
     setError(null);
     startTransition(async () => {
       const result = await submitCampaignWizardAction({
-        clinicId,
+        workspaceId,
         title,
         description,
         endsAt: endsAt ? new Date(endsAt).toISOString() : null,
@@ -114,7 +114,7 @@ export function CampaignWizard({ clinicId, initialRecipients, surveyVersionOptio
         email: email.subject.trim() ? email : null,
       });
       if (!result.ok) { setError(result.error); return; }
-      router.push(`/clinics/${clinicId}/campaigns/${result.campaignId}`);
+      router.push(`/workspaces/${workspaceId}/campaigns/${result.campaignId}`);
     });
   };
 

@@ -1,10 +1,10 @@
 import { authConfig } from "@/lib/auth/config";
 import type {
-  Clinic,
-  ClinicDetail,
-  ClinicInput,
-  ClinicMember,
-  ClinicSurveyVersionAssignment,
+  Workspace,
+  WorkspaceDetail,
+  WorkspaceInput,
+  WorkspaceMember,
+  WorkspaceSurveyVersionAssignment,
   CurrentUser,
   Organization,
   OrganizationRegisterInput,
@@ -132,8 +132,8 @@ export async function sendSmtpTestEmail(accessToken: string, recipientEmail: str
   if (!response.ok) throw new ApiError(response.status);
 }
 
-export function listClinics(accessToken: string): Promise<Clinic[]> {
-  return apiFetch<Clinic[]>("/api/v1/clinics", accessToken);
+export function listWorkspaces(accessToken: string): Promise<Workspace[]> {
+  return apiFetch<Workspace[]>("/api/v1/clinics", accessToken);
 }
 
 export function listCampaigns(accessToken: string): Promise<Campaign[]> {
@@ -164,20 +164,20 @@ export function retryFailedCampaignDeliveries(accessToken: string, campaignId: s
   return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/deliveries/retry-failed`, "POST");
 }
 
-export function listRecipients(accessToken: string, clinicId: string): Promise<Recipient[]> {
-  return apiFetch<Recipient[]>(`/api/v1/clinics/${clinicId}/recipients`, accessToken);
+export function listRecipients(accessToken: string, workspaceId: string): Promise<Recipient[]> {
+  return apiFetch<Recipient[]>(`/api/v1/clinics/${workspaceId}/recipients`, accessToken);
 }
 
 export function listCampaignRecipients(accessToken: string, campaignId: string): Promise<CampaignRecipient[]> {
   return apiFetch<CampaignRecipient[]>(`/api/v1/campaigns/${campaignId}/recipients`, accessToken);
 }
 
-export function importRecipients(accessToken: string, clinicId: string, recipients: Array<{ email: string; display_name: string | null }>): Promise<RecipientImportResult> {
-  return writeSurvey(accessToken, `/api/v1/clinics/${clinicId}/recipients/import`, "POST", { recipients });
+export function importRecipients(accessToken: string, workspaceId: string, recipients: Array<{ email: string; display_name: string | null }>): Promise<RecipientImportResult> {
+  return writeSurvey(accessToken, `/api/v1/clinics/${workspaceId}/recipients/import`, "POST", { recipients });
 }
 
-export function optOutRecipient(accessToken: string, clinicId: string, recipientId: string): Promise<Recipient> {
-  return writeSurvey(accessToken, `/api/v1/clinics/${clinicId}/recipients/${recipientId}/opt-out`, "POST");
+export function optOutRecipient(accessToken: string, workspaceId: string, recipientId: string): Promise<Recipient> {
+  return writeSurvey(accessToken, `/api/v1/clinics/${workspaceId}/recipients/${recipientId}/opt-out`, "POST");
 }
 
 export function assignCampaignRecipients(accessToken: string, campaignId: string, recipientIds: string[]): Promise<CampaignRecipient[]> {
@@ -188,8 +188,8 @@ export function removeCampaignRecipient(accessToken: string, campaignId: string,
   return deleteSurveyResource(accessToken, `/api/v1/campaigns/${campaignId}/recipients/${recipientId}`);
 }
 
-export function getCampaignAnalytics(accessToken: string, clinicId: string, campaignId: string): Promise<CampaignAnalytics> {
-  return apiFetch<CampaignAnalytics>(`/api/v1/clinics/${clinicId}/analytics/campaigns/${campaignId}`, accessToken);
+export function getCampaignAnalytics(accessToken: string, workspaceId: string, campaignId: string): Promise<CampaignAnalytics> {
+  return apiFetch<CampaignAnalytics>(`/api/v1/clinics/${workspaceId}/analytics/campaigns/${campaignId}`, accessToken);
 }
 
 export function createCampaign(accessToken: string, payload: { clinic_id: string; survey_version_id: string; title: string; description: string | null; ends_at?: string | null }): Promise<Campaign> {
@@ -205,12 +205,12 @@ export async function deleteCampaign(accessToken: string, campaignId: string): P
   if (!response.ok) throw new ApiError(response.status);
 }
 
-export function getClinic(accessToken: string, clinicId: string): Promise<ClinicDetail> {
-  return apiFetch<ClinicDetail>(`/api/v1/clinics/${clinicId}`, accessToken);
+export function getWorkspace(accessToken: string, workspaceId: string): Promise<WorkspaceDetail> {
+  return apiFetch<WorkspaceDetail>(`/api/v1/clinics/${workspaceId}`, accessToken);
 }
 
-export function listClinicMembers(accessToken: string, clinicId: string): Promise<ClinicMember[]> {
-  return apiFetch<ClinicMember[]>(`/api/v1/clinics/${clinicId}/members`, accessToken);
+export function listWorkspaceMembers(accessToken: string, workspaceId: string): Promise<WorkspaceMember[]> {
+  return apiFetch<WorkspaceMember[]>(`/api/v1/clinics/${workspaceId}/members`, accessToken);
 }
 
 export function listRoles(accessToken: string): Promise<Role[]> {
@@ -453,24 +453,24 @@ export function publishSurveyDraft(
   return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/publish`, "POST");
 }
 
-export function listClinicSurveyVersionAssignments(
+export function listWorkspaceSurveyVersionAssignments(
   accessToken: string,
-  clinicId: string,
-): Promise<ClinicSurveyVersionAssignment[]> {
-  return apiFetch<ClinicSurveyVersionAssignment[]>(
-    `/api/v1/clinics/${clinicId}/survey-versions`,
+  workspaceId: string,
+): Promise<WorkspaceSurveyVersionAssignment[]> {
+  return apiFetch<WorkspaceSurveyVersionAssignment[]>(
+    `/api/v1/clinics/${workspaceId}/survey-versions`,
     accessToken,
   );
 }
 
 async function mutateSurveyVersionAssignment(
   accessToken: string,
-  clinicId: string,
+  workspaceId: string,
   surveyVersionId: string,
   action: "assign" | "unassign",
 ): Promise<void> {
   const response = await fetch(
-    `${authConfig.apiBaseUrl}/api/v1/clinics/${clinicId}/survey-versions/${surveyVersionId}/${action}`,
+    `${authConfig.apiBaseUrl}/api/v1/clinics/${workspaceId}/survey-versions/${surveyVersionId}/${action}`,
     {
       method: "POST",
       headers: { Authorization: `Bearer ${accessToken}` },
@@ -480,20 +480,20 @@ async function mutateSurveyVersionAssignment(
   if (!response.ok) throw new ApiError(response.status);
 }
 
-export function assignSurveyVersionToClinic(
+export function assignSurveyVersionToWorkspace(
   accessToken: string,
-  clinicId: string,
+  workspaceId: string,
   surveyVersionId: string,
 ): Promise<void> {
-  return mutateSurveyVersionAssignment(accessToken, clinicId, surveyVersionId, "assign");
+  return mutateSurveyVersionAssignment(accessToken, workspaceId, surveyVersionId, "assign");
 }
 
-export function unassignSurveyVersionFromClinic(
+export function unassignSurveyVersionFromWorkspace(
   accessToken: string,
-  clinicId: string,
+  workspaceId: string,
   surveyVersionId: string,
 ): Promise<void> {
-  return mutateSurveyVersionAssignment(accessToken, clinicId, surveyVersionId, "unassign");
+  return mutateSurveyVersionAssignment(accessToken, workspaceId, surveyVersionId, "unassign");
 }
 
 async function writeMembership(
@@ -514,28 +514,28 @@ async function writeMembership(
   if (!response.ok) throw new ApiError(response.status);
 }
 
-export function addClinicMember(
+export function addWorkspaceMember(
   accessToken: string,
-  clinicId: string,
+  workspaceId: string,
   payload: { user_id: string; role_id: string },
 ): Promise<void> {
-  return writeMembership(accessToken, `/api/v1/clinics/${clinicId}/members`, "POST", payload);
+  return writeMembership(accessToken, `/api/v1/clinics/${workspaceId}/members`, "POST", payload);
 }
 
-export function removeClinicMember(
+export function removeWorkspaceMember(
   accessToken: string,
-  clinicId: string,
+  workspaceId: string,
   userId: string,
 ): Promise<void> {
-  return writeMembership(accessToken, `/api/v1/clinics/${clinicId}/members/${userId}`, "DELETE");
+  return writeMembership(accessToken, `/api/v1/clinics/${workspaceId}/members/${userId}`, "DELETE");
 }
 
-async function writeClinic(
+async function writeWorkspace(
   accessToken: string,
   path: string,
   method: "POST" | "PATCH",
-  payload: ClinicInput,
-): Promise<Clinic> {
+  payload: WorkspaceInput,
+): Promise<Workspace> {
   const response = await fetch(`${authConfig.apiBaseUrl}${path}`, {
     method,
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
@@ -543,32 +543,32 @@ async function writeClinic(
     cache: "no-store",
   });
   if (!response.ok) throw new ApiError(response.status);
-  return response.json() as Promise<Clinic>;
+  return response.json() as Promise<Workspace>;
 }
 
-export function createClinic(accessToken: string, payload: ClinicInput): Promise<Clinic> {
-  return writeClinic(accessToken, "/api/v1/clinics", "POST", payload);
+export function createWorkspace(accessToken: string, payload: WorkspaceInput): Promise<Workspace> {
+  return writeWorkspace(accessToken, "/api/v1/clinics", "POST", payload);
 }
 
-export function updateClinic(
+export function updateWorkspace(
   accessToken: string,
-  clinicId: string,
-  payload: ClinicInput,
-): Promise<Clinic> {
-  return writeClinic(accessToken, `/api/v1/clinics/${clinicId}`, "PATCH", payload);
+  workspaceId: string,
+  payload: WorkspaceInput,
+): Promise<Workspace> {
+  return writeWorkspace(accessToken, `/api/v1/clinics/${workspaceId}`, "PATCH", payload);
 }
 
-export async function uploadClinicLogo(accessToken: string, clinicId: string, logo: File): Promise<Clinic> {
+export async function uploadWorkspaceLogo(accessToken: string, workspaceId: string, logo: File): Promise<Workspace> {
   const body = new FormData();
   body.append("logo", logo);
-  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/clinics/${clinicId}/logo`, {
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/clinics/${workspaceId}/logo`, {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}` },
     body,
     cache: "no-store",
   });
   if (!response.ok) throw new ApiError(response.status, await readErrorDetail(response));
-  return response.json() as Promise<Clinic>;
+  return response.json() as Promise<Workspace>;
 }
 
 export async function createPlatformUser(

@@ -25,8 +25,8 @@ class Settings(BaseSettings):
     minio_access_key: str | None = None
     minio_secret_key: str | None = None
     minio_bucket: str = "clinic-assets"
-    # e.g. "domain.de" — when set, public survey links use "https://{clinic_slug}.{public_root_domain}/{public_slug}"
-    # instead of "{public_frontend_url}/umfragen/{public_slug}". Requires wildcard DNS/TLS and the frontend's
+    # e.g. "domain.de" — when set, public survey links use "https://{workspace_slug}.{public_root_domain}/{public_slug}"
+    # instead of "{public_frontend_url}/respond/{public_slug}". Requires wildcard DNS/TLS and the frontend's
     # subdomain-rewrite middleware to be in place.
     public_root_domain: str | None = None
     campaign_delivery_max_attempts: int = 3
