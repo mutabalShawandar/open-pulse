@@ -34,6 +34,7 @@ from app.api.v1.campaigns import router as campaigns_router
 from app.api.v1.public import router as public_router
 from app.api.v1.analytics import router as analytics_router
 from app.api.v1.recipients import campaign_router as campaign_recipients_router, router as recipients_router
+from app.api.v1.organizations import router as organizations_router
 
 is_dev = settings.app_env == "development"
 configure_logging()
@@ -53,6 +54,7 @@ app.include_router(public_router)
 app.include_router(analytics_router)
 app.include_router(recipients_router)
 app.include_router(campaign_recipients_router)
+app.include_router(organizations_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()],
