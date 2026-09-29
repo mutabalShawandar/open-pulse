@@ -101,10 +101,16 @@ async def create_survey(
     return survey, draft
 
 
-async def list_surveys(session: AsyncSession, include_archived: bool = False) -> list[Survey]:
+async def list_surveys(
+    session: AsyncSession,
+    include_archived: bool = False,
+    organization_ids: list[UUID] | None = None,
+) -> list[Survey]:
     statement = select(Survey).order_by(Survey.created_at.desc(), Survey.id.desc())
     if not include_archived:
         statement = statement.where(Survey.status != SurveyStatus.ARCHIVED)
+    if organization_ids is not None:
+        statement = statement.where(Survey.organization_id.in_(organization_ids))
     result = await session.scalars(statement)
     return list(result)
 

@@ -51,10 +51,17 @@ async def register_organization(
             detail="An organization with this slug already exists",
         ) from error
 
-    subject = await keycloak.create_user(
-        email=payload.owner_email,
-        display_name=payload.owner_display_name,
-    )
+    try:
+        subject = await keycloak.create_user(
+            email=payload.owner_email,
+            display_name=payload.owner_display_name,
+        )
+    except Exception:
+        # create_user already raises a typed HTTPException (409/503); this
+        # only ensures the flushed-but-uncommitted organization insert is
+        # explicitly discarded rather than relying on session-close cleanup.
+        await session.rollback()
+        raise
 
     owner = User(
         email=payload.owner_email,

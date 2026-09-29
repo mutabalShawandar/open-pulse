@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_permission, require_platform_admin
+from app.services.authorization_service import list_permitted_workspace_ids
 from app.db.session import get_db_session
 from app.models import AuditEvent, Permission, Workspace, WorkspaceMember, Role, User
 from app.schemas.authorization import AuditEventResponse, PermissionResponse, RoleResponse
@@ -84,11 +85,17 @@ async def test_smtp_configuration_endpoint(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 @router.get("/api/v1/clinics", response_model=list[WorkspaceResponse], tags=["clinic"])
 async def list_clinics_endpoint(
-    _: Annotated[User, Depends(get_current_user)],
+    actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
 ) -> list[WorkspaceResponse]:
-    """List every clinic for every active platform user."""
-    workspaces = (await session.scalars(select(Workspace).order_by(Workspace.name))).all()
+    """List clinics the actor has clinic.read access to (every clinic for a platform_admin)."""
+    workspace_ids = await list_permitted_workspace_ids(session, actor, "clinic.read")
+    statement = select(Workspace).order_by(Workspace.name)
+    if workspace_ids is not None:
+        if not workspace_ids:
+            return []
+        statement = statement.where(Workspace.id.in_(workspace_ids))
+    workspaces = (await session.scalars(statement)).all()
     return [WorkspaceResponse.model_validate(workspace) for workspace in workspaces]
 
 

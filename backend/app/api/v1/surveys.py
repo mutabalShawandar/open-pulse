@@ -36,7 +36,7 @@ from app.schemas.survey import (
     SurveySummaryResponse,
     SurveyUpdateRequest,
 )
-from app.services.authorization_service import require_organization_permission
+from app.services.authorization_service import list_permitted_organization_ids, require_organization_permission
 from app.services.survey_service import (
     create_section,
     create_survey,
@@ -134,11 +134,14 @@ async def create_survey_endpoint(
 
 @router.get("", response_model=list[SurveySummaryResponse])
 async def list_surveys_endpoint(
-    _: Annotated[User, Depends(get_current_user)],
+    actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
     include_archived: bool = False,
 ) -> list[SurveySummaryResponse]:
-    surveys = await list_surveys(session, include_archived=include_archived)
+    organization_ids = await list_permitted_organization_ids(session, actor, "survey.read")
+    if organization_ids is not None and not organization_ids:
+        return []
+    surveys = await list_surveys(session, include_archived=include_archived, organization_ids=organization_ids)
     return [SurveySummaryResponse.model_validate(survey, from_attributes=True) for survey in surveys]
 
 
