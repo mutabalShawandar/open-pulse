@@ -53,7 +53,7 @@ async def save_smtp_configuration(session: AsyncSession, payload: SmtpConfigurat
         configuration.password_encrypted = _cipher().encrypt(payload.password.encode("utf-8")).decode("utf-8")
     elif payload.username is None:
         configuration.password_encrypted = None
-    add_audit_event(session, actor_user_id=actor_user_id, clinic_id=None, action="smtp_configuration.saved", entity_type="smtp_configuration", entity_id=configuration.id, metadata={"host": configuration.host, "port": configuration.port, "sender_email": configuration.sender_email})
+    add_audit_event(session, actor_user_id=actor_user_id, workspace_id=None, action="smtp_configuration.saved", entity_type="smtp_configuration", entity_id=configuration.id, metadata={"host": configuration.host, "port": configuration.port, "sender_email": configuration.sender_email})
     await session.commit()
     await session.refresh(configuration)
     return configuration
@@ -73,7 +73,7 @@ def _send_message_sync(configuration: SmtpConfiguration, recipient_email: str, s
         maintype, _, subtype = media_type.partition("/")
         if not subtype:
             maintype, subtype = "application", "octet-stream"
-        message.get_payload()[-1].add_related(logo_data, maintype=maintype, subtype=subtype, cid="clinic-logo", filename=f"clinic-logo.{subtype}", disposition="inline")
+        message.get_payload()[-1].add_related(logo_data, maintype=maintype, subtype=subtype, cid="workspace-logo", filename=f"workspace-logo.{subtype}", disposition="inline")
     context = ssl.create_default_context()
     client: smtplib.SMTP | smtplib.SMTP_SSL
     client = smtplib.SMTP_SSL(configuration.host, configuration.port, timeout=20, context=context) if configuration.use_ssl else smtplib.SMTP(configuration.host, configuration.port, timeout=20)
@@ -115,5 +115,5 @@ async def send_smtp_test_email(session: AsyncSession, recipient_email: str, acto
     except (OSError, smtplib.SMTPException, RuntimeError) as error:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="The SMTP server rejected the test email") from error
     configuration = await get_smtp_configuration(session)
-    add_audit_event(session, actor_user_id=actor_user_id, clinic_id=None, action="smtp_configuration.test_sent", entity_type="smtp_configuration", entity_id=configuration.id if configuration else None, metadata={"recipient_domain": recipient_email.rsplit("@", 1)[-1]})
+    add_audit_event(session, actor_user_id=actor_user_id, workspace_id=None, action="smtp_configuration.test_sent", entity_type="smtp_configuration", entity_id=configuration.id if configuration else None, metadata={"recipient_domain": recipient_email.rsplit("@", 1)[-1]})
     await session.commit()

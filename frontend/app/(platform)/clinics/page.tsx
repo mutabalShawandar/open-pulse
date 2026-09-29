@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { listClinics } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
+import { getRequestOrganization } from "@/lib/auth/request-organization";
 
 function clinicLocation(clinic: { postal_code: string | null; city: string | null }) {
   return [clinic.postal_code, clinic.city].filter(Boolean).join(" ");
@@ -14,7 +15,12 @@ function clinicLocation(clinic: { postal_code: string | null; city: string | nul
 
 export default async function ClinicsPage() {
   const accessToken = await getAccessToken();
-  const clinics = accessToken ? await listClinics(accessToken) : [];
+  const allClinics = accessToken ? await listClinics(accessToken) : [];
+  // GET /api/v1/clinics is not org-scoped server-side (it lists every clinic
+  // the platform user can see); on an "app.{org-slug}.{root}" host, narrow it
+  // to that organization here so an org subdomain only shows its own clinics.
+  const organization = await getRequestOrganization();
+  const clinics = organization ? allClinics.filter((clinic) => clinic.organization_id === organization.id) : allClinics;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">

@@ -9,7 +9,7 @@ def add_audit_event(
     session: AsyncSession,
     *,
     actor_user_id: UUID | None,
-    clinic_id: UUID | None,
+    workspace_id: UUID | None,
     action: str,
     entity_type: str,
     entity_id: UUID | None,
@@ -17,7 +17,7 @@ def add_audit_event(
 ) -> AuditEvent:
     event = AuditEvent(
         actor_user_id=actor_user_id,
-        clinic_id=clinic_id,
+        workspace_id=workspace_id,
         action=action,
         entity_type=entity_type,
         entity_id=entity_id,

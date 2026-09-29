@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from app.core.config import settings
 from app.models import (
+    Organization,
     QuestionType,
     Survey,
     SurveyQuestion,
@@ -43,9 +44,11 @@ class SurveyPublishTests(unittest.IsolatedAsyncioTestCase):
                     display_name="Publish Test",
                     is_active=True,
                 )
-                session.add(actor)
+                organization = Organization(name="Publish Organization", slug=f"publish-org-{uuid4()}")
+                session.add_all([actor, organization])
                 await session.flush()
                 survey = Survey(
+                    organization_id=organization.id,
                     title="Publishable survey",
                     status=SurveyStatus.DRAFT,
                     created_by_user_id=actor.id,

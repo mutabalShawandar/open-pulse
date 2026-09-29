@@ -6,8 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_permission, require_platform_admin
+from app.services.authorization_service import list_permitted_workspace_ids
 from app.db.session import get_db_session
-from app.models import AuditEvent, Clinic, ClinicMember, Role, User
+from app.models import AuditEvent, Permission, Workspace, WorkspaceMember, Role, User
 from app.schemas.authorization import AuditEventResponse, PermissionResponse, RoleResponse
 from app.schemas.email import (
     SmtpConfigurationResponse,
@@ -19,15 +20,15 @@ from app.services.smtp_service import (
     save_smtp_configuration,
     send_smtp_test_email,
 )
-from app.schemas.clinic import (
-    ClinicMemberResponse,
-    ClinicResponse,
-    ClinicUpdateRequest,
+from app.schemas.workspace import (
+    WorkspaceMemberResponse,
+    WorkspaceResponse,
+    WorkspaceUpdateRequest,
 )
 from app.schemas.user import UserResponse
-from app.services.clinic_service import remove_clinic_member, update_clinic
+from app.services.workspace_service import remove_workspace_member, update_workspace
 from app.services.audit_service import add_audit_event
-from app.services.storage_service import save_clinic_logo
+from app.services.storage_service import save_workspace_logo
 from app.services.keycloak_admin import KeycloakAdminClient
 from app.services.user_service import (
     deactivate_platform_user,
@@ -38,15 +39,15 @@ from app.services.user_service import (
 
 router = APIRouter(tags=["administration"])
 
-@router.post("/api/v1/clinics/{clinic_id}/logo", response_model=ClinicResponse, tags=["clinic"])
-async def upload_clinic_logo_endpoint(clinic_id: UUID, logo: UploadFile = File(...), actor: Annotated[User, Depends(require_permission("clinic.create"))] = None, session: AsyncSession = Depends(get_db_session)) -> ClinicResponse:
-    clinic = await session.get(Clinic, clinic_id)
-    if clinic is None: raise HTTPException(status_code=404, detail="Clinic not found")
-    key, url = await save_clinic_logo(clinic.id, logo)
-    clinic.logo_storage_key, clinic.logo_url = key, url
-    add_audit_event(session, actor_user_id=actor.id, clinic_id=clinic.id, action="clinic.logo_uploaded", entity_type="clinic", entity_id=clinic.id)
-    await session.commit(); await session.refresh(clinic)
-    return ClinicResponse.model_validate(clinic)
+@router.post("/api/v1/clinics/{clinic_id}/logo", response_model=WorkspaceResponse, tags=["clinic"])
+async def upload_clinic_logo_endpoint(clinic_id: UUID, logo: UploadFile = File(...), actor: Annotated[User, Depends(require_permission("clinic.create"))] = None, session: AsyncSession = Depends(get_db_session)) -> WorkspaceResponse:
+    workspace = await session.get(Workspace, clinic_id)
+    if workspace is None: raise HTTPException(status_code=404, detail="Clinic not found")
+    key, url = await save_workspace_logo(workspace.id, logo)
+    workspace.logo_storage_key, workspace.logo_url = key, url
+    add_audit_event(session, actor_user_id=actor.id, workspace_id=workspace.id, action="clinic.logo_uploaded", entity_type="clinic", entity_id=workspace.id)
+    await session.commit(); await session.refresh(workspace)
+    return WorkspaceResponse.model_validate(workspace)
 
 
 @router.get("/api/v1/administration/smtp", response_model=SmtpConfigurationResponse | None, tags=["administration"])
@@ -82,50 +83,56 @@ async def test_smtp_configuration_endpoint(
 ) -> Response:
     await send_smtp_test_email(session, payload.recipient_email, actor.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-@router.get("/api/v1/clinics", response_model=list[ClinicResponse], tags=["clinic"])
+@router.get("/api/v1/clinics", response_model=list[WorkspaceResponse], tags=["clinic"])
 async def list_clinics_endpoint(
-    _: Annotated[User, Depends(get_current_user)],
+    actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
-) -> list[ClinicResponse]:
-    """List every clinic for every active platform user."""
-    clinics = (await session.scalars(select(Clinic).order_by(Clinic.name))).all()
-    return [ClinicResponse.model_validate(clinic) for clinic in clinics]
+) -> list[WorkspaceResponse]:
+    """List clinics the actor has clinic.read access to (every clinic for a platform_admin)."""
+    workspace_ids = await list_permitted_workspace_ids(session, actor, "clinic.read")
+    statement = select(Workspace).order_by(Workspace.name)
+    if workspace_ids is not None:
+        if not workspace_ids:
+            return []
+        statement = statement.where(Workspace.id.in_(workspace_ids))
+    workspaces = (await session.scalars(statement)).all()
+    return [WorkspaceResponse.model_validate(workspace) for workspace in workspaces]
 
 
-@router.patch("/api/v1/clinics/{clinic_id}", response_model=ClinicResponse, tags=["clinic"])
+@router.patch("/api/v1/clinics/{clinic_id}", response_model=WorkspaceResponse, tags=["clinic"])
 async def update_clinic_endpoint(
     clinic_id: UUID,
-    payload: ClinicUpdateRequest,
+    payload: WorkspaceUpdateRequest,
     actor: Annotated[User, Depends(require_permission("clinic.create"))],
     session: AsyncSession = Depends(get_db_session),
-) -> ClinicResponse:
-    clinic = await update_clinic(session, clinic_id, payload, actor.id)
-    return ClinicResponse.model_validate(clinic)
+) -> WorkspaceResponse:
+    workspace = await update_workspace(session, clinic_id, payload, actor.id)
+    return WorkspaceResponse.model_validate(workspace)
 
 
 @router.get(
     "/api/v1/clinics/{clinic_id}/members",
-    response_model=list[ClinicMemberResponse],
+    response_model=list[WorkspaceMemberResponse],
     tags=["clinic"],
 )
 async def list_clinic_members_endpoint(
     clinic_id: UUID,
     _: Annotated[User, Depends(require_permission("role.assign"))],
     session: AsyncSession = Depends(get_db_session),
-) -> list[ClinicMemberResponse]:
+) -> list[WorkspaceMemberResponse]:
     rows = (
         await session.execute(
-            select(ClinicMember, User, Role)
-            .join(User, User.id == ClinicMember.user_id)
-            .join(Role, Role.id == ClinicMember.role_id)
-            .where(ClinicMember.clinic_id == clinic_id)
+            select(WorkspaceMember, User, Role)
+            .join(User, User.id == WorkspaceMember.user_id)
+            .join(Role, Role.id == WorkspaceMember.role_id)
+            .where(WorkspaceMember.workspace_id == clinic_id)
             .order_by(User.email)
         )
     ).all()
     return [
-        ClinicMemberResponse(
+        WorkspaceMemberResponse(
             user_id=membership.user_id,
-            clinic_id=membership.clinic_id,
+            clinic_id=membership.workspace_id,
             role_id=membership.role_id,
             user_email=user.email,
             user_display_name=user.display_name,
@@ -146,7 +153,7 @@ async def remove_clinic_member_endpoint(
     actor: Annotated[User, Depends(require_permission("role.assign"))],
     session: AsyncSession = Depends(get_db_session),
 ) -> Response:
-    await remove_clinic_member(session, clinic_id, user_id, actor.id)
+    await remove_workspace_member(session, clinic_id, user_id, actor.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -257,6 +264,6 @@ async def list_audit_events_endpoint(
     safe_limit = min(max(limit, 1), 250)
     statement = select(AuditEvent).order_by(AuditEvent.created_at.desc()).limit(safe_limit)
     if clinic_id is not None:
-        statement = statement.where(AuditEvent.clinic_id == clinic_id)
+        statement = statement.where(AuditEvent.workspace_id == clinic_id)
     events = (await session.scalars(statement)).all()
     return [AuditEventResponse.model_validate(event) for event in events]

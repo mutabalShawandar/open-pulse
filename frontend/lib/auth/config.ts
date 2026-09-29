@@ -24,3 +24,25 @@ export const authEndpoints = {
   authorization: `${authConfig.keycloakIssuer}/protocol/openid-connect/auth`,
   token: `${authConfig.keycloakInternalIssuer}/protocol/openid-connect/token`,
 };
+
+// When NEXT_PUBLIC_ROOT_DOMAIN is set, each organization is served on its own
+// "app.{org-slug}.{root}" subdomain (see proxy.ts). Keycloak's redirect URI
+// matching only supports a trailing-path wildcard, never a wildcard host
+// segment, so the OIDC flow itself always runs on the single canonical
+// "app.{root}" host (the one exact redirect URI already registered in the
+// realm); org subdomains are round-tripped through it via `return_to`
+// (see auth/login and auth/callback), relying on the session cookie being
+// domain-wide once NEXT_PUBLIC_ROOT_DOMAIN is configured (see session.ts).
+export function isOrganizationAppHost(hostname: string): string | null {
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+  if (!rootDomain) return null;
+  const match = hostname.match(/^app\.([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.([^.]+(?:\.[^.]+)*)$/);
+  if (!match || match[2] !== rootDomain) return null;
+  return match[1];
+}
+
+export function isCanonicalPlatformHost(hostname: string): boolean {
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+  if (!rootDomain) return false;
+  return hostname === `app.${rootDomain}` || hostname === `staging-app.${rootDomain}`;
+}

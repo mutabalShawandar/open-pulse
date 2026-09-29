@@ -13,18 +13,18 @@ from app.api.deps import (
     require_platform_admin,
     require_permission,
 )
-from app.models import User, Clinic
+from app.models import User, Workspace
 from app.schemas.user import PlatformAdminGrantResponse, UserCreateRequest, UserResponse
 from app.schemas.auth import LoginRequest, TokenResponse
-from app.schemas.clinic import (
-    ClinicCreateRequest,
-    ClinicMemberCreateRequest,
-    ClinicMemberResponse,
-    ClinicResponse,
+from app.schemas.workspace import (
+    WorkspaceCreateRequest,
+    WorkspaceMemberCreateRequest,
+    WorkspaceMemberResponse,
+    WorkspaceResponse,
 )
 from app.services.keycloak_admin import KeycloakAdminClient
 from app.services.user_service import create_platform_user, grant_platform_admin
-from app.services.clinic_service import add_clinic_member, create_clinic
+from app.services.workspace_service import add_workspace_member, create_workspace
 from app.services.auth_service import login_with_keycloak
 from app.core.logging import configure_logging
 from app.api.v1.surveys import router as surveys_router
@@ -34,6 +34,7 @@ from app.api.v1.campaigns import router as campaigns_router
 from app.api.v1.public import router as public_router
 from app.api.v1.analytics import router as analytics_router
 from app.api.v1.recipients import campaign_router as campaign_recipients_router, router as recipients_router
+from app.api.v1.organizations import router as organizations_router
 
 is_dev = settings.app_env == "development"
 configure_logging()
@@ -53,6 +54,7 @@ app.include_router(public_router)
 app.include_router(analytics_router)
 app.include_router(recipients_router)
 app.include_router(campaign_recipients_router)
+app.include_router(organizations_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()],
@@ -84,17 +86,17 @@ async def login(payload: LoginRequest) -> TokenResponse:
 
 @app.post(
     "/api/v1/clinics",
-    response_model=ClinicResponse,
+    response_model=WorkspaceResponse,
     status_code=status.HTTP_201_CREATED,
     tags=["clinic"],
 )
 async def create_clinic_endpoint(
-    payload: ClinicCreateRequest,
+    payload: WorkspaceCreateRequest,
     actor: Annotated[User, Depends(require_permission("clinic.create"))],
     session: AsyncSession = Depends(get_db_session),
-) -> ClinicResponse:
-    clinic = await create_clinic(session, payload, actor.id)
-    return ClinicResponse.model_validate(clinic, from_attributes=True)
+) -> WorkspaceResponse:
+    workspace = await create_workspace(session, payload, actor.id)
+    return WorkspaceResponse.model_validate(workspace, from_attributes=True)
 
 @app.get("/health", tags=["system"])
 async def health() -> dict[str, str]:
@@ -221,48 +223,48 @@ async def get_clinic(
     _: Annotated[User, Depends(get_authenticated_user)],
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
-    clinic = await session.scalar(select(Clinic).where(Clinic.id == clinic_id))
+    workspace = await session.scalar(select(Workspace).where(Workspace.id == clinic_id))
 
-    if clinic is None:
+    if workspace is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Clinic not found.",
         )
 
     return {
-        "id": str(clinic.id),
-        "name": clinic.name,
-        "slug": clinic.slug,
-        "logo_url": clinic.logo_url,
-        "street": clinic.street,
-        "hausnummer": clinic.hausnummer,
-        "city": clinic.city,
-        "postal_code": clinic.postal_code,
-        "created_at": clinic.created_at.isoformat(),
-        "updated_at": clinic.updated_at.isoformat(),
+        "id": str(workspace.id),
+        "name": workspace.name,
+        "slug": workspace.slug,
+        "logo_url": workspace.logo_url,
+        "street": workspace.street,
+        "hausnummer": workspace.hausnummer,
+        "city": workspace.city,
+        "postal_code": workspace.postal_code,
+        "created_at": workspace.created_at.isoformat(),
+        "updated_at": workspace.updated_at.isoformat(),
     }
 
 
 @app.post(
     "/api/v1/clinics/{clinic_id}/members",
-    response_model=ClinicMemberResponse,
+    response_model=WorkspaceMemberResponse,
     status_code=status.HTTP_201_CREATED,
     tags=["clinic"],
 )
 async def create_clinic_member(
     clinic_id: UUID,
-    payload: ClinicMemberCreateRequest,
+    payload: WorkspaceMemberCreateRequest,
     actor: Annotated[User, Depends(require_permission("role.assign"))],
     session: AsyncSession = Depends(get_db_session),
-) -> ClinicMemberResponse:
-    membership = await add_clinic_member(
+) -> WorkspaceMemberResponse:
+    membership = await add_workspace_member(
         session=session,
-        clinic_id=clinic_id,
+        workspace_id=clinic_id,
         payload=payload,
         actor_user_id=actor.id,
     )
-    return ClinicMemberResponse(
+    return WorkspaceMemberResponse(
         user_id=membership.user_id,
-        clinic_id=membership.clinic_id,
+        clinic_id=membership.workspace_id,
         role_id=membership.role_id,
     )

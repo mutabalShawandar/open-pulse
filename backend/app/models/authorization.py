@@ -70,23 +70,23 @@ class UserRole(Base):
     )
 
 
-class ClinicMember(Base):
-    """A platform user's access assignment for a clinic.
+class WorkspaceMember(Base):
+    """A platform user's access assignment for a workspace.
 
-    The clinic is not an authenticated principal. The role belongs to the
-    user-clinic assignment and controls what that user may do there.
+    The workspace is not an authenticated principal. The role belongs to the
+    user-workspace assignment and controls what that user may do there.
     """
 
-    __tablename__ = "clinic_members"
+    __tablename__ = "workspace_members"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     )
-    clinic_id: Mapped[uuid.UUID] = mapped_column(
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("clinics.id", ondelete="CASCADE"),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
         primary_key=True,
     )
     role_id: Mapped[uuid.UUID] = mapped_column(

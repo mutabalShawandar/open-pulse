@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
+    Organization,
     Survey,
     QuestionType,
     SurveyQuestion,
@@ -15,8 +16,9 @@ from app.models import (
     SurveySection,
     SurveyStatus,
     SurveyVersion,
-    SurveyVersionClinic,
+    SurveyVersionWorkspace,
     SurveyVersionStatus,
+    Workspace,
 )
 from app.schemas.survey import (
     SurveyCreateRequest,
@@ -51,8 +53,15 @@ async def create_survey(
     payload: SurveyCreateRequest,
     actor_user_id: UUID,
 ) -> tuple[Survey, SurveyVersion]:
-    """Create an agency catalogue survey with one explicitly labelled draft."""
+    """Create an organization catalogue survey with one explicitly labelled draft."""
+    organization = await session.scalar(
+        select(Organization).where(Organization.id == payload.organization_id)
+    )
+    if organization is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+
     survey = Survey(
+        organization_id=payload.organization_id,
         title=payload.title,
         description=payload.description,
         created_by_user_id=actor_user_id,
@@ -73,7 +82,7 @@ async def create_survey(
         add_audit_event(
             session,
             actor_user_id=actor_user_id,
-            clinic_id=None,
+            workspace_id=None,
             action="survey.created",
             entity_type="survey",
             entity_id=survey.id,
@@ -92,10 +101,16 @@ async def create_survey(
     return survey, draft
 
 
-async def list_surveys(session: AsyncSession, include_archived: bool = False) -> list[Survey]:
+async def list_surveys(
+    session: AsyncSession,
+    include_archived: bool = False,
+    organization_ids: list[UUID] | None = None,
+) -> list[Survey]:
     statement = select(Survey).order_by(Survey.created_at.desc(), Survey.id.desc())
     if not include_archived:
         statement = statement.where(Survey.status != SurveyStatus.ARCHIVED)
+    if organization_ids is not None:
+        statement = statement.where(Survey.organization_id.in_(organization_ids))
     result = await session.scalars(statement)
     return list(result)
 
@@ -105,6 +120,13 @@ async def get_survey_or_404(session: AsyncSession, survey_id: UUID) -> Survey:
     if survey is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey not found")
     return survey
+
+
+async def get_survey_organization_id_or_404(session: AsyncSession, survey_id: UUID) -> UUID:
+    organization_id = await session.scalar(select(Survey.organization_id).where(Survey.id == survey_id))
+    if organization_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey not found")
+    return organization_id
 
 
 async def update_survey(
@@ -121,7 +143,7 @@ async def update_survey(
     add_audit_event(
         session,
         actor_user_id=actor_user_id,
-        clinic_id=None,
+        workspace_id=None,
         action="survey.updated",
         entity_type="survey",
         entity_id=survey.id,
@@ -141,7 +163,7 @@ async def archive_survey(session: AsyncSession, survey_id: UUID, actor_user_id: 
     add_audit_event(
         session,
         actor_user_id=actor_user_id,
-        clinic_id=None,
+        workspace_id=None,
         action="survey.archived",
         entity_type="survey",
         entity_id=survey.id,
@@ -166,7 +188,7 @@ async def restore_survey(session: AsyncSession, survey_id: UUID, actor_user_id: 
     add_audit_event(
         session,
         actor_user_id=actor_user_id,
-        clinic_id=None,
+        workspace_id=None,
         action="survey.restored",
         entity_type="survey",
         entity_id=survey.id,
@@ -306,7 +328,7 @@ async def create_draft(
         add_audit_event(
             session,
             actor_user_id=actor_user_id,
-            clinic_id=None,
+            workspace_id=None,
             action="survey.draft_created",
             entity_type="survey_version",
             entity_id=draft.id,
@@ -331,6 +353,7 @@ async def copy_survey(
         session, source_survey_id, payload.source_version_id
     )
     survey = Survey(
+        organization_id=source_survey.organization_id,
         title=payload.title or f"{source_survey.title} (Kopie)",
         description=payload.description if payload.description is not None else source_survey.description,
         status=SurveyStatus.DRAFT,
@@ -351,7 +374,7 @@ async def copy_survey(
         add_audit_event(
             session,
             actor_user_id=actor_user_id,
-            clinic_id=None,
+            workspace_id=None,
             action="survey.copied",
             entity_type="survey",
             entity_id=survey.id,
@@ -457,7 +480,7 @@ async def publish_draft(
     add_audit_event(
         session,
         actor_user_id=actor_user_id,
-        clinic_id=None,
+        workspace_id=None,
         action="survey.published",
         entity_type="survey_version",
         entity_id=draft.id,
@@ -477,58 +500,67 @@ async def publish_draft(
     return draft
 
 
-async def list_clinic_version_assignments(
+async def list_workspace_version_assignments(
     session: AsyncSession,
-    clinic_id: UUID,
+    workspace_id: UUID,
     actor,
-) -> list[SurveyVersionClinic]:
+) -> list[SurveyVersionWorkspace]:
     result = await session.scalars(
-        select(SurveyVersionClinic)
+        select(SurveyVersionWorkspace)
         .where(
-            SurveyVersionClinic.clinic_id == clinic_id,
-            SurveyVersionClinic.unassigned_at.is_(None),
+            SurveyVersionWorkspace.workspace_id == workspace_id,
+            SurveyVersionWorkspace.unassigned_at.is_(None),
         )
-        .order_by(SurveyVersionClinic.assigned_at.desc(), SurveyVersionClinic.id.desc())
+        .order_by(SurveyVersionWorkspace.assigned_at.desc(), SurveyVersionWorkspace.id.desc())
     )
     return list(result)
 
 
-async def assign_version_to_clinic(
+async def assign_version_to_workspace(
     session: AsyncSession,
-    clinic_id: UUID,
+    workspace_id: UUID,
     survey_version_id: UUID,
     actor,
-) -> SurveyVersionClinic:
+) -> SurveyVersionWorkspace:
     version = await session.scalar(select(SurveyVersion).where(SurveyVersion.id == survey_version_id))
     if version is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey version not found")
     if version.status != SurveyVersionStatus.PUBLISHED:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Only published survey versions can be assigned to clinics",
+            detail="Only published survey versions can be assigned to workspaces",
         )
     survey = await get_survey_or_404(session, version.survey_id)
     if survey.status == SurveyStatus.ARCHIVED:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Archived surveys cannot be assigned to clinics",
+            detail="Archived surveys cannot be assigned to workspaces",
+        )
+
+    workspace = await session.scalar(select(Workspace).where(Workspace.id == workspace_id))
+    if workspace is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found")
+    if workspace.organization_id != survey.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Survey versions can only be assigned to workspaces within the survey's organization",
         )
 
     assignment = await session.scalar(
-        select(SurveyVersionClinic)
+        select(SurveyVersionWorkspace)
         .where(
-            SurveyVersionClinic.survey_version_id == survey_version_id,
-            SurveyVersionClinic.clinic_id == clinic_id,
+            SurveyVersionWorkspace.survey_version_id == survey_version_id,
+            SurveyVersionWorkspace.workspace_id == workspace_id,
         )
-        .order_by(SurveyVersionClinic.assigned_at.desc())
+        .order_by(SurveyVersionWorkspace.assigned_at.desc())
         .limit(1)
     )
     if assignment is not None and assignment.unassigned_at is None:
         return assignment
     if assignment is None:
-        assignment = SurveyVersionClinic(
+        assignment = SurveyVersionWorkspace(
             survey_version_id=survey_version_id,
-            clinic_id=clinic_id,
+            workspace_id=workspace_id,
             assigned_by_user_id=actor.id,
         )
         session.add(assignment)
@@ -542,9 +574,9 @@ async def assign_version_to_clinic(
         add_audit_event(
             session,
             actor_user_id=actor.id,
-            clinic_id=clinic_id,
+            workspace_id=workspace_id,
             action="survey_version.assigned",
-            entity_type="survey_version_clinic",
+            entity_type="survey_version_workspace",
             entity_id=assignment.id,
             metadata={
                 "survey_version_id": str(survey_version_id),
@@ -559,17 +591,17 @@ async def assign_version_to_clinic(
     return assignment
 
 
-async def unassign_version_from_clinic(
+async def unassign_version_from_workspace(
     session: AsyncSession,
-    clinic_id: UUID,
+    workspace_id: UUID,
     survey_version_id: UUID,
     actor,
 ) -> None:
     assignment = await session.scalar(
-        select(SurveyVersionClinic).where(
-            SurveyVersionClinic.survey_version_id == survey_version_id,
-            SurveyVersionClinic.clinic_id == clinic_id,
-            SurveyVersionClinic.unassigned_at.is_(None),
+        select(SurveyVersionWorkspace).where(
+            SurveyVersionWorkspace.survey_version_id == survey_version_id,
+            SurveyVersionWorkspace.workspace_id == workspace_id,
+            SurveyVersionWorkspace.unassigned_at.is_(None),
         )
     )
     if assignment is None:
@@ -578,9 +610,9 @@ async def unassign_version_from_clinic(
     add_audit_event(
         session,
         actor_user_id=actor.id,
-        clinic_id=clinic_id,
+        workspace_id=workspace_id,
         action="survey_version.unassigned",
-        entity_type="survey_version_clinic",
+        entity_type="survey_version_workspace",
         entity_id=assignment.id,
         metadata={"survey_version_id": str(survey_version_id)},
     )

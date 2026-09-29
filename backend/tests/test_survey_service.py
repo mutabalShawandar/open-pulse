@@ -20,15 +20,21 @@ from app.services.survey_service import (
 
 class SurveyServiceTests(unittest.TestCase):
     def test_create_survey_creates_an_initial_draft_and_audit_event(self) -> None:
-        session = RecordingSession()
+        organization_id = uuid4()
+        session = RecordingSession(organization=SimpleNamespace(id=organization_id))
         survey, draft = asyncio.run(
             create_survey(
                 session,
-                SurveyCreateRequest(title="Patientenzufriedenheit", initial_draft_label="Entwurf A"),
+                SurveyCreateRequest(
+                    organization_id=organization_id,
+                    title="Patientenzufriedenheit",
+                    initial_draft_label="Entwurf A",
+                ),
                 uuid4(),
             )
         )
 
+        self.assertEqual(survey.organization_id, organization_id)
         self.assertEqual(survey.status, SurveyStatus.DRAFT)
         self.assertEqual(draft.status, SurveyVersionStatus.DRAFT)
         self.assertEqual(draft.survey_id, survey.id)
@@ -124,14 +130,18 @@ class SurveyServiceTests(unittest.TestCase):
 
 
 class RecordingSession:
-    def __init__(self) -> None:
+    def __init__(self, organization: object | None = None) -> None:
         self.added: list[object] = []
         self.committed = False
+        self.organization = organization
 
     def add(self, value: object) -> None:
         if getattr(value, "id", None) is None:
             value.id = uuid4()
         self.added.append(value)
+
+    async def scalar(self, _statement):
+        return self.organization
 
     async def flush(self) -> None:
         pass

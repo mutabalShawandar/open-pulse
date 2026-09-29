@@ -52,6 +52,9 @@ class Survey(Base):
     __tablename__ = "surveys"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[SurveyStatus] = mapped_column(
@@ -124,13 +127,13 @@ class SurveyVersion(Base):
     )
 
 
-class SurveyVersionClinic(Base):
-    __tablename__ = "survey_version_clinics"
+class SurveyVersionWorkspace(Base):
+    __tablename__ = "survey_version_workspaces"
     __table_args__ = (
         Index(
-            "uq_survey_version_clinics_active_assignment",
+            "uq_survey_version_workspaces_active_assignment",
             "survey_version_id",
-            "clinic_id",
+            "workspace_id",
             unique=True,
             postgresql_where=text("unassigned_at IS NULL"),
         ),
@@ -143,8 +146,8 @@ class SurveyVersionClinic(Base):
         nullable=False,
         index=True,
     )
-    clinic_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("clinics.id", ondelete="RESTRICT"), nullable=False, index=True
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     assigned_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
@@ -153,6 +156,11 @@ class SurveyVersionClinic(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     unassigned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    @property
+    def clinic_id(self) -> uuid.UUID:
+        """Kept for the stable `clinic_id` API/schema field name; the column is `workspace_id`."""
+        return self.workspace_id
 
 
 class SurveySection(Base):

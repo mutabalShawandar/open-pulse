@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from app.core.config import settings
 from app.models import (
+    Organization,
     QuestionType,
     Survey,
     SurveyQuestion,
@@ -45,7 +46,11 @@ class SurveyCopyTests(unittest.IsolatedAsyncioTestCase):
                     display_name="Copy Test",
                     is_active=True,
                 )
+                organization = Organization(name="Copy Organization", slug=f"copy-org-{uuid4()}")
+                session.add(organization)
+                await session.flush()
                 source_survey = Survey(
+                    organization_id=organization.id,
                     title="Source survey",
                     status=SurveyStatus.DRAFT,
                     created_by_user_id=actor.id,

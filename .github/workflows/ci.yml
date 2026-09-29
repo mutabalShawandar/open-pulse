@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [staging, main]
+  pull_request:
+    branches: [staging, main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Backend and frontend checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      # Pinned to the commit documented by uv for GitHub Actions (v9.0.0).
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          enable-cache: true
+
+      - name: Run backend unit tests
+        working-directory: backend
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test
+          KEYCLOAK_URL: http://localhost:8081
+          KEYCLOAK_INTERNAL_URL: http://localhost:8081
+          KEYCLOAK_REALM: openpulse
+          KEYCLOAK_CLIENT_ID: openpulse-frontend
+          KEYCLOAK_AUDIENCE: openpulse-api
+          KEYCLOAK_ISSUER: http://localhost:8081/realms/openpulse
+        run: |
+          uv sync --locked --all-groups
+          uv run --no-sync pytest tests --ignore=tests/integration
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Lint and build frontend
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+          NEXT_PUBLIC_ROOT_DOMAIN: localhost
+          APP_URL: http://localhost:3000
+          KEYCLOAK_ISSUER: http://localhost:8081/realms/openpulse
+          KEYCLOAK_FRONTEND_CLIENT_ID: openpulse-frontend
+        run: |
+          npm ci
+          npm run lint
+          npm run build

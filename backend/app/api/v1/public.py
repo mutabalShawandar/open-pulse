@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response
 from uuid import UUID
-from app.models import Clinic
-from app.services.storage_service import read_clinic_logo
+from app.models import Workspace
+from app.services.storage_service import read_workspace_logo
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db_session
@@ -17,9 +17,9 @@ router = APIRouter(prefix="/api/v1/public", tags=["public surveys"])
 
 @router.get("/clinic-logos/{clinic_id}")
 async def public_clinic_logo_endpoint(clinic_id: UUID, session: AsyncSession = Depends(get_db_session)) -> Response:
-    clinic = await session.get(Clinic, clinic_id)
-    if clinic is None or clinic.logo_storage_key is None: raise HTTPException(status_code=404, detail="Logo not found")
-    data, media_type = await read_clinic_logo(clinic.logo_storage_key)
+    workspace = await session.get(Workspace, clinic_id)
+    if workspace is None or workspace.logo_storage_key is None: raise HTTPException(status_code=404, detail="Logo not found")
+    data, media_type = await read_workspace_logo(workspace.logo_storage_key)
     return Response(content=data, media_type=media_type, headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
@@ -34,8 +34,8 @@ async def public_write_limit(request: Request) -> None:
 @router.get("/campaigns/{slug}", response_model=PublicCampaignResponse, dependencies=[Depends(public_read_limit)])
 async def public_campaign_endpoint(slug: str, session: AsyncSession = Depends(get_db_session)) -> PublicCampaignResponse:
     campaign = await get_public_campaign(session, slug)
-    clinic = await session.get(Clinic, campaign.clinic_id)
-    return PublicCampaignResponse(title=campaign.title, description=campaign.description, clinic_name=clinic.name if clinic else "", logo_url=clinic.logo_url if clinic else None, branding=campaign.branding, response_identity_mode=campaign.response_identity_mode, sections=await public_campaign_sections(session, campaign))
+    workspace = await session.get(Workspace, campaign.workspace_id)
+    return PublicCampaignResponse(title=campaign.title, description=campaign.description, clinic_name=workspace.name if workspace else "", logo_url=workspace.logo_url if workspace else None, branding=campaign.branding, response_identity_mode=campaign.response_identity_mode, sections=await public_campaign_sections(session, campaign))
 
 
 @router.post("/campaigns/{slug}/responses", response_model=PublicResponseSessionResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(public_write_limit)])

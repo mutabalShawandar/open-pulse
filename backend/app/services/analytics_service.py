@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Campaign, ResponseAnswer, ResponseAnswerOption, ResponseStatus, SurveyQuestion, SurveyQuestionOption, SurveyResponse, SurveySection
 
 
-async def campaign_analytics(session: AsyncSession, clinic_id: UUID, campaign_id: UUID) -> dict:
-    campaign = await session.scalar(select(Campaign).where(Campaign.id == campaign_id, Campaign.clinic_id == clinic_id))
+async def campaign_analytics(session: AsyncSession, workspace_id: UUID, campaign_id: UUID) -> dict:
+    campaign = await session.scalar(select(Campaign).where(Campaign.id == campaign_id, Campaign.workspace_id == workspace_id))
     if campaign is None: raise HTTPException(status_code=404, detail="Campaign not found")
     started = await session.scalar(select(func.count(SurveyResponse.id)).where(SurveyResponse.campaign_id == campaign.id)) or 0
     completed = await session.scalar(select(func.count(SurveyResponse.id)).where(SurveyResponse.campaign_id == campaign.id, SurveyResponse.status == ResponseStatus.COMPLETED)) or 0

@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
     Campaign,
-    Clinic,
+    Workspace,
     ResponseAnswer,
     ResponseAnswerOption,
     ResponseStatus,
@@ -74,16 +74,16 @@ def _format_answer(answer: ResponseAnswer, selected_labels: list[str]) -> str:
     return "; ".join(parts)
 
 
-async def export_report_data(session: AsyncSession, clinic_id: UUID, campaign_id: UUID) -> dict[str, Any]:
-    campaign = await session.scalar(select(Campaign).where(Campaign.id == campaign_id, Campaign.clinic_id == clinic_id))
+async def export_report_data(session: AsyncSession, workspace_id: UUID, campaign_id: UUID) -> dict[str, Any]:
+    campaign = await session.scalar(select(Campaign).where(Campaign.id == campaign_id, Campaign.workspace_id == workspace_id))
     if campaign is None:
         raise HTTPException(status_code=404, detail="Campaign not found")
 
-    clinic = await session.scalar(select(Clinic).where(Clinic.id == clinic_id))
+    workspace = await session.scalar(select(Workspace).where(Workspace.id == workspace_id))
     survey = await session.scalar(
         select(Survey).join(SurveyVersion).where(SurveyVersion.id == campaign.survey_version_id),
     )
-    analytics = await campaign_analytics(session, clinic_id, campaign_id)
+    analytics = await campaign_analytics(session, workspace_id, campaign_id)
 
     question_rows = list(
         await session.execute(
@@ -146,7 +146,7 @@ async def export_report_data(session: AsyncSession, clinic_id: UUID, campaign_id
 
     return {
         "campaign": campaign,
-        "clinic": clinic,
+        "workspace": workspace,
         "survey": survey,
         "questions": questions,
         "question_sections": question_sections,
@@ -178,7 +178,7 @@ def build_excel_export(data: dict[str, Any]) -> tuple[bytes, str]:
     overview.merge_range("A1:B1", f"Auswertung - {title}", title_format)
     overview.set_row(0, 30)
     metadata = [
-        ("Klinik", data["clinic"].name),
+        ("Klinik", data["workspace"].name),
         ("Kampagne", title),
         ("Umfrage", data["survey"].title if data["survey"] else ""),
         ("Status", data["campaign"].status.value),
@@ -293,7 +293,7 @@ def build_pdf_export(data: dict[str, Any]) -> tuple[bytes, str]:
     story: list[Any] = [
         paragraph("Kampagnenauswertung", "ReportTitle"),
         paragraph(data["campaign"].title, "Heading2"),
-        paragraph(f"{data['clinic'].name} - Export vom {data['generated_at'].strftime('%d.%m.%Y %H:%M UTC')}", "Small"),
+        paragraph(f"{data['workspace'].name} - Export vom {data['generated_at'].strftime('%d.%m.%Y %H:%M UTC')}", "Small"),
         Spacer(1, 0.35 * cm),
     ]
     meta_table = Table([
@@ -352,7 +352,7 @@ def build_pdf_export(data: dict[str, Any]) -> tuple[bytes, str]:
         canvas.saveState()
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(HexColor("#405260"))
-        canvas.drawString(1.5 * cm, 1 * cm, f"{data['clinic'].name} - {data['campaign'].title}")
+        canvas.drawString(1.5 * cm, 1 * cm, f"{data['workspace'].name} - {data['campaign'].title}")
         canvas.drawRightString(A4[0] - 1.5 * cm, 1 * cm, f"Seite {canvas.getPageNumber()}")
         canvas.restoreState()
 

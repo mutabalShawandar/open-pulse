@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Campaign, CampaignDelivery, CampaignRecipient, CampaignRecipientStatus, CampaignStatus, Clinic, QuestionType, ResponseAnswer, ResponseAnswerOption, ResponseSession, ResponseStatus, Survey, SurveyQuestion, SurveyQuestionOption, SurveyQuestionValidation, SurveyResponse, SurveySection, SurveyVersion, SurveyVersionClinic, SurveyVersionStatus
+from app.models import Campaign, CampaignDelivery, CampaignRecipient, CampaignRecipientStatus, CampaignStatus, Workspace, QuestionType, ResponseAnswer, ResponseAnswerOption, ResponseSession, ResponseStatus, Survey, SurveyQuestion, SurveyQuestionOption, SurveyQuestionValidation, SurveyResponse, SurveySection, SurveyVersion, SurveyVersionWorkspace, SurveyVersionStatus
 from app.models.campaign import generate_response_token, hash_response_token
 from app.core.links import normalize_campaign_path
 from app.schemas.campaign import CampaignCreateRequest, CampaignUpdateRequest, PublicAnswerRequest
@@ -32,20 +32,20 @@ async def assign_public_path(session: AsyncSession, campaign: Campaign) -> str:
 async def create_campaign(session: AsyncSession, payload: CampaignCreateRequest, actor_user_id: UUID) -> Campaign:
     if payload.response_identity_mode.value != "anonymous":
         raise HTTPException(status_code=422, detail="Only anonymous public responses are supported in Phase 3")
-    clinic = await session.get(Clinic, payload.clinic_id)
-    if clinic is None:
+    workspace = await session.get(Workspace, payload.clinic_id)
+    if workspace is None:
         raise HTTPException(status_code=404, detail="Clinic not found")
     version = await session.get(SurveyVersion, payload.survey_version_id)
     if version is None or version.status != SurveyVersionStatus.PUBLISHED:
         raise HTTPException(status_code=422, detail="Campaigns require a published survey version")
-    assignment = await session.scalar(select(SurveyVersionClinic.id).where(SurveyVersionClinic.clinic_id == clinic.id, SurveyVersionClinic.survey_version_id == version.id, SurveyVersionClinic.unassigned_at.is_(None)))
+    assignment = await session.scalar(select(SurveyVersionWorkspace.id).where(SurveyVersionWorkspace.workspace_id == workspace.id, SurveyVersionWorkspace.survey_version_id == version.id, SurveyVersionWorkspace.unassigned_at.is_(None)))
     if assignment is None:
         raise HTTPException(status_code=422, detail="The published survey version is not actively assigned to this clinic")
-    campaign = Campaign(**payload.model_dump(), created_by_user_id=actor_user_id)
+    campaign = Campaign(**payload.model_dump(exclude={"clinic_id"}), workspace_id=payload.clinic_id, created_by_user_id=actor_user_id)
     session.add(campaign)
     await session.flush()
     await assign_public_path(session, campaign)
-    add_audit_event(session, actor_user_id=actor_user_id, clinic_id=campaign.clinic_id, action="campaign.created", entity_type="campaign", entity_id=campaign.id, metadata={"survey_version_id": str(campaign.survey_version_id)})
+    add_audit_event(session, actor_user_id=actor_user_id, workspace_id=campaign.workspace_id, action="campaign.created", entity_type="campaign", entity_id=campaign.id, metadata={"survey_version_id": str(campaign.survey_version_id)})
     await session.commit()
     await session.refresh(campaign)
     return campaign
@@ -54,7 +54,7 @@ async def create_campaign(session: AsyncSession, payload: CampaignCreateRequest,
 async def list_campaigns(session: AsyncSession, clinic_id: UUID | None = None) -> list[Campaign]:
     query = select(Campaign).order_by(Campaign.created_at.desc())
     if clinic_id is not None:
-        query = query.where(Campaign.clinic_id == clinic_id)
+        query = query.where(Campaign.workspace_id == clinic_id)
     return list(await session.scalars(query))
 
 
@@ -68,14 +68,14 @@ async def get_campaign_or_404(session: AsyncSession, campaign_id: UUID) -> Campa
 async def campaign_response_data(session: AsyncSession, campaign: Campaign) -> dict:
     version = await session.get(SurveyVersion, campaign.survey_version_id)
     survey = await session.get(Survey, version.survey_id) if version else None
-    return {"id": campaign.id, "clinic_id": campaign.clinic_id, "survey_version_id": campaign.survey_version_id, "survey_title": survey.title if survey else "Unbekannte Umfrage", "survey_version_number": version.version_number if version and version.version_number else 0, "title": campaign.title, "description": campaign.description, "public_slug": campaign.public_slug, "public_path": campaign.public_path, "status": campaign.status, "response_identity_mode": campaign.response_identity_mode, "branding": campaign.branding, "starts_at": campaign.starts_at, "ends_at": campaign.ends_at, "created_at": campaign.created_at, "updated_at": campaign.updated_at}
+    return {"id": campaign.id, "clinic_id": campaign.workspace_id, "survey_version_id": campaign.survey_version_id, "survey_title": survey.title if survey else "Unbekannte Umfrage", "survey_version_number": version.version_number if version and version.version_number else 0, "title": campaign.title, "description": campaign.description, "public_slug": campaign.public_slug, "public_path": campaign.public_path, "status": campaign.status, "response_identity_mode": campaign.response_identity_mode, "branding": campaign.branding, "starts_at": campaign.starts_at, "ends_at": campaign.ends_at, "created_at": campaign.created_at, "updated_at": campaign.updated_at}
 
 
 async def delete_campaign(session: AsyncSession, campaign_id: UUID, actor_user_id: UUID) -> None:
     campaign = await get_campaign_or_404(session, campaign_id)
     if await session.scalar(select(SurveyResponse.id).where(SurveyResponse.campaign_id == campaign.id).limit(1)):
         raise HTTPException(status_code=409, detail="Campaigns with responses cannot be deleted; cancel the campaign instead")
-    add_audit_event(session, actor_user_id=actor_user_id, clinic_id=campaign.clinic_id, action="campaign.deleted", entity_type="campaign", entity_id=campaign.id)
+    add_audit_event(session, actor_user_id=actor_user_id, workspace_id=campaign.workspace_id, action="campaign.deleted", entity_type="campaign", entity_id=campaign.id)
     await session.delete(campaign)
     await session.commit()
 
@@ -90,7 +90,7 @@ async def update_campaign(session: AsyncSession, campaign_id: UUID, payload: Cam
         version = await session.get(SurveyVersion, payload.survey_version_id)
         if version is None or version.status != SurveyVersionStatus.PUBLISHED:
             raise HTTPException(status_code=422, detail="Campaigns require a published survey version")
-        assignment = await session.scalar(select(SurveyVersionClinic.id).where(SurveyVersionClinic.clinic_id == campaign.clinic_id, SurveyVersionClinic.survey_version_id == version.id, SurveyVersionClinic.unassigned_at.is_(None)))
+        assignment = await session.scalar(select(SurveyVersionWorkspace.id).where(SurveyVersionWorkspace.workspace_id == campaign.workspace_id, SurveyVersionWorkspace.survey_version_id == version.id, SurveyVersionWorkspace.unassigned_at.is_(None)))
         if assignment is None:
             raise HTTPException(status_code=422, detail="The published survey version is not actively assigned to this clinic")
     if payload.status in {CampaignStatus.DRAFT, CampaignStatus.SCHEDULED}:
@@ -113,7 +113,7 @@ async def update_campaign(session: AsyncSession, campaign_id: UUID, payload: Cam
                 recipient.last_error = delivery.last_error
     if campaign.starts_at and campaign.ends_at and campaign.starts_at >= campaign.ends_at:
         raise HTTPException(status_code=422, detail="starts_at must be before ends_at")
-    add_audit_event(session, actor_user_id=actor_user_id, clinic_id=campaign.clinic_id, action="campaign.updated", entity_type="campaign", entity_id=campaign.id, metadata={"changed_fields": sorted(payload.model_fields_set)})
+    add_audit_event(session, actor_user_id=actor_user_id, workspace_id=campaign.workspace_id, action="campaign.updated", entity_type="campaign", entity_id=campaign.id, metadata={"changed_fields": sorted(payload.model_fields_set)})
     await session.commit(); await session.refresh(campaign)
     return campaign
 
@@ -157,7 +157,7 @@ async def complete_expired_campaigns(session: AsyncSession, now: datetime | None
             if recipient and recipient.status != CampaignRecipientStatus.SENT:
                 recipient.status = CampaignRecipientStatus.FAILED
                 recipient.last_error = delivery.last_error
-        add_audit_event(session, actor_user_id=None, clinic_id=campaign.clinic_id, action="campaign.auto_completed", entity_type="campaign", entity_id=campaign.id, metadata={"ends_at": campaign.ends_at.isoformat()})
+        add_audit_event(session, actor_user_id=None, workspace_id=campaign.workspace_id, action="campaign.auto_completed", entity_type="campaign", entity_id=campaign.id, metadata={"ends_at": campaign.ends_at.isoformat()})
     if campaigns:
         await session.commit()
     return len(campaigns)
@@ -190,7 +190,7 @@ async def start_public_response(session: AsyncSession, campaign: Campaign) -> tu
     session.add(response); await session.flush()
     response_session = ResponseSession(response_id=response.id, token_hash=hash_response_token(token), expires_at=datetime.now(UTC) + timedelta(days=30))
     session.add(response_session)
-    add_audit_event(session, actor_user_id=None, clinic_id=campaign.clinic_id, action="response.started", entity_type="survey_response", entity_id=response.id, metadata={"campaign_id": str(campaign.id)})
+    add_audit_event(session, actor_user_id=None, workspace_id=campaign.workspace_id, action="response.started", entity_type="survey_response", entity_id=response.id, metadata={"campaign_id": str(campaign.id)})
     await session.commit(); await session.refresh(response_session)
     return token, response_session
 
@@ -306,6 +306,6 @@ async def complete_response(session: AsyncSession, response: SurveyResponse) -> 
         raise HTTPException(status_code=422, detail="Required questions are missing", headers={"X-Missing-Question-Count": str(len(missing))})
     response.status = ResponseStatus.COMPLETED; response.completed_at = datetime.now(UTC); response.legal_accepted_at = response.completed_at
     campaign = await session.get(Campaign, response.campaign_id)
-    add_audit_event(session, actor_user_id=None, clinic_id=campaign.clinic_id if campaign else None, action="response.completed", entity_type="survey_response", entity_id=response.id, metadata={"campaign_id": str(response.campaign_id)})
+    add_audit_event(session, actor_user_id=None, workspace_id=campaign.workspace_id if campaign else None, action="response.completed", entity_type="survey_response", entity_id=response.id, metadata={"campaign_id": str(response.campaign_id)})
     await session.commit(); await session.refresh(response)
     return response

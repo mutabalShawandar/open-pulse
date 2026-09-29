@@ -102,11 +102,11 @@ class AuthorizationServiceTestCase(unittest.IsolatedAsyncioTestCase):
     def test_permission_query_is_scoped_to_user_clinic_and_permission(self):
         user = SimpleNamespace(id=uuid4(), is_active=True)
         clinic_id = uuid4()
-        captured = {}
+        captured = []
 
         class FakeSession:
             async def scalar(self, query):
-                captured["query"] = query
+                captured.append(query)
                 return None
 
         with self.assertRaises(HTTPException):
@@ -119,17 +119,75 @@ class AuthorizationServiceTestCase(unittest.IsolatedAsyncioTestCase):
                 )
             )
 
-        compiled = captured["query"].compile(dialect=postgresql.dialect())
+        # First call checks platform_admin, second the direct WorkspaceMember
+        # grant; a third (organization-scoped) fallback query also runs
+        # before rejecting — see test_organization_fallback_query_is_scoped
+        # for that one's shape.
+        compiled = captured[1].compile(dialect=postgresql.dialect())
         sql = str(compiled).lower()
         parameter_values = list(compiled.params.values())
 
-        self.assertIn("clinic_members", sql)
+        self.assertIn("workspace_members", sql)
         self.assertIn("role_permissions", sql)
         self.assertIn("permissions", sql)
-        self.assertIn("clinic_members.user_id", sql)
-        self.assertIn("clinic_members.clinic_id", sql)
+        self.assertIn("workspace_members.user_id", sql)
+        self.assertIn("workspace_members.workspace_id", sql)
         self.assertIn("permissions.name", sql)
         self.assertIn("limit", sql)
         self.assertIn(user.id, parameter_values)
         self.assertIn(clinic_id, parameter_values)
         self.assertIn("survey.create", parameter_values)
+
+    def test_organization_fallback_query_is_scoped(self):
+        user = SimpleNamespace(id=uuid4(), is_active=True)
+        clinic_id = uuid4()
+        captured = []
+
+        class FakeSession:
+            async def scalar(self, query):
+                captured.append(query)
+                return None
+
+        with self.assertRaises(HTTPException):
+            asyncio.run(
+                require_clinic_permission(
+                    FakeSession(),
+                    user,
+                    clinic_id,
+                    "survey.create",
+                )
+            )
+
+        compiled = captured[2].compile(dialect=postgresql.dialect())
+        sql = str(compiled).lower()
+        parameter_values = list(compiled.params.values())
+
+        self.assertIn("organization_members", sql)
+        self.assertIn("workspaces", sql)
+        self.assertIn("organization_members.user_id", sql)
+        self.assertIn(user.id, parameter_values)
+        self.assertIn(clinic_id, parameter_values)
+        self.assertIn("survey.create", parameter_values)
+
+    def test_organization_owner_is_allowed_without_workspace_membership(self):
+        user = SimpleNamespace(id=uuid4(), is_active=True)
+        clinic_id = uuid4()
+
+        class FakeSession:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            async def scalar(self, query):
+                self.calls += 1
+                # 1: not platform_admin, 2: no direct WorkspaceMember grant,
+                # 3: granted via the OrganizationMember fallback.
+                return uuid4() if self.calls == 3 else None
+
+        asyncio.run(
+            require_clinic_permission(
+                FakeSession(),
+                user,
+                clinic_id,
+                "survey.create",
+            )
+        )

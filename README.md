@@ -50,7 +50,7 @@ This repository is intended to be self-hosted, but it is not automatically produ
 ### Start the application
 
 ```powershell
-git clone https://github.com/YOUR_GITHUB_USERNAME/open-pulse.git
+git clone https://github.com/mutabalShawandar/open-pulse.git
 cd open-pulse
 
 Copy-Item .env.example .env

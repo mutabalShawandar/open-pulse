@@ -1,9 +1,9 @@
 from app.models.user import User
 from app.models.identity import ExternalIdentityLink
-from app.models.clinic import Clinic
+from app.models.workspace import Workspace
 from app.models.organization import Organization
 from app.models.authorization import (
-    ClinicMember,
+    WorkspaceMember,
     OrganizationMember,
     Permission,
     Role,
@@ -32,7 +32,7 @@ from app.models.survey import (
     SurveySection,
     SurveyStatus,
     SurveyVersion,
-    SurveyVersionClinic,
+    SurveyVersionWorkspace,
     SurveyVersionStatus,
 )
 
@@ -40,13 +40,13 @@ from app.models.survey import (
 __all__ = [
     "User", 
     "ExternalIdentityLink",
-    "Clinic",
+    "Workspace",
     "Organization",
     "Role",
     "Permission",
     "RolePermission",
     "UserRole",
-    "ClinicMember",
+    "WorkspaceMember",
     "OrganizationMember",
     "AuditEvent",
     "SmtpConfiguration",
@@ -72,6 +72,6 @@ __all__ = [
     "SurveySection",
     "SurveyStatus",
     "SurveyVersion",
-    "SurveyVersionClinic",
+    "SurveyVersionWorkspace",
     "SurveyVersionStatus",
 ]
