@@ -7,6 +7,20 @@ export type CurrentUser = {
 
 export type PlatformUser = CurrentUser;
 
+export type Organization = {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: string;
+};
+
+export type OrganizationRegisterInput = {
+  organization_name: string;
+  organization_slug: string;
+  owner_email: string;
+  owner_display_name: string;
+};
+
 export type Clinic = {
   id: string;
   name: string;

@@ -6,6 +6,8 @@ import type {
   ClinicMember,
   ClinicSurveyVersionAssignment,
   CurrentUser,
+  Organization,
+  OrganizationRegisterInput,
   PlatformUser,
   Survey,
   SurveyDetail,
@@ -61,6 +63,26 @@ export function getCurrentUser(accessToken: string): Promise<CurrentUser> {
 
 export function listPlatformUsers(accessToken: string): Promise<PlatformUser[]> {
   return apiFetch<PlatformUser[]>("/api/v1/users", accessToken);
+}
+
+export async function registerOrganization(payload: OrganizationRegisterInput): Promise<Organization> {
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/organizations/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+  if (!response.ok) throw new ApiError(response.status, await readErrorDetail(response));
+  return response.json() as Promise<Organization>;
+}
+
+export async function checkOrganizationSlugAvailable(slug: string): Promise<boolean> {
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/organizations/slug-available/${encodeURIComponent(slug)}`, {
+    cache: "no-store",
+  });
+  if (!response.ok) throw new ApiError(response.status, await readErrorDetail(response));
+  const body = (await response.json()) as { available: boolean };
+  return body.available;
 }
 
 export function getSmtpConfiguration(accessToken: string): Promise<SmtpConfiguration | null> {
