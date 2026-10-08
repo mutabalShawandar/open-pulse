@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeftIcon, Building2Icon, MapPinIcon, PencilIcon } from "lucide-react";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ async function loadWorkspace(workspaceSlug: string) {
   }
 }
 
-async function loadSurveyVersionManagement(workspaceId: string) {
+async function loadSurveyVersionManagement(workspaceId: string, versionLabel: (survey: string, number: number | string) => string) {
   const accessToken = await getAccessToken();
   if (!accessToken) return null;
 
@@ -58,7 +59,7 @@ async function loadSurveyVersionManagement(workspaceId: string) {
         .filter((version) => version.status === "published")
         .map((version) => ({
           id: version.id,
-          label: `${survey.title} · Version ${version.version_number ?? "—"}`,
+          label: versionLabel(survey.title, version.version_number ?? "—"),
         })),
     );
     return { assignments, options };
@@ -84,10 +85,12 @@ export default async function WorkspaceDetailPage({
   }>;
 }) {
   const { workspaceId: workspaceSlug } = await params;
+  const t = await getTranslations("workspaces");
+  const tc = await getTranslations("campaigns");
   const workspace = await loadWorkspace(workspaceSlug);
   const address = fullAddress(workspace);
   const query = await searchParams;
-  const surveyVersionManagement = await loadSurveyVersionManagement(workspace.id);
+  const surveyVersionManagement = await loadSurveyVersionManagement(workspace.id, (survey, number) => tc("versionLine", { survey, number }));
   const assignmentError = query.assignmentError;
 
   return (
@@ -99,71 +102,63 @@ export default async function WorkspaceDetailPage({
         render={<Link href="/workspaces" />}
       >
         <ArrowLeftIcon data-icon="inline-start" />
-        Alle Kliniken
+        {t("detail.all")}
       </Button>
       <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div className="flex items-start gap-4">
           {workspace.logo_url ? (
-            <img src={workspace.logo_url} alt={`${workspace.name} Logo`} className="size-12 rounded-2xl bg-white object-contain p-1 shadow-lg shadow-primary/15" />
+            <img src={workspace.logo_url} alt={t("logoAlt", { name: workspace.name })} className="size-12 rounded-2xl bg-white object-contain p-1 shadow-lg shadow-primary/15" />
           ) : (
             <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/15">
               <Building2Icon className="size-6" />
             </div>
           )}
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Klinikprofil</p>
+            <p className="text-sm font-medium text-muted-foreground">{t("detail.profile")}</p>
             <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">{workspace.name}</h1>
             <p className="mt-2 text-sm text-muted-foreground">/{workspace.slug}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="secondary">Stammdaten</Badge>
+          <Badge variant="secondary">{t("detail.badge")}</Badge>
           <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/edit`} />}>
             <PencilIcon data-icon="inline-start" />
-            Bearbeiten
+            {t("detail.edit")}
           </Button>
-          <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/campaigns`} />}>Kampagnen</Button>
-          <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/recipients`} />}>Empfänger</Button>
-          <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/analytics`} />}>Auswertungen</Button>
+          <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/campaigns`} />}>{t("detail.campaigns")}</Button>
+          <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/recipients`} />}>{t("detail.recipients")}</Button>
+          <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/analytics`} />}>{t("detail.analytics")}</Button>
         </div>
       </section>
       {query.created || query.updated ? (
         <Alert>
-          <AlertTitle>{query.created ? "Klinik angelegt" : "Änderungen gespeichert"}</AlertTitle>
+          <AlertTitle>{query.created ? t("detail.createdTitle") : t("detail.updatedTitle")}</AlertTitle>
           <AlertDescription>
-            {query.created
-              ? "Die Klinik steht jetzt für die weitere Einrichtung bereit."
-              : "Die Stammdaten der Klinik wurden aktualisiert."}
+            {query.created ? t("detail.createdBody") : t("detail.updatedBody")}
           </AlertDescription>
         </Alert>
       ) : null}
       {query.assignmentAdded || query.assignmentRemoved ? (
         <Alert>
-          <AlertTitle>{query.assignmentAdded ? "Version zugeordnet" : "Zuordnung aufgehoben"}</AlertTitle>
+          <AlertTitle>{query.assignmentAdded ? t("detail.assignmentAdded") : t("detail.assignmentRemoved")}</AlertTitle>
           <AlertDescription>
-            {query.assignmentAdded
-              ? "Die veröffentlichte Version kann jetzt für diese Klinik verwendet werden."
-              : "Die Version steht nicht mehr für neue Kampagnen dieser Klinik bereit."}
+            {query.assignmentAdded ? t("detail.addedBody") : t("detail.removedBody")}
           </AlertDescription>
         </Alert>
       ) : null}
       {assignmentError ? (
         <Alert variant="destructive">
-          <AlertTitle>Zuordnung nicht aktualisiert</AlertTitle>
+          <AlertTitle>{t("detail.assignErrorTitle")}</AlertTitle>
           <AlertDescription>
-            {assignmentError === "exists"
-              ? "Diese veröffentlichte Version ist bereits der Klinik zugeordnet."
-              : assignmentError === "validation"
-                ? "Bitte wählen Sie eine veröffentlichte Version aus."
-                : "Die Änderung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."}
+            {assignmentError === "exists" ? t("detail.exists") : assignmentError === "validation" ? t("detail.validation") : t("detail.unknown")}
           </AlertDescription>
         </Alert>
       ) : null}
       <Card>
         <CardHeader className="border-b">
-          <CardTitle>Standortdaten</CardTitle>
+          <CardTitle>{t("detail.locationTitle")}</CardTitle>
           <CardDescription>
-            Diese Angaben bilden die Grundlage für die spätere klinikspezifische Umfrageausspielung.
+            {t("detail.locationHint")}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
@@ -179,16 +174,16 @@ export default async function WorkspaceDetailPage({
               </address>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Für diese Klinik sind noch keine Standortdaten hinterlegt.</p>
+            <p className="text-sm text-muted-foreground">{t("detail.noLocation")}</p>
           )}
         </CardContent>
       </Card>
       {surveyVersionManagement ? (
         <Card>
           <CardHeader className="border-b">
-            <CardTitle>Veröffentlichte Umfrageversionen</CardTitle>
+            <CardTitle>{t("detail.versionsTitle")}</CardTitle>
             <CardDescription>
-              Kampagnen wählen später ausschließlich aus diesen aktiven, unveränderlichen Versionen.
+              {t("detail.versionsHint")}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-5">

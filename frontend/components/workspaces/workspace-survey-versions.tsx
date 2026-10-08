@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { useFormatter, useTranslations } from "next-intl";
 import { ClipboardCheckIcon, LinkIcon, Trash2Icon } from "lucide-react";
 
 import {
@@ -35,13 +36,9 @@ type WorkspaceSurveyVersionsProps = {
   options: PublishedSurveyVersionOption[] | null;
 };
 
-const dateFormatter = new Intl.DateTimeFormat("de-DE", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-});
-
 export function WorkspaceSurveyVersions({ assignments, workspaceSlug, options }: WorkspaceSurveyVersionsProps) {
+  const t = useTranslations("surveys.assign");
+  const format = useFormatter();
   const assignedIds = new Set(assignments.map((assignment) => assignment.survey_version_id));
   const assignableOptions = options?.filter((option) => !assignedIds.has(option.id)) ?? [];
   const labels = new Map(options?.map((option) => [option.id, option.label]));
@@ -52,8 +49,8 @@ export function WorkspaceSurveyVersions({ assignments, workspaceSlug, options }:
         {assignments.length === 0 ? (
           <div className="rounded-xl border border-dashed p-6 text-center">
             <ClipboardCheckIcon className="mx-auto size-5 text-muted-foreground" />
-            <p className="mt-3 font-medium">Noch keine Umfrageversion zugeordnet</p>
-            <p className="mt-1 text-sm text-muted-foreground">Wählen Sie rechts eine veröffentlichte Version aus.</p>
+            <p className="mt-3 font-medium">{t("none")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("noneHint")}</p>
           </div>
         ) : (
           <ul className="divide-y rounded-xl border">
@@ -64,18 +61,18 @@ export function WorkspaceSurveyVersions({ assignments, workspaceSlug, options }:
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">
-                    {labels.get(assignment.survey_version_id) ?? `Version ${assignment.survey_version_id}`}
+                    {labels.get(assignment.survey_version_id) ?? t("unknownVersion", { id: assignment.survey_version_id })}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Zugeordnet am {dateFormatter.format(new Date(assignment.assigned_at))}
+                    {t("assignedOn", { date: format.dateTime(new Date(assignment.assigned_at), { day: "2-digit", month: "2-digit", year: "numeric" }) })}
                   </p>
                 </div>
-                <Badge variant="secondary">Aktiv</Badge>
+                <Badge variant="secondary">{t("active")}</Badge>
                 {options ? (
                   <UnassignVersionDialog
                     workspaceSlug={workspaceSlug}
                     surveyVersionId={assignment.survey_version_id}
-                    surveyVersionName={labels.get(assignment.survey_version_id) ?? "diese Umfrageversion"}
+                    surveyVersionName={labels.get(assignment.survey_version_id) ?? t("thisVersion")}
                   />
                 ) : null}
               </li>
@@ -84,26 +81,24 @@ export function WorkspaceSurveyVersions({ assignments, workspaceSlug, options }:
         )}
       </section>
       <section className="rounded-xl border bg-muted/25 p-4">
-        <p className="font-medium">Version zuordnen</p>
-        <p className="mt-1 text-sm text-muted-foreground">Nur veröffentlichte Versionen können für Kampagnen verwendet werden.</p>
+        <p className="font-medium">{t("title")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("hint")}</p>
         {options === null ? (
-          <p className="mt-5 text-sm text-muted-foreground">
-            Sie können die Zuordnungen sehen, benötigen aber Zugriff auf den Umfragekatalog, um sie zu verwalten.
-          </p>
+          <p className="mt-5 text-sm text-muted-foreground">{t("noAccess")}</p>
         ) : assignableOptions.length === 0 ? (
-          <p className="mt-5 text-sm text-muted-foreground">Es sind keine weiteren veröffentlichten Versionen verfügbar.</p>
+          <p className="mt-5 text-sm text-muted-foreground">{t("noMore")}</p>
         ) : (
           <form action={assignSurveyVersionAction.bind(null, workspaceSlug)} className="mt-5">
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="surveyVersionId">Veröffentlichte Version</FieldLabel>
+                <FieldLabel htmlFor="surveyVersionId">{t("published")}</FieldLabel>
                 <NativeSelect id="surveyVersionId" name="surveyVersionId" className="w-full" required defaultValue="">
-                  <NativeSelectOption value="" disabled>Version auswählen</NativeSelectOption>
+                  <NativeSelectOption value="" disabled>{t("choose")}</NativeSelectOption>
                   {assignableOptions.map((option) => (
                     <NativeSelectOption key={option.id} value={option.id}>{option.label}</NativeSelectOption>
                   ))}
                 </NativeSelect>
-                <FieldDescription>Der spätere Kampagnenstart bindet exakt diese unveränderliche Version.</FieldDescription>
+                <FieldDescription>{t("pinHint")}</FieldDescription>
               </Field>
               <AssignButton />
             </FieldGroup>
@@ -115,12 +110,13 @@ export function WorkspaceSurveyVersions({ assignments, workspaceSlug, options }:
 }
 
 function AssignButton() {
+  const t = useTranslations("surveys.assign");
   const { pending } = useFormStatus();
 
   return (
     <Button type="submit" disabled={pending} className="w-full">
       {pending ? <Spinner data-icon="inline-start" /> : <LinkIcon data-icon="inline-start" />}
-      {pending ? "Wird zugeordnet …" : "Version zuordnen"}
+      {pending ? t("assigning") : t("assign")}
     </Button>
   );
 }
@@ -134,25 +130,24 @@ function UnassignVersionDialog({
   surveyVersionId: string;
   surveyVersionName: string;
 }) {
+  const t = useTranslations("surveys.assign");
   return (
     <AlertDialog>
       <AlertDialogTrigger render={<Button variant="ghost" size="icon-sm" />}>
         <Trash2Icon />
-        <span className="sr-only">{surveyVersionName} entfernen</span>
+        <span className="sr-only">{t("remove", { name: surveyVersionName })}</span>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogMedia><Trash2Icon /></AlertDialogMedia>
-          <AlertDialogTitle>Zuordnung aufheben?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {surveyVersionName} steht anschließend nicht mehr für neue Kampagnen dieser Klinik bereit.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t("unassignTitle")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("unassignDescription", { name: surveyVersionName })}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
           <form action={unassignSurveyVersionAction.bind(null, workspaceSlug)}>
             <input type="hidden" name="surveyVersionId" value={surveyVersionId} />
-            <AlertDialogAction type="submit" variant="destructive">Zuordnung aufheben</AlertDialogAction>
+            <AlertDialogAction type="submit" variant="destructive">{t("unassign")}</AlertDialogAction>
           </form>
         </AlertDialogFooter>
       </AlertDialogContent>

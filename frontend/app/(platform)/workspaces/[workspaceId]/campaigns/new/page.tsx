@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { CampaignWizard } from "@/components/campaigns/campaign-wizard";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { listWorkspaceSurveyVersionAssignments, listPublishedSurveyVersions, lis
 import { getAccessToken } from "@/lib/auth/session";
 import { resolveWorkspaceBySlug } from "@/lib/resolve-workspace";
 
-async function loadSurveyVersionOptions(token: string, workspaceId: string) {
+async function loadSurveyVersionOptions(token: string, workspaceId: string, versionLabel: (survey: string, number: number | string) => string) {
   const assignments = (await listWorkspaceSurveyVersionAssignments(token, workspaceId)).filter((assignment) => assignment.unassigned_at === null);
   if (assignments.length === 0) return [];
   const assignedIds = new Set(assignments.map((assignment) => assignment.survey_version_id));
@@ -15,7 +16,7 @@ async function loadSurveyVersionOptions(token: string, workspaceId: string) {
   return versions.flatMap(({ survey, versions: publishedVersions }) =>
     publishedVersions
       .filter((version) => version.status === "published" && assignedIds.has(version.id))
-      .map((version) => ({ id: version.id, label: `${survey.title} · Version ${version.version_number ?? "—"}` })),
+      .map((version) => ({ id: version.id, label: versionLabel(survey.title, version.version_number ?? "—") })),
   );
 }
 
@@ -23,15 +24,16 @@ export default async function NewCampaignPage(props: PageProps<"/workspaces/[wor
   const { workspaceId: workspaceSlug } = await props.params;
   const token = await getAccessToken();
   if (!token) return null;
+  const t = await getTranslations("campaigns");
   const workspace = await resolveWorkspaceBySlug(token, workspaceSlug);
   const [recipients, surveyVersionOptions] = await Promise.all([
     listRecipients(token, workspace.id),
-    loadSurveyVersionOptions(token, workspace.id),
+    loadSurveyVersionOptions(token, workspace.id, (survey, number) => t("versionLine", { survey, number })),
   ]);
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-7 sm:px-6 lg:py-10">
-      <Button nativeButton={false} variant="ghost" className="w-fit" render={<Link href={`/workspaces/${workspaceSlug}/campaigns`} />}>← Kampagnen</Button>
-      <div><p className="text-sm text-muted-foreground">{workspace.name}</p><h1 className="mt-2 text-3xl font-semibold">Kampagne erstellen</h1></div>
+      <Button nativeButton={false} variant="ghost" className="w-fit" render={<Link href={`/workspaces/${workspaceSlug}/campaigns`} />}>{t("newPage.back")}</Button>
+      <div><p className="text-sm text-muted-foreground">{workspace.name}</p><h1 className="mt-2 text-3xl font-semibold">{t("newPage.title")}</h1></div>
       <CampaignWizard workspaceId={workspaceSlug} initialRecipients={recipients.filter((recipient) => recipient.status === "active")} surveyVersionOptions={surveyVersionOptions} />
     </div>
   );

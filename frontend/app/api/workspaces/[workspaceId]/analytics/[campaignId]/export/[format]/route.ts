@@ -25,7 +25,7 @@ export async function GET(_: Request, { params }: { params: Promise<Params> }) {
     },
   );
   if (!response.ok) {
-    return NextResponse.json({ detail: "Export konnte nicht erstellt werden" }, { status: response.status });
+    return NextResponse.json({ detail: "The export could not be created" }, { status: response.status });
   }
 
   return new NextResponse(response.body, {
