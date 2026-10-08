@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Building2Icon, ChevronRightIcon, MapPinIcon, PlusIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ function workspaceLocation(workspace: { postal_code: string | null; city: string
 }
 
 export default async function WorkspacesPage() {
+  const t = await getTranslations("workspaces");
   const accessToken = await getAccessToken();
   const allWorkspaces = accessToken ? await listWorkspaces(accessToken) : [];
   // GET /api/v1/workspaces is not org-scoped server-side (it lists every workspace
@@ -26,17 +28,17 @@ export default async function WorkspacesPage() {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Organisation</p>
-          <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">Kliniken</h1>
+          <p className="text-sm font-medium text-muted-foreground">{t("eyebrow")}</p>
+          <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">{t("listTitle")}</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            Alle verfügbaren Klinikstandorte und ihre Plattformdaten.
+            {t("listIntro")}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="secondary">{workspaces.length} gesamt</Badge>
+          <Badge variant="secondary">{t("total", { count: workspaces.length })}</Badge>
           <Button nativeButton={false} render={<Link href="/workspaces/new" />}>
             <PlusIcon data-icon="inline-start" />
-            Neue Klinik
+            {t("new")}
           </Button>
         </div>
       </section>
@@ -47,9 +49,9 @@ export default async function WorkspacesPage() {
             <EmptyMedia variant="icon">
               <Building2Icon />
             </EmptyMedia>
-            <EmptyTitle>Noch keine Kliniken verfügbar</EmptyTitle>
+            <EmptyTitle>{t("emptyTitle")}</EmptyTitle>
             <EmptyDescription>
-              Sobald Kliniken für Ihren Zugriff eingerichtet sind, erscheinen sie hier.
+              {t("emptyDescription")}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
@@ -64,7 +66,7 @@ export default async function WorkspacesPage() {
                   <CardHeader>
                     <div className="flex items-start justify-between gap-3">
                       {workspace.logo_url ? (
-                        <img src={workspace.logo_url} alt={`${workspace.name} Logo`} className="size-10 rounded-xl bg-white object-contain p-1 ring-1 ring-border" />
+                        <img src={workspace.logo_url} alt={t("logoAlt", { name: workspace.name })} className="size-10 rounded-xl bg-white object-contain p-1 ring-1 ring-border" />
                       ) : (
                         <div className="flex size-10 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
                           <Building2Icon className="size-5" />
@@ -82,7 +84,7 @@ export default async function WorkspacesPage() {
                         {location}
                       </p>
                     ) : (
-                      <p className="text-sm text-muted-foreground">Standortdaten ausstehend</p>
+                      <p className="text-sm text-muted-foreground">{t("locationPending")}</p>
                     )}
                   </CardContent>
                 </Card>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
@@ -16,6 +17,7 @@ function toLocalInputValue(value: string | null): string {
 }
 
 export function CampaignEndDateForm({ endsAt, action }: { endsAt: string | null; action: (formData: FormData) => void | Promise<void> }) {
+  const t = useTranslations("campaigns.endDate");
   const [localEndDate, setLocalEndDate] = useState(() => toLocalInputValue(endsAt));
   const isoEndDate = localEndDate ? new Date(localEndDate).toISOString() : "";
 
@@ -23,19 +25,20 @@ export function CampaignEndDateForm({ endsAt, action }: { endsAt: string | null;
     <form action={action} className="flex flex-col gap-3">
       <input type="hidden" name="endsAt" value={isoEndDate} />
       <Field>
-        <FieldLabel htmlFor="campaign-ends-at">Endet am</FieldLabel>
+        <FieldLabel htmlFor="campaign-ends-at">{t("endsAt")}</FieldLabel>
         <Input id="campaign-ends-at" type="datetime-local" value={localEndDate} onChange={(event) => setLocalEndDate(event.target.value)} />
-        <FieldDescription>Die Kampagne wird zu diesem Zeitpunkt automatisch abgeschlossen. Laufende oder neue Antworten sind danach nicht mehr möglich.</FieldDescription>
+        <FieldDescription>{t("hint")}</FieldDescription>
       </Field>
       <div className="flex gap-2">
         <SaveEndDateButton />
-        {localEndDate ? <Button type="button" variant="outline" onClick={() => setLocalEndDate("")}>Enddatum entfernen</Button> : null}
+        {localEndDate ? <Button type="button" variant="outline" onClick={() => setLocalEndDate("")}>{t("remove")}</Button> : null}
       </div>
     </form>
   );
 }
 
 function SaveEndDateButton() {
+  const t = useTranslations("campaigns.endDate");
   const { pending } = useFormStatus();
-  return <Button type="submit" disabled={pending} aria-busy={pending}>{pending ? <Spinner data-icon="inline-start" /> : null}{pending ? "Wird gespeichert …" : "Enddatum speichern"}</Button>;
+  return <Button type="submit" disabled={pending} aria-busy={pending}>{pending ? <Spinner data-icon="inline-start" /> : null}{pending ? t("saving") : t("save")}</Button>;
 }

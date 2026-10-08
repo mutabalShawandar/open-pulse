@@ -1,4 +1,5 @@
 import { MailCheckIcon } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { SmtpConfigurationForm } from "@/components/administration/smtp-configuration-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,6 +14,7 @@ export default async function EmailAdministrationPage({ searchParams }: PageProp
   await requireUser();
   const accessToken = await getAccessToken();
   if (!accessToken) return null;
+  const t = await getTranslations("admin.email");
   let configuration: SmtpConfiguration | null = null;
   let availabilityMessage: string | null = null;
   try {
@@ -20,19 +22,19 @@ export default async function EmailAdministrationPage({ searchParams }: PageProp
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
     if (error instanceof ApiError && error.status === 404) {
-      availabilityMessage = "Die SMTP-Funktion ist im verbundenen Backend noch nicht verfügbar. Starten Sie das Backend mit der aktuellen Version neu und führen Sie die Datenbankmigration aus.";
+      availabilityMessage = t("unavailable404");
     } else {
-      availabilityMessage = "Die SMTP-Konfiguration kann momentan nicht geladen werden. Bitte versuchen Sie es später erneut.";
+      availabilityMessage = t("unavailableGeneric");
     }
   }
   const query = await searchParams;
-  const errorMessage = query.error ? "Die Aktion konnte nicht abgeschlossen werden. Pr\u00fcfen Sie Server, Zugangsdaten und den Verschl\u00fcsselungs-Schl\u00fcssel." : null;
+  const errorMessage = query.error ? t("actionError") : null;
 
   return <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
-    <section><p className="text-sm font-medium text-muted-foreground">Administration</p><h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">E-Mail-Versand</h1><p className="mt-2 text-muted-foreground">Globale SMTP-Verbindung f\u00fcr Kampagnen-E-Mails einrichten.</p></section>
-    {query.saved ? <Alert><MailCheckIcon /><AlertTitle>SMTP-Konfiguration gespeichert</AlertTitle><AlertDescription>Sie k\u00f6nnen jetzt eine Test-E-Mail versenden.</AlertDescription></Alert> : null}
-    {query.tested ? <Alert><MailCheckIcon /><AlertTitle>Test-E-Mail an SMTP-Server \u00fcbergeben</AlertTitle><AlertDescription>Pr\u00fcfen Sie das Postfach des Empf\u00e4ngers.</AlertDescription></Alert> : null}
-    {errorMessage ? <Alert variant="destructive"><AlertTitle>Aktion fehlgeschlagen</AlertTitle><AlertDescription>{errorMessage}</AlertDescription></Alert> : null}
-    {availabilityMessage ? <Alert variant="destructive"><AlertTitle>SMTP-Konfiguration nicht verfügbar</AlertTitle><AlertDescription>{availabilityMessage}</AlertDescription></Alert> : <Card><CardHeader><CardTitle>SMTP-Verbindung</CardTitle><CardDescription>Nur Plattformadministratoren k\u00f6nnen diese Zugangsdaten verwalten. Kampagnenversand wird erst im n\u00e4chsten Schritt aktiviert.</CardDescription></CardHeader><CardContent><SmtpConfigurationForm configuration={configuration} /></CardContent></Card>}
+    <section><p className="text-sm font-medium text-muted-foreground">{(await getTranslations("admin"))("eyebrow")}</p><h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">{t("title")}</h1><p className="mt-2 text-muted-foreground">{t("intro")}</p></section>
+    {query.saved ? <Alert><MailCheckIcon /><AlertTitle>{t("saved")}</AlertTitle><AlertDescription>{t("savedBody")}</AlertDescription></Alert> : null}
+    {query.tested ? <Alert><MailCheckIcon /><AlertTitle>{t("tested")}</AlertTitle><AlertDescription>{t("testedBody")}</AlertDescription></Alert> : null}
+    {errorMessage ? <Alert variant="destructive"><AlertTitle>{t("failedTitle")}</AlertTitle><AlertDescription>{errorMessage}</AlertDescription></Alert> : null}
+    {availabilityMessage ? <Alert variant="destructive"><AlertTitle>{t("unavailableTitle")}</AlertTitle><AlertDescription>{availabilityMessage}</AlertDescription></Alert> : <Card><CardHeader><CardTitle>{t("cardTitle")}</CardTitle><CardDescription>{t("cardDescription")}</CardDescription></CardHeader><CardContent><SmtpConfigurationForm configuration={configuration} /></CardContent></Card>}
   </div>;
 }

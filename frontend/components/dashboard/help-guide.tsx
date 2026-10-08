@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ArrowLeftIcon, ArrowRightIcon, HelpCircleIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,9 +15,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getHelpTopic, type HelpTopic } from "@/lib/help/help-content";
+import { getHelpTopicId } from "@/lib/help/help-content";
 
-function HelpWalkthrough({ topic, onClose }: { topic: HelpTopic; onClose: () => void }) {
+function HelpWalkthrough({ topicId, onClose }: { topicId: string; onClose: () => void }) {
+  const t = useTranslations("help");
+  const topic = { title: t(`topics.${topicId}.title`), steps: t.raw(`topics.${topicId}.steps`) as { title: string; description: string }[] };
   const [stepIndex, setStepIndex] = useState(0);
   const step = topic.steps[stepIndex];
   const isFirst = stepIndex === 0;
@@ -27,7 +30,7 @@ function HelpWalkthrough({ topic, onClose }: { topic: HelpTopic; onClose: () => 
       <DialogHeader>
         <DialogTitle>{topic.title}</DialogTitle>
         <DialogDescription>
-          Schritt {stepIndex + 1} von {topic.steps.length}
+          {t("step", { current: stepIndex + 1, total: topic.steps.length })}
         </DialogDescription>
       </DialogHeader>
 
@@ -56,13 +59,13 @@ function HelpWalkthrough({ topic, onClose }: { topic: HelpTopic; onClose: () => 
           onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
         >
           <ArrowLeftIcon data-icon="inline-start" />
-          Zurück
+          {t("back")}
         </Button>
         {isLast ? (
-          <Button onClick={onClose}>Fertig</Button>
+          <Button onClick={onClose}>{t("done")}</Button>
         ) : (
           <Button onClick={() => setStepIndex((index) => Math.min(topic.steps.length - 1, index + 1))}>
-            Weiter
+            {t("next")}
             <ArrowRightIcon data-icon="inline-end" />
           </Button>
         )}
@@ -72,21 +75,22 @@ function HelpWalkthrough({ topic, onClose }: { topic: HelpTopic; onClose: () => 
 }
 
 export function HelpGuide() {
+  const t = useTranslations("help");
   const pathname = usePathname();
-  const topic = getHelpTopic(pathname ?? "/");
+  const topicId = getHelpTopicId(pathname ?? "/");
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="ghost" size="icon-sm" aria-label="Hilfe für diesen Bereich anzeigen" />
+          <Button variant="ghost" size="icon-sm" aria-label={t("ariaLabel")} />
         }
       >
         <HelpCircleIcon />
       </DialogTrigger>
       <DialogContent>
-        <HelpWalkthrough key={`${pathname}-${open}`} topic={topic} onClose={() => setOpen(false)} />
+        <HelpWalkthrough key={`${pathname}-${open}`} topicId={topicId} onClose={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );

@@ -4,10 +4,9 @@ Revision ID: c2a8e4f1d9b7
 Revises: 7a3c9d1e2b4f
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
-
 
 revision = "c2a8e4f1d9b7"
 down_revision = "7a3c9d1e2b4f"
@@ -53,8 +52,12 @@ def upgrade() -> None:
         sa.Column("status", survey_status, server_default="draft", nullable=False),
         sa.Column("created_by_user_id", sa.UUID(), nullable=True),
         sa.Column("archived_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["created_by_user_id"], ["users.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -70,8 +73,12 @@ def upgrade() -> None:
         sa.Column("based_on_version_id", sa.UUID(), nullable=True),
         sa.Column("created_by_user_id", sa.UUID(), nullable=True),
         sa.Column("published_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "(status = 'draft' AND version_number IS NULL AND published_at IS NULL) "
             "OR (status = 'published' AND version_number IS NOT NULL AND published_at IS NOT NULL)",
@@ -81,14 +88,18 @@ def upgrade() -> None:
             "version_number IS NULL OR version_number > 0",
             name="ck_survey_versions_positive_version_number",
         ),
-        sa.ForeignKeyConstraint(["based_on_version_id"], ["survey_versions.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(
+            ["based_on_version_id"], ["survey_versions.id"], ondelete="SET NULL"
+        ),
         sa.ForeignKeyConstraint(["created_by_user_id"], ["users.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["survey_id"], ["surveys.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_survey_versions_survey_id", "survey_versions", ["survey_id"])
     op.create_index("ix_survey_versions_status", "survey_versions", ["status"])
-    op.create_index("ix_survey_versions_based_on_version_id", "survey_versions", ["based_on_version_id"])
+    op.create_index(
+        "ix_survey_versions_based_on_version_id", "survey_versions", ["based_on_version_id"]
+    )
     op.create_index(
         "uq_survey_versions_published_number",
         "survey_versions",
@@ -103,14 +114,20 @@ def upgrade() -> None:
         sa.Column("survey_version_id", sa.UUID(), nullable=False),
         sa.Column("clinic_id", sa.UUID(), nullable=False),
         sa.Column("assigned_by_user_id", sa.UUID(), nullable=True),
-        sa.Column("assigned_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "assigned_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.Column("unassigned_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["assigned_by_user_id"], ["users.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["clinic_id"], ["clinics.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["survey_version_id"], ["survey_versions.id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("ix_survey_version_clinics_survey_version_id", "survey_version_clinics", ["survey_version_id"])
+    op.create_index(
+        "ix_survey_version_clinics_survey_version_id",
+        "survey_version_clinics",
+        ["survey_version_id"],
+    )
     op.create_index("ix_survey_version_clinics_clinic_id", "survey_version_clinics", ["clinic_id"])
     op.create_index(
         "uq_survey_version_clinics_active_assignment",
@@ -127,14 +144,22 @@ def upgrade() -> None:
         sa.Column("title", sa.String(length=255), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("position", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint("position >= 0", name="ck_survey_sections_position_nonnegative"),
         sa.ForeignKeyConstraint(["survey_version_id"], ["survey_versions.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("survey_version_id", "position", name="uq_survey_sections_version_position"),
+        sa.UniqueConstraint(
+            "survey_version_id", "position", name="uq_survey_sections_version_position"
+        ),
     )
-    op.create_index("ix_survey_sections_survey_version_id", "survey_sections", ["survey_version_id"])
+    op.create_index(
+        "ix_survey_sections_survey_version_id", "survey_sections", ["survey_version_id"]
+    )
 
     op.create_table(
         "survey_questions",
@@ -145,8 +170,12 @@ def upgrade() -> None:
         sa.Column("help_text", sa.Text(), nullable=True),
         sa.Column("is_required", sa.Boolean(), server_default=sa.text("false"), nullable=False),
         sa.Column("position", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint("position >= 0", name="ck_survey_questions_position_nonnegative"),
         sa.ForeignKeyConstraint(["section_id"], ["survey_sections.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
@@ -161,15 +190,21 @@ def upgrade() -> None:
         sa.Column("label", sa.String(length=500), nullable=False),
         sa.Column("value", sa.String(length=255), nullable=False),
         sa.Column("position", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint("position >= 0", name="ck_survey_question_options_position_nonnegative"),
         sa.ForeignKeyConstraint(["question_id"], ["survey_questions.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("question_id", "position", name="uq_survey_question_options_position"),
         sa.UniqueConstraint("question_id", "value", name="uq_survey_question_options_value"),
     )
-    op.create_index("ix_survey_question_options_question_id", "survey_question_options", ["question_id"])
+    op.create_index(
+        "ix_survey_question_options_question_id", "survey_question_options", ["question_id"]
+    )
 
     op.create_table(
         "survey_question_validations",
@@ -177,13 +212,21 @@ def upgrade() -> None:
         sa.Column("question_id", sa.UUID(), nullable=False),
         sa.Column("rule_type", sa.String(length=100), nullable=False),
         sa.Column("rule_value", sa.JSON(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["question_id"], ["survey_questions.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("question_id", "rule_type", name="uq_survey_question_validations_rule_type"),
+        sa.UniqueConstraint(
+            "question_id", "rule_type", name="uq_survey_question_validations_rule_type"
+        ),
     )
-    op.create_index("ix_survey_question_validations_question_id", "survey_question_validations", ["question_id"])
+    op.create_index(
+        "ix_survey_question_validations_question_id", "survey_question_validations", ["question_id"]
+    )
 
     permissions = sa.table(
         "permissions",
@@ -236,7 +279,9 @@ def downgrade() -> None:
         {"permission_ids": permission_ids},
     )
 
-    op.drop_index("ix_survey_question_validations_question_id", table_name="survey_question_validations")
+    op.drop_index(
+        "ix_survey_question_validations_question_id", table_name="survey_question_validations"
+    )
     op.drop_table("survey_question_validations")
     op.drop_index("ix_survey_question_options_question_id", table_name="survey_question_options")
     op.drop_table("survey_question_options")
@@ -244,9 +289,13 @@ def downgrade() -> None:
     op.drop_table("survey_questions")
     op.drop_index("ix_survey_sections_survey_version_id", table_name="survey_sections")
     op.drop_table("survey_sections")
-    op.drop_index("uq_survey_version_clinics_active_assignment", table_name="survey_version_clinics")
+    op.drop_index(
+        "uq_survey_version_clinics_active_assignment", table_name="survey_version_clinics"
+    )
     op.drop_index("ix_survey_version_clinics_clinic_id", table_name="survey_version_clinics")
-    op.drop_index("ix_survey_version_clinics_survey_version_id", table_name="survey_version_clinics")
+    op.drop_index(
+        "ix_survey_version_clinics_survey_version_id", table_name="survey_version_clinics"
+    )
     op.drop_table("survey_version_clinics")
     op.drop_index("uq_survey_versions_published_number", table_name="survey_versions")
     op.drop_index("ix_survey_versions_based_on_version_id", table_name="survey_versions")

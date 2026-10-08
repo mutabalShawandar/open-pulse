@@ -33,9 +33,7 @@ async def bootstrap(email: str) -> None:
                 user = User(
                     email=email,
                     display_name=(
-                        keycloak_user.get("firstName")
-                        or keycloak_user.get("username")
-                        or email
+                        keycloak_user.get("firstName") or keycloak_user.get("username") or email
                     ),
                     is_active=True,
                 )
@@ -59,9 +57,7 @@ async def bootstrap(email: str) -> None:
                     )
                 )
 
-            role = await session.scalar(
-                select(Role).where(Role.name == "platform_admin")
-            )
+            role = await session.scalar(select(Role).where(Role.name == "platform_admin"))
             if role is None:
                 raise RuntimeError("Run `alembic upgrade head` before bootstrapping")
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
@@ -151,7 +152,7 @@ export async function retryFailedCampaignDeliveriesAction(workspaceId: string, c
 export type WizardImportResult = { ok: true; createdCount: number; duplicateCount: number; recipients: Recipient[] } | { ok: false; error: string };
 
 export async function importWizardRecipientsAction(workspaceSlug: string, recipients: { display_name: string | null; email: string }[]): Promise<WizardImportResult> {
-  if (!recipients.length || recipients.length > 2_000) return { ok: false, error: "Bitte prüfen Sie das Format und die maximale Anzahl von 2.000 Empfängern." };
+  if (!recipients.length || recipients.length > 2_000) return { ok: false, error: (await getTranslations("campaigns.actionErrors"))("recipients") };
   try {
     const accessToken = await token();
     const workspace = await resolveWorkspaceBySlug(accessToken, workspaceSlug);
@@ -159,7 +160,7 @@ export async function importWizardRecipientsAction(workspaceSlug: string, recipi
     const workspaceRecipients = await listRecipients(accessToken, workspace.id);
     return { ok: true, createdCount: result.created_count, duplicateCount: result.duplicate_count, recipients: workspaceRecipients.filter((recipient) => recipient.status === "active") };
   } catch {
-    return { ok: false, error: "Der Import konnte nicht verarbeitet werden." };
+    return { ok: false, error: (await getTranslations("campaigns.actionErrors"))("importFailed") };
   }
 }
 
@@ -184,7 +185,7 @@ export async function submitCampaignWizardAction(payload: WizardSubmitPayload): 
     const campaign = await createCampaign(accessToken, { clinic_id: workspace.id, survey_version_id: payload.surveyVersionId, title: payload.title.trim(), description: payload.description.trim() || null, ends_at: payload.endsAt });
     campaignId = campaign.id;
   } catch {
-    return { ok: false, error: "Die Kampagne konnte nicht erstellt werden. Bitte prüfen Sie die ausgewählte Umfrageversion." };
+    return { ok: false, error: (await getTranslations("campaigns.actionErrors"))("createFailed") };
   }
   if (payload.recipientIds.length) {
     try { await assignCampaignRecipients(accessToken, campaignId, payload.recipientIds); } catch { /* recipients can still be added later on the detail page */ }

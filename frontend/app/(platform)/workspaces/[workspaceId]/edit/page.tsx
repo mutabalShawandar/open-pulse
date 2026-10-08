@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeftIcon, PencilIcon } from "lucide-react";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { updateWorkspaceAction } from "@/app/(platform)/workspaces/actions";
 import { WorkspaceForm } from "@/components/workspaces/workspace-form";
@@ -11,10 +12,10 @@ import { ApiError } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
 import { resolveWorkspaceBySlug } from "@/lib/resolve-workspace";
 
-function errorMessage(error: string | string[] | undefined) {
-  if (error === "exists") return "Diese interne Kennung wird bereits von einer anderen Klinik verwendet.";
-  if (error === "validation") return "Bitte prüfen Sie die Pflichtfelder und die Hausnummer.";
-  if (error) return "Die Änderungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.";
+function errorKey(error: string | string[] | undefined) {
+  if (error === "exists") return "errors.exists";
+  if (error === "validation") return "errors.validation";
+  if (error) return "errors.saveUnknown";
   return null;
 }
 
@@ -37,7 +38,9 @@ export default async function EditWorkspacePage({
   const { workspaceId: workspaceSlug } = await params;
   const workspace = await loadWorkspace(workspaceSlug);
 
-  const error = errorMessage((await searchParams).error);
+  const t = await getTranslations("workspaces");
+  const key = errorKey((await searchParams).error);
+  const error = key ? t(key) : null;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
@@ -48,34 +51,34 @@ export default async function EditWorkspacePage({
         render={<Link href={`/workspaces/${workspaceSlug}`} />}
       >
         <ArrowLeftIcon data-icon="inline-start" />
-        Zur Klinik
+        {t("toWorkspace")}
       </Button>
       <section className="flex items-start gap-4">
         <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/15">
           <PencilIcon className="size-6" />
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Klinikprofil</p>
-          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">Klinik bearbeiten</h1>
+          <p className="text-sm font-medium text-muted-foreground">{t("profile")}</p>
+          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">{t("editTitle")}</h1>
           <p className="mt-2 text-muted-foreground">{workspace.name}</p>
         </div>
       </section>
       {error ? (
         <Alert variant="destructive">
-          <AlertTitle>Änderungen nicht gespeichert</AlertTitle>
+          <AlertTitle>{t("saveFailedTitle")}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
       <Card>
         <CardHeader className="border-b">
-          <CardTitle>Stammdaten bearbeiten</CardTitle>
-          <CardDescription>Änderungen werden in der Historie der Klinik festgehalten.</CardDescription>
+          <CardTitle>{t("editMasterData")}</CardTitle>
+          <CardDescription>{t("editHint")}</CardDescription>
         </CardHeader>
         <CardContent className="pt-5">
           <WorkspaceForm
             action={updateWorkspaceAction.bind(null, workspaceSlug)}
             workspace={workspace}
-            submitLabel="Änderungen speichern"
+            submitLabel={t("saveChanges")}
           />
         </CardContent>
       </Card>

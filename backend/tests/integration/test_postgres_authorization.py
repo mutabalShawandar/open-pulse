@@ -6,10 +6,10 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-from app.models import AuditEvent, Organization, Workspace, WorkspaceMember, Permission, Role, User
 from app.core.config import settings
-from app.services.authorization_service import require_clinic_permission
+from app.models import AuditEvent, Organization, Permission, Role, User, Workspace, WorkspaceMember
 from app.services.audit_service import add_audit_event
+from app.services.authorization_service import require_clinic_permission
 
 
 @unittest.skipUnless(
@@ -24,9 +24,7 @@ class PostgresAuthorizationTests(unittest.IsolatedAsyncioTestCase):
             transaction = await connection.begin()
             session = AsyncSession(bind=connection, expire_on_commit=False)
             try:
-                role = await session.scalar(
-                    select(Role).where(Role.name == "clinic_manager")
-                )
+                role = await session.scalar(select(Role).where(Role.name == "clinic_manager"))
                 permission = await session.scalar(
                     select(Permission).where(Permission.name == "survey.create")
                 )
@@ -78,14 +76,10 @@ class PostgresAuthorizationTests(unittest.IsolatedAsyncioTestCase):
                 )
                 await session.flush()
 
-                await require_clinic_permission(
-                    session, user, clinic.id, "survey.create"
-                )
+                await require_clinic_permission(session, user, clinic.id, "survey.create")
 
                 with self.assertRaises(HTTPException) as error:
-                    await require_clinic_permission(
-                        session, user, other_clinic.id, "survey.create"
-                    )
+                    await require_clinic_permission(session, user, other_clinic.id, "survey.create")
                 self.assertEqual(error.exception.status_code, 403)
 
                 event = add_audit_event(

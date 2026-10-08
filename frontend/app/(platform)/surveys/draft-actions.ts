@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -269,7 +270,7 @@ export async function saveRatingBoundsAction(
   const minValue = Number(value(formData, "minValue"));
   const maxValue = Number(value(formData, "maxValue"));
   if (!Number.isFinite(minValue) || !Number.isFinite(maxValue)) {
-    redirect(`${draftPath(surveyId, draftId)}?error=validation-rule&message=${encodeURIComponent("Minimal- und Maximalwert müssen Zahlen sein.")}`);
+    redirect(`${draftPath(surveyId, draftId)}?error=validation-rule&message=${encodeURIComponent((await getTranslations("surveys.errors"))("ratingNumbers"))}`);
   }
   const accessToken = await token();
   try {
@@ -285,7 +286,7 @@ export async function saveRatingBoundsAction(
     }
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
-    const message = error instanceof ApiError && error.detail ? error.detail : "Bewertungsskala konnte nicht gespeichert werden.";
+    const message = error instanceof ApiError && error.detail ? error.detail : (await getTranslations("surveys.errors"))("ratingSaveFailed");
     redirect(`${draftPath(surveyId, draftId)}?error=validation-rule&message=${encodeURIComponent(message)}`);
   }
   finish(surveyId, draftId, "validation-updated");
@@ -297,7 +298,7 @@ export async function publishDraftAction(surveyId: string, draftId: string) {
     version = await publishSurveyDraft(await token(), surveyId, draftId);
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
-    const message = error instanceof ApiError && error.detail ? error.detail : "Veröffentlichung fehlgeschlagen.";
+    const message = error instanceof ApiError && error.detail ? error.detail : (await getTranslations("surveys.errors"))("publishFailed");
     redirect(`${draftPath(surveyId, draftId)}?error=publish&message=${encodeURIComponent(message)}`);
   }
   revalidatePath(`/surveys/${surveyId}`);

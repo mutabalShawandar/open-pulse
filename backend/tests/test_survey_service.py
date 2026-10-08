@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
-from app.models import QuestionType, Survey, SurveyStatus, SurveyVersionStatus
+from app.models import QuestionType, SurveyStatus, SurveyVersionStatus
 from app.schemas.survey import SurveyCreateRequest, SurveyQuestionCreateRequest
 from app.services.survey_service import (
     _require_choice_question,

@@ -6,8 +6,17 @@ from uuid import uuid4
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 
-from app.schemas.workspace import WorkspaceCreateRequest, WorkspaceMemberCreateRequest, WorkspaceUpdateRequest
-from app.services.workspace_service import add_workspace_member, create_workspace, remove_workspace_member, update_workspace
+from app.schemas.workspace import (
+    WorkspaceCreateRequest,
+    WorkspaceMemberCreateRequest,
+    WorkspaceUpdateRequest,
+)
+from app.services.workspace_service import (
+    add_workspace_member,
+    create_workspace,
+    remove_workspace_member,
+    update_workspace,
+)
 
 
 class WorkspaceServiceTests(unittest.TestCase):
@@ -25,10 +34,12 @@ class WorkspaceServiceTests(unittest.TestCase):
         self.assertEqual(error.exception.status_code, 404)
 
     def test_inactive_target_user_is_rejected(self) -> None:
-        session = SequenceSession([
-            SimpleNamespace(id=uuid4()),
-            SimpleNamespace(id=uuid4(), is_active=False),
-        ])
+        session = SequenceSession(
+            [
+                SimpleNamespace(id=uuid4()),
+                SimpleNamespace(id=uuid4(), is_active=False),
+            ]
+        )
         with self.assertRaises(HTTPException) as error:
             asyncio.run(
                 add_workspace_member(
@@ -41,11 +52,13 @@ class WorkspaceServiceTests(unittest.TestCase):
         self.assertEqual(error.exception.status_code, 404)
 
     def test_missing_role_is_rejected(self) -> None:
-        session = SequenceSession([
-            SimpleNamespace(id=uuid4()),
-            SimpleNamespace(id=uuid4(), is_active=True),
-            None,
-        ])
+        session = SequenceSession(
+            [
+                SimpleNamespace(id=uuid4()),
+                SimpleNamespace(id=uuid4(), is_active=True),
+                None,
+            ]
+        )
         with self.assertRaises(HTTPException) as error:
             asyncio.run(
                 add_workspace_member(
@@ -58,12 +71,14 @@ class WorkspaceServiceTests(unittest.TestCase):
         self.assertEqual(error.exception.status_code, 404)
 
     def test_duplicate_membership_is_rejected(self) -> None:
-        session = SequenceSession([
-            SimpleNamespace(id=uuid4()),
-            SimpleNamespace(id=uuid4(), is_active=True),
-            SimpleNamespace(id=uuid4()),
-            SimpleNamespace(user_id=uuid4()),
-        ])
+        session = SequenceSession(
+            [
+                SimpleNamespace(id=uuid4()),
+                SimpleNamespace(id=uuid4(), is_active=True),
+                SimpleNamespace(id=uuid4()),
+                SimpleNamespace(user_id=uuid4()),
+            ]
+        )
         with self.assertRaises(HTTPException) as error:
             asyncio.run(
                 add_workspace_member(

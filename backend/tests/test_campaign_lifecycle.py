@@ -1,6 +1,6 @@
-from datetime import UTC, datetime, timedelta
 import asyncio
 import unittest
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -8,7 +8,11 @@ from pydantic import ValidationError
 
 from app.models.campaign import Campaign, CampaignStatus
 from app.models.survey import QuestionType, SurveyQuestion
-from app.schemas.campaign import CampaignCreateRequest, PublicAnswerRequest, PublicResponseCompletionRequest
+from app.schemas.campaign import (
+    CampaignCreateRequest,
+    PublicAnswerRequest,
+    PublicResponseCompletionRequest,
+)
 from app.services.campaign_service import _is_publicly_open, _validate_answer, campaign_has_ended
 
 

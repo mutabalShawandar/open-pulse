@@ -22,6 +22,7 @@ export const authConfig = {
 
 export const authEndpoints = {
   authorization: `${authConfig.keycloakIssuer}/protocol/openid-connect/auth`,
+  endSession: `${authConfig.keycloakIssuer}/protocol/openid-connect/logout`,
   token: `${authConfig.keycloakInternalIssuer}/protocol/openid-connect/token`,
 };
 

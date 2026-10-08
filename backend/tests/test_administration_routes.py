@@ -19,8 +19,6 @@ class AdministrationRouteTests(unittest.TestCase):
             ("/api/v1/audit-events", "GET"),
         }
         actual = {
-            (path, method.upper())
-            for path, operations in paths.items()
-            for method in operations
+            (path, method.upper()) for path, operations in paths.items() for method in operations
         }
         self.assertTrue(expected.issubset(actual))

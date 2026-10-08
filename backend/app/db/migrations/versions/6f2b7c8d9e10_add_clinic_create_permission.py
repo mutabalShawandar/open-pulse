@@ -4,9 +4,8 @@ Revision ID: 6f2b7c8d9e10
 Revises: b8f4c1a2d9e0
 """
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "6f2b7c8d9e10"
 down_revision = "b8f4c1a2d9e0"
@@ -42,9 +41,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.execute(
-        sa.text(
-            "DELETE FROM role_permissions WHERE permission_id = :permission_id"
-        ).bindparams(permission_id=PERMISSION_ID)
+        sa.text("DELETE FROM role_permissions WHERE permission_id = :permission_id").bindparams(
+            permission_id=PERMISSION_ID
+        )
     )
     op.execute(
         sa.text("DELETE FROM permissions WHERE id = :permission_id").bindparams(

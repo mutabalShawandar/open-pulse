@@ -1,13 +1,14 @@
 import asyncio
 import unittest
-from uuid import uuid4
 from types import SimpleNamespace
+from uuid import uuid4
 
 from fastapi import HTTPException
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.services.authorization_service import require_clinic_permission
+
 
 class AuthorizationServiceTestCase(unittest.IsolatedAsyncioTestCase):
     def test_authorization_database_failure_returns_503(self):
@@ -18,11 +19,7 @@ class AuthorizationServiceTestCase(unittest.IsolatedAsyncioTestCase):
                 raise SQLAlchemyError("database unavailable")
 
         with self.assertRaises(HTTPException) as error:
-            asyncio.run(
-                require_clinic_permission(
-                    FailingSession(), user, uuid4(), "clinic.read"
-                )
-            )
+            asyncio.run(require_clinic_permission(FailingSession(), user, uuid4(), "clinic.read"))
 
         self.assertEqual(error.exception.status_code, 503)
 
@@ -30,14 +27,14 @@ class AuthorizationServiceTestCase(unittest.IsolatedAsyncioTestCase):
         # Create a mock session and user
         user = SimpleNamespace(id=uuid4(), is_active=True)
         clinic_id = uuid4()
-        
+
         class FakeSession:
             async def scalar(self, query):
                 return None  # Simulate no permission found
-            
+
         with self.assertRaises(HTTPException) as error:
             asyncio.run(require_clinic_permission(FakeSession(), user, clinic_id, "survey.create"))
-            
+
         self.assertEqual(error.exception.status_code, 403)
 
     def test_existing_clinic_permission_is_allowed(self):
@@ -70,11 +67,7 @@ class AuthorizationServiceTestCase(unittest.IsolatedAsyncioTestCase):
             async def scalar(self, _query):
                 return uuid4()
 
-        asyncio.run(
-            require_clinic_permission(
-                FakeSession(), user, uuid4(), "clinic.read"
-            )
-        )
+        asyncio.run(require_clinic_permission(FakeSession(), user, uuid4(), "clinic.read"))
 
     def test_inactive_user_is_rejected(self):
         user = SimpleNamespace(id=uuid4(), is_active=False)

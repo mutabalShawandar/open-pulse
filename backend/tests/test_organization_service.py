@@ -105,8 +105,15 @@ class OrganizationServiceTests(unittest.TestCase):
         self.assertEqual(organization.slug, "acme")
         self.assertEqual(keycloak.disabled_subjects, [])
         self.assertEqual(session.commit_count, 1)
-        self.assertTrue(any(value.__class__.__name__ == "OrganizationMember" for value in session.values))
-        self.assertTrue(any(getattr(value, "action", None) == "organization.registered" for value in session.values))
+        self.assertTrue(
+            any(value.__class__.__name__ == "OrganizationMember" for value in session.values)
+        )
+        self.assertTrue(
+            any(
+                getattr(value, "action", None) == "organization.registered"
+                for value in session.values
+            )
+        )
 
     def test_missing_owner_role_raises_503(self) -> None:
         keycloak = FakeKeycloak()

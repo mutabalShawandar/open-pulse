@@ -11,17 +11,17 @@ clinic_manager could never list or assign published survey versions for
 their own workspace even though clinic_survey_versions.py gates those
 routes on exactly these two permissions via require_clinic_permission.
 """
-from typing import Sequence, Union
 
-from alembic import op
+from collections.abc import Sequence
+
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'c4d5e6f7a8b9'
-down_revision: Union[str, Sequence[str], None] = 'b3c4d5e6f7a8'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+revision: str = "c4d5e6f7a8b9"
+down_revision: str | Sequence[str] | None = "b3c4d5e6f7a8"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 CLINIC_MANAGER_ROLE_ID = "00000000-0000-0000-0000-000000000002"

@@ -1,17 +1,16 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { MailCheckIcon } from "lucide-react";
 
+import { organizationRegistrationEnabled } from "@/lib/features";
 import { RegisterOrganizationForm } from "@/components/auth/register-organization-form";
 
-const ERROR_MESSAGES: Record<string, string> = {
-  "slug-taken": "Diese Adresse ist bereits vergeben. Bitte wählen Sie eine andere.",
-  validation: "Bitte füllen Sie alle Felder korrekt aus.",
-  "rate-limited": "Zu viele Versuche. Bitte versuchen Sie es in einer Minute erneut.",
-  unknown: "Die Organisation konnte nicht angelegt werden. Bitte versuchen Sie es erneut.",
-};
-
 export default async function RegisterPage({ searchParams }: PageProps<"/register">) {
+  if (!organizationRegistrationEnabled()) notFound();
   const { error, registered } = await searchParams;
+  const t = await getTranslations("auth.register");
+  const errorKeys = ["slug-taken", "validation", "rate-limited", "unknown"];
 
   return (
     <main className="grid min-h-screen place-items-center bg-muted/30 p-6">
@@ -21,32 +20,31 @@ export default async function RegisterPage({ searchParams }: PageProps<"/registe
           <>
             <h1 className="mt-10 flex items-center gap-2 text-2xl font-semibold tracking-tight">
               <MailCheckIcon className="size-6" />
-              Fast geschafft
+              {t("doneTitle")}
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Wir haben Ihnen eine E-Mail geschickt. Bestätigen Sie Ihre Adresse und legen Sie ein
-              Passwort fest, um sich anzumelden.
+              {t("doneBody")}
             </p>
             <Link href="/login" className="mt-8 block text-center text-sm font-medium text-primary underline-offset-4 hover:underline">
-              Zur Anmeldung
+              {t("toLogin")}
             </Link>
           </>
         ) : (
           <>
-            <h1 className="mt-10 text-2xl font-semibold tracking-tight">Organisation registrieren</h1>
+            <h1 className="mt-10 text-2xl font-semibold tracking-tight">{t("heading")}</h1>
             <p className="mt-2 text-muted-foreground">
-              Legen Sie Ihre Organisation an und werden Sie deren erste:r Administrator:in.
+              {t("description")}
             </p>
-            {typeof error === "string" && ERROR_MESSAGES[error] ? (
+            {typeof error === "string" && errorKeys.includes(error) ? (
               <p className="mt-6 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-                {ERROR_MESSAGES[error]}
+                {t(`errors.${error}`)}
               </p>
             ) : null}
             <div className="mt-8">
               <RegisterOrganizationForm />
             </div>
             <Link href="/login" className="mt-6 block text-center text-sm text-muted-foreground underline-offset-4 hover:underline">
-              Bereits registriert? Anmelden
+              {t("haveAccount")}
             </Link>
           </>
         )}

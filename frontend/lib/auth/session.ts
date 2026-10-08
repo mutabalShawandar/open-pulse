@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 
 const accessTokenCookie = "umfrage_access_token";
 const refreshTokenCookie = "umfrage_refresh_token";
+const idTokenCookie = "umfrage_id_token";
 const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
 // Shared across "app.{root}" and every "app.{org-slug}.{root}" subdomain so a
 // session established on the canonical host (see lib/auth/config.ts) is
@@ -23,7 +24,7 @@ export function sessionCookieOptions(maxAge: number | undefined) {
   return { ...cookieOptions, maxAge: maxAge ?? 300 };
 }
 
-export const sessionCookies = { accessTokenCookie, refreshTokenCookie, cookieOptions };
+export const sessionCookies = { accessTokenCookie, refreshTokenCookie, idTokenCookie, cookieOptions };
 
 export const returnToCookie = "umfrage_return_to";
 

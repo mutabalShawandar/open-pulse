@@ -44,7 +44,9 @@ class SurveyPublishTests(unittest.IsolatedAsyncioTestCase):
                     display_name="Publish Test",
                     is_active=True,
                 )
-                organization = Organization(name="Publish Organization", slug=f"publish-org-{uuid4()}")
+                organization = Organization(
+                    name="Publish Organization", slug=f"publish-org-{uuid4()}"
+                )
                 session.add_all([actor, organization])
                 await session.flush()
                 survey = Survey(
