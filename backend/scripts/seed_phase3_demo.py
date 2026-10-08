@@ -16,6 +16,12 @@ from app.models import Campaign, CampaignStatus, Organization, Workspace, Questi
 async def seed() -> None:
     async with async_session_factory() as session:
         if await session.scalar(select(Campaign).where(Campaign.public_slug == "demo-analytics")):
+            # Databases seeded before the English rebrand still carry the German demo workspace.
+            legacy = await session.scalar(select(Workspace).where(Workspace.slug == "demo-klinik"))
+            if legacy is not None and await session.scalar(select(Workspace).where(Workspace.slug == "demo-workspace")) is None:
+                legacy.slug = "demo-workspace"; legacy.name = "Demo Workspace"
+                await session.commit()
+                print("Renamed legacy demo workspace to demo-workspace.")
             print("Phase-3 demo data already exists.")
             return
         actor = await session.scalar(select(User).where(User.is_active.is_(True)).limit(1))

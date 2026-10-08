@@ -9,9 +9,19 @@ import { defaultLocale, isLocale, localeCookie, type Locale } from "./config";
 async function resolveLocale(): Promise<Locale> {
   const stored = (await cookies()).get(localeCookie)?.value;
   if (isLocale(stored)) return stored;
-  const accepted = ((await headers()).get("accept-language") ?? "").toLowerCase();
-  const first = accepted.split(",")[0]?.trim().slice(0, 2);
-  return isLocale(first) ? first : defaultLocale;
+  const accepted = (await headers()).get("accept-language") ?? "";
+  const ranked = accepted
+    .split(",")
+    .map((entry, index) => {
+      const [range, ...params] = entry.trim().toLowerCase().split(";");
+      const q = params.map((param) => param.trim()).find((param) => param.startsWith("q="));
+      const quality = q ? Number.parseFloat(q.slice(2)) : 1;
+      return { language: range.slice(0, 2), quality, index };
+    })
+    .filter((entry) => isLocale(entry.language) && entry.quality > 0)
+    .sort((a, b) => b.quality - a.quality || a.index - b.index);
+  const best = ranked[0]?.language;
+  return isLocale(best) ? best : defaultLocale;
 }
 
 export default getRequestConfig(async () => {

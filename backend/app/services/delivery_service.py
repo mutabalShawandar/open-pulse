@@ -204,7 +204,7 @@ async def process_delivery_job(session: AsyncSession, delivery_id: UUID, raw_tok
     template = await session.get(CampaignEmailTemplate, campaign.id)
     if template is None:
         delivery.status = "failed"
-        delivery.last_error = "E-Mail-Vorlage fehlt"
+        delivery.last_error = "Email template missing"
         campaign_recipient.status = CampaignRecipientStatus.FAILED
         campaign_recipient.last_error = delivery.last_error
         await session.commit()
