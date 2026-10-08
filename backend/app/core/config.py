@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     keycloak_admin_client_secret: str | None = None
     redis_url: str = "redis://localhost:6379/0"
     public_frontend_url: str = "http://localhost:3000"
+    # Self-serve organization registration is off by default: the first release is
+    # single-organization. See README "Scope of the first release".
+    organization_registration_enabled: bool = False
     public_backend_url: str = "http://localhost:8000"
     minio_endpoint: str = "http://minio:9000"
     minio_access_key: str | None = None

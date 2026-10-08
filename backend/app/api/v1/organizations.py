@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.config import settings
 from app.db.session import get_db_session
 from app.models.user import User
 from app.schemas.organization import OrganizationRegisterRequest, OrganizationResponse
@@ -19,6 +20,11 @@ from app.services.workspace_service import create_workspace
 router = APIRouter(prefix="/api/v1/organizations", tags=["organizations"])
 
 
+async def require_registration_enabled() -> None:
+    if not settings.organization_registration_enabled:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
+
 async def register_rate_limit(request: Request) -> None:
     await enforce_public_rate_limit(request, "organization_register", limit=5)
 
@@ -27,7 +33,7 @@ async def register_rate_limit(request: Request) -> None:
     "/register",
     response_model=OrganizationResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(register_rate_limit)],
+    dependencies=[Depends(require_registration_enabled), Depends(register_rate_limit)],
 )
 async def register_organization_endpoint(
     payload: OrganizationRegisterRequest,
