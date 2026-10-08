@@ -16,8 +16,8 @@
   "failureFactor": 10,
   "passwordPolicy": "hashAlgorithm(argon2) and length(10) and notUsername and notEmail and passwordHistory(5)",
   "internationalizationEnabled": true,
-  "supportedLocales": ["de"],
-  "defaultLocale": "de",
+  "supportedLocales": ["en", "de"],
+  "defaultLocale": "en",
   "smtpServer": {
     "host": "mailpit",
     "port": "1025",
