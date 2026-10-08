@@ -63,10 +63,10 @@ def with_workspace_logo(html_body: str, workspace: Workspace | None, inline_logo
 
 def _safe_error(error: Exception) -> str:
     if isinstance(error, (smtplib.SMTPAuthenticationError, smtplib.SMTPRecipientsRefused)):
-        return "SMTP-Authentifizierung oder Empfänger wurde abgelehnt"
+        return "SMTP authentication failed or the recipient was rejected"
     if isinstance(error, (TimeoutError, OSError, smtplib.SMTPException)):
-        return "Temporärer SMTP-Übertragungsfehler"
-    return "E-Mail konnte nicht versendet werden"
+        return "Temporary SMTP transmission error"
+    return "The email could not be sent"
 
 
 def is_transient_smtp_error(error: Exception) -> bool:
@@ -196,7 +196,7 @@ async def process_delivery_job(session: AsyncSession, delivery_id: UUID, raw_tok
         return 0
     if recipient.status != RecipientStatus.ACTIVE:
         delivery.status = "failed"
-        delivery.last_error = "Empfänger ist nicht versandberechtigt"
+        delivery.last_error = "Recipient is not eligible to receive email"
         campaign_recipient.status = CampaignRecipientStatus.FAILED
         campaign_recipient.last_error = delivery.last_error
         await session.commit()

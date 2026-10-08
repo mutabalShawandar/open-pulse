@@ -27,7 +27,7 @@ async def campaign_analytics(session: AsyncSession, workspace_id: UUID, campaign
         if question.question_type.value == "yes_no":
             true_count = sum(answer.boolean_value is True for answer in answer_rows)
             false_count = sum(answer.boolean_value is False for answer in answer_rows)
-            choices = [{"label": "Ja", "count": true_count}, {"label": "Nein", "count": false_count}]
+            choices = [{"label": "Yes", "count": true_count}, {"label": "No", "count": false_count}]
         else:
             choices=[]
         rows = await session.execute(select(SurveyQuestionOption.label, func.count(ResponseAnswerOption.option_id)).join(ResponseAnswerOption, ResponseAnswerOption.option_id == SurveyQuestionOption.id).join(ResponseAnswer, ResponseAnswer.id == ResponseAnswerOption.answer_id).join(SurveyResponse, SurveyResponse.id == ResponseAnswer.response_id).where(SurveyQuestionOption.question_id == question.id, SurveyResponse.campaign_id == campaign.id, SurveyResponse.status == ResponseStatus.COMPLETED).group_by(SurveyQuestionOption.id, SurveyQuestionOption.label).order_by(SurveyQuestionOption.position))
