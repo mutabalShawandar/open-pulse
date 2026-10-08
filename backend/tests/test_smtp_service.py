@@ -80,6 +80,10 @@ class SmtpServiceTests(unittest.TestCase):
         session = FakeSession(configuration)
         key = Fernet.generate_key().decode("utf-8")
         with patch.object(settings, "email_credential_encryption_key", key):
-            configuration.password_encrypted = Fernet(key.encode()).encrypt(b"secret-value").decode()
-            asyncio.run(save_smtp_configuration(session, payload(username=None, password=None), uuid4()))
+            configuration.password_encrypted = (
+                Fernet(key.encode()).encrypt(b"secret-value").decode()
+            )
+            asyncio.run(
+                save_smtp_configuration(session, payload(username=None, password=None), uuid4())
+            )
         self.assertIsNone(configuration.password_encrypted)

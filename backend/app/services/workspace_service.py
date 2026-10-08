@@ -5,8 +5,12 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Workspace, WorkspaceMember, Role, User
-from app.schemas.workspace import WorkspaceCreateRequest, WorkspaceMemberCreateRequest, WorkspaceUpdateRequest
+from app.models import Role, User, Workspace, WorkspaceMember
+from app.schemas.workspace import (
+    WorkspaceCreateRequest,
+    WorkspaceMemberCreateRequest,
+    WorkspaceUpdateRequest,
+)
 from app.services.audit_service import add_audit_event
 
 
@@ -86,7 +90,9 @@ async def remove_workspace_member(
         )
     )
     if membership is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Clinic membership not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Clinic membership not found"
+        )
 
     await session.delete(membership)
     add_audit_event(
@@ -116,12 +122,15 @@ async def add_workspace_member(
     if await session.scalar(select(Role).where(Role.id == payload.role_id)) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
 
-    if await session.scalar(
-        select(WorkspaceMember).where(
-            WorkspaceMember.user_id == payload.user_id,
-            WorkspaceMember.workspace_id == workspace_id,
+    if (
+        await session.scalar(
+            select(WorkspaceMember).where(
+                WorkspaceMember.user_id == payload.user_id,
+                WorkspaceMember.workspace_id == workspace_id,
+            )
         )
-    ) is not None:
+        is not None
+    ):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User is already a member of this clinic",

@@ -62,7 +62,9 @@ class OrganizationRegistrationTests(unittest.IsolatedAsyncioTestCase):
                 self.assertTrue(owner.is_active)
 
                 # The owner can create a workspace inside their own organization.
-                await require_organization_permission(session, owner, organization.id, "clinic.create")
+                await require_organization_permission(
+                    session, owner, organization.id, "clinic.create"
+                )
                 workspace = await create_workspace(
                     session,
                     WorkspaceCreateRequest(

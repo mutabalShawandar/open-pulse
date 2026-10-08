@@ -8,7 +8,17 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from app.core.config import settings
-from app.models import Organization, Workspace, WorkspaceMember, Role, Survey, SurveyStatus, SurveyVersion, SurveyVersionStatus, User
+from app.models import (
+    Organization,
+    Role,
+    Survey,
+    SurveyStatus,
+    SurveyVersion,
+    SurveyVersionStatus,
+    User,
+    Workspace,
+    WorkspaceMember,
+)
 from app.services.survey_service import (
     assign_version_to_workspace,
     list_workspace_version_assignments,
@@ -35,10 +45,16 @@ class SurveyVersionAssignmentTests(unittest.IsolatedAsyncioTestCase):
                     display_name="Assignment Test",
                     is_active=True,
                 )
-                organization = Organization(name="Assignment Organization", slug=f"assignment-org-{uuid4()}")
+                organization = Organization(
+                    name="Assignment Organization", slug=f"assignment-org-{uuid4()}"
+                )
                 session.add(organization)
                 await session.flush()
-                clinic = Workspace(name="Assignment Clinic", slug=f"assignment-{uuid4()}", organization_id=organization.id)
+                clinic = Workspace(
+                    name="Assignment Clinic",
+                    slug=f"assignment-{uuid4()}",
+                    organization_id=organization.id,
+                )
                 session.add_all([actor, clinic])
                 await session.flush()
                 session.add(
@@ -62,7 +78,9 @@ class SurveyVersionAssignmentTests(unittest.IsolatedAsyncioTestCase):
                 session.add(version)
                 await session.flush()
 
-                assignment = await assign_version_to_workspace(session, clinic.id, version.id, actor)
+                assignment = await assign_version_to_workspace(
+                    session, clinic.id, version.id, actor
+                )
                 self.assertEqual(assignment.workspace_id, clinic.id)
                 self.assertEqual(assignment.survey_version_id, version.id)
                 self.assertIsNone(assignment.unassigned_at)
@@ -110,7 +128,9 @@ class SurveyVersionAssignmentTests(unittest.IsolatedAsyncioTestCase):
                 session.add_all([actor, other_workspace])
                 await session.flush()
                 session.add(
-                    WorkspaceMember(user_id=actor.id, workspace_id=other_workspace.id, role_id=role.id)
+                    WorkspaceMember(
+                        user_id=actor.id, workspace_id=other_workspace.id, role_id=role.id
+                    )
                 )
                 survey = Survey(
                     organization_id=survey_organization.id,
@@ -131,7 +151,9 @@ class SurveyVersionAssignmentTests(unittest.IsolatedAsyncioTestCase):
                 await session.flush()
 
                 with self.assertRaises(HTTPException) as error:
-                    await assign_version_to_workspace(session, other_workspace.id, version.id, actor)
+                    await assign_version_to_workspace(
+                        session, other_workspace.id, version.id, actor
+                    )
                 self.assertEqual(error.exception.status_code, 422)
             finally:
                 await session.close()

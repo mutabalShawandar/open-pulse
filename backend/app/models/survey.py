@@ -3,13 +3,13 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     CheckConstraint,
     DateTime,
     Enum,
     ForeignKey,
     Index,
     Integer,
-    JSON,
     String,
     Text,
     UniqueConstraint,
@@ -53,7 +53,10 @@ class Survey(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="RESTRICT"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -147,7 +150,10 @@ class SurveyVersionWorkspace(Base):
         index=True,
     )
     workspace_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="RESTRICT"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     assigned_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
@@ -166,7 +172,9 @@ class SurveyVersionWorkspace(Base):
 class SurveySection(Base):
     __tablename__ = "survey_sections"
     __table_args__ = (
-        UniqueConstraint("survey_version_id", "position", name="uq_survey_sections_version_position"),
+        UniqueConstraint(
+            "survey_version_id", "position", name="uq_survey_sections_version_position"
+        ),
         CheckConstraint("position >= 0", name="ck_survey_sections_position_nonnegative"),
     )
 
@@ -197,15 +205,23 @@ class SurveyQuestion(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     section_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("survey_sections.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("survey_sections.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     question_type: Mapped[QuestionType] = mapped_column(
-        Enum(QuestionType, name="survey_question_type", values_callable=_enum_values), nullable=False
+        Enum(QuestionType, name="survey_question_type", values_callable=_enum_values),
+        nullable=False,
     )
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     help_text: Mapped[str | None] = mapped_column(Text, nullable=True)
-    is_required: Mapped[bool] = mapped_column(nullable=False, default=False, server_default=text("false"))
-    allow_other: Mapped[bool] = mapped_column(nullable=False, default=False, server_default=text("false"))
+    is_required: Mapped[bool] = mapped_column(
+        nullable=False, default=False, server_default=text("false")
+    )
+    allow_other: Mapped[bool] = mapped_column(
+        nullable=False, default=False, server_default=text("false")
+    )
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -225,7 +241,10 @@ class SurveyQuestionOption(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     question_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("survey_questions.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("survey_questions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     label: Mapped[str] = mapped_column(String(500), nullable=False)
     value: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -241,12 +260,17 @@ class SurveyQuestionOption(Base):
 class SurveyQuestionValidation(Base):
     __tablename__ = "survey_question_validations"
     __table_args__ = (
-        UniqueConstraint("question_id", "rule_type", name="uq_survey_question_validations_rule_type"),
+        UniqueConstraint(
+            "question_id", "rule_type", name="uq_survey_question_validations_rule_type"
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     question_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("survey_questions.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("survey_questions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     rule_type: Mapped[str] = mapped_column(String(100), nullable=False)
     rule_value: Mapped[dict] = mapped_column(JSON, nullable=False)

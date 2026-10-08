@@ -6,51 +6,69 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_permission, require_platform_admin
-from app.services.authorization_service import list_permitted_workspace_ids
 from app.db.session import get_db_session
-from app.models import AuditEvent, Permission, Workspace, WorkspaceMember, Role, User
+from app.models import AuditEvent, Permission, Role, User, Workspace, WorkspaceMember
 from app.schemas.authorization import AuditEventResponse, PermissionResponse, RoleResponse
 from app.schemas.email import (
     SmtpConfigurationResponse,
     SmtpConfigurationUpsertRequest,
     SmtpTestEmailRequest,
 )
-from app.services.smtp_service import (
-    get_smtp_configuration,
-    save_smtp_configuration,
-    send_smtp_test_email,
-)
+from app.schemas.user import UserResponse
 from app.schemas.workspace import (
     WorkspaceMemberResponse,
     WorkspaceResponse,
     WorkspaceUpdateRequest,
 )
-from app.schemas.user import UserResponse
-from app.services.workspace_service import remove_workspace_member, update_workspace
 from app.services.audit_service import add_audit_event
-from app.services.storage_service import save_workspace_logo
+from app.services.authorization_service import list_permitted_workspace_ids
 from app.services.keycloak_admin import KeycloakAdminClient
+from app.services.smtp_service import (
+    get_smtp_configuration,
+    save_smtp_configuration,
+    send_smtp_test_email,
+)
+from app.services.storage_service import save_workspace_logo
 from app.services.user_service import (
     deactivate_platform_user,
     permanently_delete_platform_user,
     reactivate_platform_user,
 )
-
+from app.services.workspace_service import remove_workspace_member, update_workspace
 
 router = APIRouter(tags=["administration"])
 
+
 @router.post("/api/v1/clinics/{clinic_id}/logo", response_model=WorkspaceResponse, tags=["clinic"])
-async def upload_clinic_logo_endpoint(clinic_id: UUID, logo: UploadFile = File(...), actor: Annotated[User, Depends(require_permission("clinic.create"))] = None, session: AsyncSession = Depends(get_db_session)) -> WorkspaceResponse:
+async def upload_clinic_logo_endpoint(
+    clinic_id: UUID,
+    logo: UploadFile = File(...),
+    actor: Annotated[User, Depends(require_permission("clinic.create"))] = None,
+    session: AsyncSession = Depends(get_db_session),
+) -> WorkspaceResponse:
     workspace = await session.get(Workspace, clinic_id)
-    if workspace is None: raise HTTPException(status_code=404, detail="Clinic not found")
+    if workspace is None:
+        raise HTTPException(status_code=404, detail="Clinic not found")
     key, url = await save_workspace_logo(workspace.id, logo)
     workspace.logo_storage_key, workspace.logo_url = key, url
-    add_audit_event(session, actor_user_id=actor.id, workspace_id=workspace.id, action="clinic.logo_uploaded", entity_type="clinic", entity_id=workspace.id)
-    await session.commit(); await session.refresh(workspace)
+    add_audit_event(
+        session,
+        actor_user_id=actor.id,
+        workspace_id=workspace.id,
+        action="clinic.logo_uploaded",
+        entity_type="clinic",
+        entity_id=workspace.id,
+    )
+    await session.commit()
+    await session.refresh(workspace)
     return WorkspaceResponse.model_validate(workspace)
 
 
-@router.get("/api/v1/administration/smtp", response_model=SmtpConfigurationResponse | None, tags=["administration"])
+@router.get(
+    "/api/v1/administration/smtp",
+    response_model=SmtpConfigurationResponse | None,
+    tags=["administration"],
+)
 async def get_smtp_configuration_endpoint(
     _: Annotated[User, Depends(require_platform_admin)],
     session: AsyncSession = Depends(get_db_session),
@@ -59,11 +77,20 @@ async def get_smtp_configuration_endpoint(
     if configuration is None:
         return None
     return SmtpConfigurationResponse.model_validate(
-        {**{field: getattr(configuration, field) for field in SmtpConfigurationResponse.model_fields if field != "password_configured"}, "password_configured": configuration.password_encrypted is not None}
+        {
+            **{
+                field: getattr(configuration, field)
+                for field in SmtpConfigurationResponse.model_fields
+                if field != "password_configured"
+            },
+            "password_configured": configuration.password_encrypted is not None,
+        }
     )
 
 
-@router.put("/api/v1/administration/smtp", response_model=SmtpConfigurationResponse, tags=["administration"])
+@router.put(
+    "/api/v1/administration/smtp", response_model=SmtpConfigurationResponse, tags=["administration"]
+)
 async def save_smtp_configuration_endpoint(
     payload: SmtpConfigurationUpsertRequest,
     actor: Annotated[User, Depends(require_platform_admin)],
@@ -71,11 +98,22 @@ async def save_smtp_configuration_endpoint(
 ) -> SmtpConfigurationResponse:
     configuration = await save_smtp_configuration(session, payload, actor.id)
     return SmtpConfigurationResponse.model_validate(
-        {**{field: getattr(configuration, field) for field in SmtpConfigurationResponse.model_fields if field != "password_configured"}, "password_configured": configuration.password_encrypted is not None}
+        {
+            **{
+                field: getattr(configuration, field)
+                for field in SmtpConfigurationResponse.model_fields
+                if field != "password_configured"
+            },
+            "password_configured": configuration.password_encrypted is not None,
+        }
     )
 
 
-@router.post("/api/v1/administration/smtp/test", status_code=status.HTTP_204_NO_CONTENT, tags=["administration"])
+@router.post(
+    "/api/v1/administration/smtp/test",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["administration"],
+)
 async def test_smtp_configuration_endpoint(
     payload: SmtpTestEmailRequest,
     actor: Annotated[User, Depends(require_platform_admin)],
@@ -83,6 +121,8 @@ async def test_smtp_configuration_endpoint(
 ) -> Response:
     await send_smtp_test_email(session, payload.recipient_email, actor.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.get("/api/v1/clinics", response_model=list[WorkspaceResponse], tags=["clinic"])
 async def list_clinics_endpoint(
     actor: Annotated[User, Depends(get_current_user)],
@@ -183,7 +223,9 @@ async def get_user_endpoint(
     user = await session.scalar(select(User).where(User.id == user_id))
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return UserResponse(id=str(user.id), email=user.email, display_name=user.display_name, is_active=user.is_active)
+    return UserResponse(
+        id=str(user.id), email=user.email, display_name=user.display_name, is_active=user.is_active
+    )
 
 
 @router.post("/api/v1/users/{user_id}/deactivate", response_model=UserResponse, tags=["user"])
@@ -198,7 +240,9 @@ async def deactivate_user_endpoint(
         actor_user_id=actor.id,
         keycloak=KeycloakAdminClient(),
     )
-    return UserResponse(id=str(user.id), email=user.email, display_name=user.display_name, is_active=user.is_active)
+    return UserResponse(
+        id=str(user.id), email=user.email, display_name=user.display_name, is_active=user.is_active
+    )
 
 
 @router.post("/api/v1/users/{user_id}/reactivate", response_model=UserResponse, tags=["user"])

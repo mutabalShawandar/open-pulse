@@ -1,11 +1,17 @@
-from pathlib import Path
 import os
 import re
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
 TEST_ENV_FILE = ROOT_DIR / ".env.test"
-ENV_FILE = TEST_ENV_FILE if os.getenv("APP_ENV") == "test" and TEST_ENV_FILE.exists() else ROOT_DIR / ".env"
+ENV_FILE = (
+    TEST_ENV_FILE
+    if os.getenv("APP_ENV") == "test" and TEST_ENV_FILE.exists()
+    else ROOT_DIR / ".env"
+)
+
 
 class Settings(BaseSettings):
     app_env: str = "development"
@@ -45,7 +51,7 @@ class Settings(BaseSettings):
         env_file=ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
-        )
+    )
 
     @property
     def effective_cors_origin_regex(self) -> str | None:
@@ -54,5 +60,6 @@ class Settings(BaseSettings):
         if self.public_root_domain:
             patterns.append(rf"https://[a-z0-9-]+\.{re.escape(self.public_root_domain)}")
         return f"^(?:{'|'.join(patterns)})$" if patterns else None
+
 
 settings = Settings()

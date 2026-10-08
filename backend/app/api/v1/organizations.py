@@ -12,10 +12,13 @@ from app.schemas.organization import OrganizationRegisterRequest, OrganizationRe
 from app.schemas.workspace import WorkspaceCreateRequest, WorkspaceResponse
 from app.services.authorization_service import require_organization_permission
 from app.services.keycloak_admin import KeycloakAdminClient
-from app.services.organization_service import get_organization_by_slug, is_slug_available, register_organization
+from app.services.organization_service import (
+    get_organization_by_slug,
+    is_slug_available,
+    register_organization,
+)
 from app.services.rate_limit_service import enforce_public_rate_limit
 from app.services.workspace_service import create_workspace
-
 
 router = APIRouter(prefix="/api/v1/organizations", tags=["organizations"])
 

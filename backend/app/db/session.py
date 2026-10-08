@@ -1,7 +1,8 @@
 from collections.abc import AsyncGenerator
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from app.core.config import settings
 
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from app.core.config import settings
 
 if not settings.database_url:
     raise ValueError("DATABASE_URL is not set in the environment variables.")
@@ -9,15 +10,15 @@ if not settings.database_url:
 engine = create_async_engine(
     settings.database_url,
     pool_pre_ping=True,
-    )
+)
 
 async_session_factory = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False,
-    )
+)
 
-async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+
+async def get_db_session() -> AsyncGenerator[AsyncSession]:
     async with async_session_factory() as session:
         yield session
-

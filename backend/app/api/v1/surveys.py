@@ -8,14 +8,13 @@ from app.api.deps import get_current_user
 from app.db.session import get_db_session
 from app.models import User
 from app.schemas.survey import (
-    SurveyCreateRequest,
     SurveyCopyRequest,
-    SurveyDraftCreateRequest,
+    SurveyCreateRequest,
     SurveyDetailResponse,
-    SurveyDraftSummaryResponse,
-    SurveyVersionResponse,
-    SurveyPublishedVersionDetailResponse,
+    SurveyDraftCreateRequest,
     SurveyDraftDetailResponse,
+    SurveyDraftSummaryResponse,
+    SurveyPublishedVersionDetailResponse,
     SurveyQuestionCreateRequest,
     SurveyQuestionDetailResponse,
     SurveyQuestionOptionCreateRequest,
@@ -35,48 +34,49 @@ from app.schemas.survey import (
     SurveySectionUpdateRequest,
     SurveySummaryResponse,
     SurveyUpdateRequest,
+    SurveyVersionResponse,
 )
-from app.services.authorization_service import list_permitted_organization_ids, require_organization_permission
+from app.services.authorization_service import (
+    list_permitted_organization_ids,
+    require_organization_permission,
+)
 from app.services.survey_service import (
+    archive_survey,
+    copy_survey,
+    create_draft,
+    create_option,
+    create_question,
     create_section,
     create_survey,
-    create_draft,
-    copy_survey,
-    publish_draft,
-    create_question,
-    create_option,
     create_validation,
     delete_option,
     delete_question,
-    delete_validation,
     delete_section,
+    delete_validation,
     get_draft_or_404,
     get_published_version_or_404,
-    get_option_or_404,
     get_question_or_404,
     get_section_or_404,
     get_survey_or_404,
     get_survey_organization_id_or_404,
-    get_validation_or_404,
-    list_sections,
-    list_options,
-    list_questions,
-    list_validations,
     list_drafts,
+    list_options,
     list_published_versions,
+    list_questions,
+    list_sections,
     list_surveys,
-    reorder_sections,
+    list_validations,
+    publish_draft,
     reorder_options,
     reorder_questions,
+    reorder_sections,
+    restore_survey,
     update_option,
     update_question,
-    update_validation,
     update_section,
     update_survey,
-    archive_survey,
-    restore_survey,
+    update_validation,
 )
-
 
 router = APIRouter(prefix="/api/v1/surveys", tags=["surveys"])
 
@@ -88,9 +88,7 @@ async def _require_survey_permission(
     await require_organization_permission(session, actor, organization_id, permission_name)
 
 
-async def question_detail_response(
-    session: AsyncSession, question
-) -> SurveyQuestionDetailResponse:
+async def question_detail_response(session: AsyncSession, question) -> SurveyQuestionDetailResponse:
     return SurveyQuestionDetailResponse(
         **SurveyQuestionResponse.model_validate(question, from_attributes=True).model_dump(),
         options=[
@@ -141,8 +139,12 @@ async def list_surveys_endpoint(
     organization_ids = await list_permitted_organization_ids(session, actor, "survey.read")
     if organization_ids is not None and not organization_ids:
         return []
-    surveys = await list_surveys(session, include_archived=include_archived, organization_ids=organization_ids)
-    return [SurveySummaryResponse.model_validate(survey, from_attributes=True) for survey in surveys]
+    surveys = await list_surveys(
+        session, include_archived=include_archived, organization_ids=organization_ids
+    )
+    return [
+        SurveySummaryResponse.model_validate(survey, from_attributes=True) for survey in surveys
+    ]
 
 
 @router.get("/{survey_id}", response_model=SurveyDetailResponse)
@@ -158,7 +160,10 @@ async def get_survey_endpoint(
     return SurveyDetailResponse(
         **summary.model_dump(),
         created_by_user_id=survey.created_by_user_id,
-        drafts=[SurveyDraftSummaryResponse.model_validate(draft, from_attributes=True) for draft in drafts],
+        drafts=[
+            SurveyDraftSummaryResponse.model_validate(draft, from_attributes=True)
+            for draft in drafts
+        ],
     )
 
 
@@ -239,7 +244,11 @@ async def get_published_version_endpoint(
     )
 
 
-@router.post("/{survey_id}/drafts", response_model=SurveyDraftSummaryResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{survey_id}/drafts",
+    response_model=SurveyDraftSummaryResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_draft_endpoint(
     survey_id: UUID,
     payload: SurveyDraftCreateRequest,
@@ -251,7 +260,9 @@ async def create_draft_endpoint(
     return SurveyDraftSummaryResponse.model_validate(draft, from_attributes=True)
 
 
-@router.post("/{survey_id}/copy", response_model=SurveyDetailResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{survey_id}/copy", response_model=SurveyDetailResponse, status_code=status.HTTP_201_CREATED
+)
 async def copy_survey_endpoint(
     survey_id: UUID,
     payload: SurveyCopyRequest,
@@ -342,7 +353,9 @@ async def reorder_sections_endpoint(
 ) -> list[SurveySectionResponse]:
     await _require_survey_permission(session, actor, survey_id, "survey.edit")
     sections = await reorder_sections(session, survey_id, draft_id, payload.section_ids)
-    return [SurveySectionResponse.model_validate(section, from_attributes=True) for section in sections]
+    return [
+        SurveySectionResponse.model_validate(section, from_attributes=True) for section in sections
+    ]
 
 
 @router.patch(
@@ -412,7 +425,10 @@ async def reorder_questions_endpoint(
     questions = await reorder_questions(
         session, survey_id, draft_id, section_id, payload.question_ids
     )
-    return [SurveyQuestionResponse.model_validate(question, from_attributes=True) for question in questions]
+    return [
+        SurveyQuestionResponse.model_validate(question, from_attributes=True)
+        for question in questions
+    ]
 
 
 @router.get(
@@ -448,9 +464,7 @@ async def update_question_endpoint(
     session: AsyncSession = Depends(get_db_session),
 ) -> SurveyQuestionResponse:
     await _require_survey_permission(session, actor, survey_id, "survey.edit")
-    question = await update_question(
-        session, survey_id, draft_id, section_id, question_id, payload
-    )
+    question = await update_question(session, survey_id, draft_id, section_id, question_id, payload)
     return SurveyQuestionResponse.model_validate(question, from_attributes=True)
 
 
@@ -476,7 +490,10 @@ async def delete_question_endpoint(
     response_model=list[SurveyQuestionOptionResponse],
 )
 async def list_options_endpoint(
-    survey_id: UUID, draft_id: UUID, section_id: UUID, question_id: UUID,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
     actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
 ) -> list[SurveyQuestionOptionResponse]:
@@ -494,7 +511,10 @@ async def list_options_endpoint(
     status_code=status.HTTP_201_CREATED,
 )
 async def create_option_endpoint(
-    survey_id: UUID, draft_id: UUID, section_id: UUID, question_id: UUID,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
     payload: SurveyQuestionOptionCreateRequest,
     actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
@@ -509,7 +529,10 @@ async def create_option_endpoint(
     response_model=list[SurveyQuestionOptionResponse],
 )
 async def reorder_options_endpoint(
-    survey_id: UUID, draft_id: UUID, section_id: UUID, question_id: UUID,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
     payload: SurveyQuestionOptionReorderRequest,
     actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
@@ -518,7 +541,10 @@ async def reorder_options_endpoint(
     options = await reorder_options(
         session, survey_id, draft_id, section_id, question_id, payload.option_ids
     )
-    return [SurveyQuestionOptionResponse.model_validate(option, from_attributes=True) for option in options]
+    return [
+        SurveyQuestionOptionResponse.model_validate(option, from_attributes=True)
+        for option in options
+    ]
 
 
 @router.patch(
@@ -526,7 +552,11 @@ async def reorder_options_endpoint(
     response_model=SurveyQuestionOptionResponse,
 )
 async def update_option_endpoint(
-    survey_id: UUID, draft_id: UUID, section_id: UUID, question_id: UUID, option_id: UUID,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
+    option_id: UUID,
     payload: SurveyQuestionOptionUpdateRequest,
     actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
@@ -543,7 +573,11 @@ async def update_option_endpoint(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_option_endpoint(
-    survey_id: UUID, draft_id: UUID, section_id: UUID, question_id: UUID, option_id: UUID,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
+    option_id: UUID,
     actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
 ) -> Response:
@@ -557,7 +591,10 @@ async def delete_option_endpoint(
     response_model=list[SurveyQuestionValidationResponse],
 )
 async def list_validations_endpoint(
-    survey_id: UUID, draft_id: UUID, section_id: UUID, question_id: UUID,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
     actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
 ) -> list[SurveyQuestionValidationResponse]:
@@ -575,13 +612,18 @@ async def list_validations_endpoint(
     status_code=status.HTTP_201_CREATED,
 )
 async def create_validation_endpoint(
-    survey_id: UUID, draft_id: UUID, section_id: UUID, question_id: UUID,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
     payload: SurveyQuestionValidationCreateRequest,
     actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
 ) -> SurveyQuestionValidationResponse:
     await _require_survey_permission(session, actor, survey_id, "survey.edit")
-    validation = await create_validation(session, survey_id, draft_id, section_id, question_id, payload)
+    validation = await create_validation(
+        session, survey_id, draft_id, section_id, question_id, payload
+    )
     return SurveyQuestionValidationResponse.model_validate(validation, from_attributes=True)
 
 
@@ -590,7 +632,11 @@ async def create_validation_endpoint(
     response_model=SurveyQuestionValidationResponse,
 )
 async def update_validation_endpoint(
-    survey_id: UUID, draft_id: UUID, section_id: UUID, question_id: UUID, validation_id: UUID,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
+    validation_id: UUID,
     payload: SurveyQuestionValidationUpdateRequest,
     actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
@@ -607,7 +653,11 @@ async def update_validation_endpoint(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_validation_endpoint(
-    survey_id: UUID, draft_id: UUID, section_id: UUID, question_id: UUID, validation_id: UUID,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
+    validation_id: UUID,
     actor: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
 ) -> Response:
