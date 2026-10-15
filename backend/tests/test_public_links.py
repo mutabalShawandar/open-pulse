@@ -25,7 +25,7 @@ class PublicLinkTests(unittest.TestCase):
     def test_cors_allows_a_clinic_subdomain_of_the_public_root_domain(self) -> None:
         with (
             patch.object(settings, "public_root_domain", "example.test"),
-            patch.object(settings, "cors_origin_regex", "https://staging-app\\.example\\.test"),
+            patch.object(settings, "cors_origin_regex", "https://app\\.example\\.test"),
         ):
             pattern = settings.effective_cors_origin_regex
 

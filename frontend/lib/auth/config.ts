@@ -45,5 +45,5 @@ export function isOrganizationAppHost(hostname: string): string | null {
 export function isCanonicalPlatformHost(hostname: string): boolean {
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
   if (!rootDomain) return false;
-  return hostname === `app.${rootDomain}` || hostname === `staging-app.${rootDomain}`;
+  return hostname === `app.${rootDomain}`;
 }
