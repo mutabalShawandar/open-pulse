@@ -15,41 +15,50 @@ The interface and documentation are English-first, with a German translation ava
 - Public anonymous survey links with secure response sessions, rate limiting, and typed answer persistence
 - Recipient import and email campaigns with SMTP configuration, templates, and retry/delivery-status tracking
 - Campaign analytics with PDF and Excel export
-- Keycloak authentication with application-controlled user activation, roles, and permissions
+- Keycloak authentication with application-controlled user activation, roles, and permissions (to be replaced by Zitadel, see the roadmap)
 - English-first interface with German translation (`next-intl`, language switcher; PDF/Excel exports and default email templates are English only)
-- Docker Compose for local development and a reference VPS deployment
+- One-command Docker Compose setup for local use: Keycloak, Mailpit for test emails, a seeded administrator, and optional demo data
 
 ## Scope of the first release (v0.1)
 
-**v0.1 is a single-organization, self-hosted release.**
+**v0.1 is a single-organization, self-hosted release for local use.**
 
-- The data model is organization-based: surveys belong to an organization's catalogue, workspaces belong to exactly one organization, and authorization is scoped to the organization and workspace. A single default organization is used, and platform administrators manage users, roles, and email (SMTP) settings.
+- The data model is organization-based: surveys belong to an organization's catalogue, workspaces belong to exactly one organization, and authorization is scoped to the organization and workspace. v0.1 runs with one default organization, and platform administrators manage users, roles, and email (SMTP) settings.
+- Sign-in uses [Keycloak](https://www.keycloak.org) purely as an identity provider. Roles, permissions, and workspace membership live in the application database, and a valid login alone never grants access. See the roadmap below: this identity setup is temporary.
 - **Self-serve organization registration is disabled** (`ORGANIZATION_REGISTRATION_ENABLED=false`, the default). The `/register` page and the `POST /api/v1/organizations/register` endpoint return 404 unless you enable it. It is not supported in this release: a newly registered organization cannot yet manage its own users or email settings, so do not turn it on for real deployments.
 - Per-organization subdomains (`app.{org-slug}.{root}`) are opt-in through `NEXT_PUBLIC_ROOT_DOMAIN` and are likewise not part of the supported v0.1 scope.
 - Responses are anonymous only. Identified-response workflows are out of scope for the initial public edition.
 
-### Roadmap: multi-organization support with Zitadel
+### Roadmap: identity, organizations, and authentication with Zitadel
 
-Full multi-organization handling (self-serve sign-up, organization-scoped user and email administration, organization switcher, per-organization login) is planned for a later release and will be built on [Zitadel](https://zitadel.com), which supports organizations natively, instead of extending the Keycloak setup. Identity stays separate from authorization: whichever identity provider is used, membership, roles, and permissions remain in the application database, and a valid login alone never grants access. No migration work has started yet.
+The plan is to move identity, organizations, and authentication to [Zitadel](https://zitadel.com), which supports organizations natively. That covers self-serve sign-up, organization-scoped users and administration, an organization switcher, and per-organization login.
 
-### Organization model
+This is a **large refactoring step, not a configuration change**. It replaces the Keycloak integration (token validation, the Keycloak admin client, user provisioning and activation, the login and logout flows, and the local realm), and it reshapes how organizations and memberships are modeled and registered. No migration work has started, and the design has not been written yet.
 
-An **Organization** is the tenant account. It has member users and manages one or more **Workspaces**. Surveys belong to the organization's reusable catalogue and can be assigned only to workspaces of the same organization. A user can access only the organizations and workspaces where they hold membership and permission.
+What this means for v0.1 and for contributors:
 
-### Production readiness
+- The current Organization model, the registration endpoint, the per-organization subdomain handling, and everything that talks to Keycloak are **transitional** and are expected to change.
+- Please open an issue to discuss a change before building on those parts, especially anything that deepens the dependency on Keycloak or on the current organization model.
+- One rule is expected to survive the migration: a valid login by itself must never grant access to the application.
 
-This repository is intended to be self-hosted, but it is **not production-ready**. A real deployment needs a security review, encrypted backups, monitoring, retention/deletion policies, and load/security testing.
+### Organization model (current)
+
+An **Organization** is the tenant account. It has member users and manages one or more **Workspaces**. Surveys belong to the organization's reusable catalogue and can be assigned only to workspaces of the same organization. A user can access only the organizations and workspaces where they hold membership and permission. This model is expected to be reshaped by the Zitadel migration described above.
+
+### Deployment scope
+
+v0.1 targets **local, self-hosted use on localhost** with Docker Compose. There is no supported production deployment and no production Compose file yet, and the project is **not production-ready**: it still needs a security review, encrypted backups, monitoring, retention and deletion policies, and load and security testing. See [docs/RELEASE_READINESS.md](docs/RELEASE_READINESS.md).
 
 ## Tech stack
 
 - Frontend: Next.js, TypeScript, Tailwind CSS, shadcn/ui, next-intl
 - Backend: FastAPI, SQLAlchemy, Alembic
 - Database: PostgreSQL
-- Authentication: Keycloak
+- Authentication: Keycloak (planned to move to Zitadel)
 - Background jobs: Redis worker
 - Object storage: S3-compatible storage
 - Local email testing: Mailpit
-- Deployment: Docker Compose
+- Local runtime: Docker Compose
 
 ## Local setup
 
@@ -75,15 +84,26 @@ values for a real deployment.
 docker compose up --build -d
 ```
 
-Database migrations run automatically (the `migrate` service), and a local platform
-administrator is seeded automatically the first time the stack starts (the
-`bootstrap-admin` service retries until Keycloak is ready).
+Database migrations run automatically (the `migrate` service). On first start the
+`bootstrap-admin` service also seeds a local platform administrator and a default
+outbound SMTP configuration that points at the bundled Mailpit inbox. It retries until
+Keycloak is ready, which takes about a minute. The database starts otherwise empty.
+
+To also load demo data (a workspace, a published survey, a campaign with responses for
+analytics, and an unsent campaign with three recipients), start with the `demo` profile:
+
+```powershell
+docker compose --profile demo up --build -d
+```
+
+Open the "Invitation demo" campaign and send it; the emails appear in Mailpit.
 
 When the stack is ready, open:
 
 - Application: `http://localhost:3000`
 - API documentation: `http://localhost:8000/docs`
 - Keycloak: `http://localhost:8081`
+- Mailpit (captured emails): `http://localhost:8025`
 
 Sign in at `http://localhost:3000` with the seeded local administrator:
 
@@ -93,7 +113,6 @@ Sign in at `http://localhost:3000` with the seeded local administrator:
 These credentials only work against your own local Keycloak instance — they are defined
 directly in `docker/keycloak/local-realm/openpulse-realm.json`, which is committed for
 local development only.
-- Mailpit: `http://localhost:8025`
 
 Stop the local stack:
 
@@ -107,34 +126,62 @@ To delete local development data as well:
 docker compose down -v
 ```
 
-## Development checks
+## Development and tests
+
+Backend (Python 3.14 and [uv](https://docs.astral.sh/uv/)):
 
 ```powershell
-docker compose exec backend pytest
-docker compose exec frontend npm run lint
-docker compose exec frontend npm run build
+cd backend
+uv sync --locked --all-groups
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest tests --ignore=tests/integration   # unit tests, no services needed
 ```
 
-## VPS deployment
+The integration tests need a migrated PostgreSQL database, and the delivery test also needs Mailpit. Start both throwaway containers, then run the full suite:
 
-The production Compose configuration is a reference single-VPS setup. It requires Docker Engine, Docker Compose Plugin, HTTPS reverse proxying, a domain, and a server-local `.env.production` file containing real secrets.
+```powershell
+docker run -d --rm --name openpulse-test-db -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=test -p 55432:5432 postgres:16-alpine
+docker run -d --rm --name openpulse-test-mailpit -p 1025:1025 -p 8025:8025 axllent/mailpit:v1.27.4
 
-```bash
-git clone https://github.com/mutabalShawandar/open-pulse.git
-cd open-pulse
-cp .env.production.example .env.production
-chmod 600 .env.production
+$env:APP_ENV = "test"
+$env:DATABASE_URL = "postgresql+asyncpg://test:test@localhost:55432/test"
+$env:TEST_DATABASE_URL = $env:DATABASE_URL
+$env:MAILPIT_API_URL = "http://localhost:8025"
+$env:KEYCLOAK_URL = "http://localhost:8081"
+$env:KEYCLOAK_INTERNAL_URL = "http://localhost:8081"
+$env:KEYCLOAK_REALM = "openpulse"
+$env:KEYCLOAK_CLIENT_ID = "openpulse-frontend"
+$env:KEYCLOAK_AUDIENCE = "openpulse-api"
+$env:KEYCLOAK_ISSUER = "http://localhost:8081/realms/openpulse"
+
+uv run alembic upgrade head
+uv run pytest tests
 ```
 
-Set all domains, database passwords, Keycloak secrets, storage credentials, and encryption keys in `.env.production`. Then run migrations and start the stack:
+Frontend (Node.js 24):
 
-```bash
-docker compose --project-name openpulse-prod --env-file .env.production -f docker-compose.prod.yml --profile migration run --rm migrate
-docker compose --project-name openpulse-prod --env-file .env.production -f docker-compose.prod.yml up -d --build
+```powershell
+cd frontend
+npm ci
+npm run lint
+npm run format:check
+npm run typecheck
+npm run build
 ```
 
-Do not expose PostgreSQL, Redis, or backend container ports publicly. Only your HTTPS reverse proxy should be publicly reachable.
+GitHub Actions runs all of the above on every pull request, plus a Compose smoke test (`.github/scripts/compose-smoke.sh`), CodeQL, and Snyk. The frontend does not have a test framework yet.
+
+## Project direction
+
+OpenPulse is open source today, under the [MIT License](LICENSE), and it will stay open while the project proves that it is useful in real-world use. If it does, the plan is to continue its development as a closed-source product operated as a hosted (SaaS) service.
+
+What that means in practice:
+
+- **Released versions stay free.** Every version published under the MIT License remains MIT-licensed. Nothing changes retroactively: contributors and everyone else can keep using, modifying, and forking the code they already have, at no cost and including commercially.
+- **Contributions are MIT-licensed.** The MIT License allows code to be used in proprietary software, so contributed code may become part of a closed-source version. Please contribute only if you are comfortable with that.
+- **There is no timeline.** This is a plan, not a commitment to a date, and it depends on the project proving itself first. If the plan changes, this section will be updated.
 
 ## License
 
-OpenPulse will be released under the [MIT License](LICENSE).
+OpenPulse is released under the [MIT License](LICENSE). See [Project direction](#project-direction) for how the project is expected to evolve.

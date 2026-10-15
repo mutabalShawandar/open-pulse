@@ -1,5 +1,7 @@
 # Frontend Handoff
 
+> **Historical planning document.** It was written during the original build, before the OpenPulse rebrand. In it, "clinic" means **workspace**; the REST paths (`/api/v1/clinics/...`) and some identifiers (`clinic_manager`, `require_clinic_permission`) keep the old name for compatibility. Notes about VPS or production deployment are out of scope for v0.1, which is local-only. For the current state see [README.md](../README.md) and [AGENTS.md](../AGENTS.md).
+
 This document describes the backend capabilities available to the frontend after Phase 2.
 
 ## Recommended frontend
@@ -205,7 +207,7 @@ Create request:
 
 ```json
 {
-  "title": "Patientenzufriedenheit 2026",
+  "title": "Customer satisfaction 2026",
   "description": "Standardfragebogen der Agentur",
   "initial_draft_label": "Erster Entwurf"
 }
@@ -283,7 +285,7 @@ POST /api/v1/surveys/{survey_id}/drafts
 
 ```json
 {
-  "draft_label": "Variante für Klinik Nord",
+  "draft_label": "Variant for North Branch",
   "source_version_id": "source-version-uuid"
 }
 ```
@@ -297,7 +299,7 @@ POST /api/v1/surveys/{survey_id}/copy
 ```json
 {
   "source_version_id": "source-version-uuid",
-  "title": "Patientenzufriedenheit Kinderarztpraxis"
+  "title": "Customer satisfaction, pediatrics team"
 }
 ```
 

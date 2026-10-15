@@ -12,44 +12,49 @@ Proceed in small, verifiable steps and wait for confirmation before moving to th
 
 ## Project
 
-This project is a German-language, multi-clinic survey platform for creating reusable surveys, distributing them through public links or email campaigns, collecting anonymous or identified responses, and providing analytics and exports.
+OpenPulse is an open-source, English-first (with a German translation) multi-workspace survey platform for creating reusable surveys, distributing them through public links or email campaigns, collecting anonymous responses, and providing analytics and exports.
+
+The scope of the first release (v0.1) is **local, self-hosted use on localhost with a single organization**. See [`README.md`](README.md) for the user-facing description and setup.
 
 ## Domain Boundaries
 
-- Only human platform users authenticate through Keycloak.
-- Clinics are tenant records and do not log in during the current scope.
-- A platform user may manage multiple clinics, and a clinic may have multiple platform users.
-- The application database controls user roles, clinic assignments, permissions, surveys, campaigns, analytics, and audit history.
-- Patients and email recipients use public or campaign-specific survey links and do not need platform accounts.
+- Only human platform users authenticate, through Keycloak, which is identity-only. Identity, organizations, and authentication are planned to move to Zitadel in a later release; that is a large refactor, so treat the Keycloak integration and the current Organization model as transitional and do not deepen them without discussion.
 - A valid Keycloak login alone must not grant application access; platform users are created or approved through an administrator-controlled workflow.
+- The application database controls user roles, organization and workspace membership, permissions, surveys, campaigns, analytics, and audit history.
+- An **Organization** is the tenant account. A **Workspace** (formerly "clinic") belongs to exactly one organization. Workspaces do not log in.
+- A platform user may belong to multiple workspaces, and a workspace may have multiple users.
+- Surveys are reusable and owned by an organization, not by a workspace. A published version can be assigned only to workspaces of the same organization.
+- A campaign binds to one exact assigned `survey_version_id`, never to a mutable draft or "latest" version.
+- Respondents and email recipients use public or campaign-specific survey links and do not need platform accounts.
+- Public responses are anonymous only. Identified response mode is not implemented.
 
-## Current Progress
+### Naming
 
-Phases 1–4 are complete. The project is now mid-way through a private→OSS rebrand/refactor (Organization → Workspace model; tracked in the gitignored `MIGRATION_PLAN.md`), plus Phase 6 production hardening, neither of which is finished.
+The product term is **workspace**. For API compatibility the REST paths (`/api/v1/clinics/...`) and some identifiers (`clinic_manager`, `require_clinic_permission`) keep the old name. Do not rename them without a migration plan. In new code, UI text, and docs, say "workspace".
 
-Phase 1 delivered FastAPI health/readiness endpoints, PostgreSQL and Alembic setup, local Keycloak Compose configuration, Keycloak JWT extraction and validation, issuer/expiry/signature/audience checks, JWKS caching with timeouts, and a protected `/api/v1/me` endpoint. The local authorization schema includes `roles`, `permissions`, `role_permissions`, `user_roles`, and workspace (formerly clinic) membership; protected platform-user and workspace-management workflows, audit events, workspace-scoped authorization, and automated unit/integration tests are also in place.
+## Current State
 
-Phase 2 delivered the agency survey catalogue and builder. Surveys are reusable, organization-owned records rather than workspace-owned records. The backend supports multiple editable drafts, deep-copying drafts and whole surveys, immutable published versions, sections, typed questions, choice options, validation rules, ordering, archive/restore, published-version reads, and assigning published versions to workspaces. A campaign must bind to one exact assigned `survey_version_id`, never to a mutable draft or "latest" version.
+- Backend (FastAPI, PostgreSQL, Alembic, Redis worker) and frontend (Next.js, next-intl) are feature-complete for the v0.1 scope: authentication and authorization, survey catalogue and builder, campaigns and public responses, recipient import and email delivery, analytics with PDF and Excel export.
+- `docker compose up` starts everything, applies migrations, imports the local Keycloak realm, and seeds an administrator (`admin@openpulse.local`) plus a default SMTP configuration pointing at Mailpit. `docker compose --profile demo up` also seeds demo data.
+- Self-serve organization registration exists but is disabled by default (`ORGANIZATION_REGISTRATION_ENABLED=false`). Multi-organization support is planned for a later release (see README).
+- CI (GitHub Actions) runs backend lint, format check, and tests against Postgres and Mailpit; frontend lint, format check, type check, and build; a Docker Compose smoke test; CodeQL; and Snyk.
+- Not production-ready. There is no supported production deployment. Encrypted backups, monitoring, retention jobs, and security and load testing are still open; see `docs/RELEASE_READINESS.md`.
 
-Phase 3 delivered campaign branding and workspace-to-published-version binding, non-guessable public campaign links, secure anonymous response sessions and typed answer persistence, immutable-version validation/completion, public-endpoint payload limits and rate limiting, audit events, and automated tests.
+## Working Conventions
 
-Phase 4 delivered recipient import, campaign-recipient selection, SMTP configuration, delivery templates, and durable delivery/retry/delivery-status workflows (`recipient_service.py`, `smtp_service.py`, `delivery_service.py`), with integration test coverage including Mailpit-based delivery tests.
-
-Current limitations: identified response mode is not implemented; public responses are anonymous only — still an open decision for first public release. Production hardening remains incomplete: encrypted automated backups, monitoring/error reporting, retention/deletion jobs, security/load testing, and a production VPS deployment and recovery runbook are required. Do not treat the current setup as production-ready.
-
-The rebrand/refactor (Organization/Workspace model, deleting client-identifying leaks, English-language UI, new visual identity, publication prep) is in progress with uncommitted work; see `MIGRATION_PLAN.md` for step-by-step status. Do not describe rebrand steps beyond what that file marks complete as finished.
-
-Next work order: finish the rebrand/refactor, then perform Phase 6 production hardening.
-
-1. Decide whether identified response mode is required for the first public release and implement it if so.
-2. Verify campaign analytics and PDF/Excel export workflows against real completed responses.
-3. Complete the Organization/Workspace rebrand per `MIGRATION_PLAN.md` (cross-org authorization tests, Compose/env updates, UI/frontend rebrand + translation, docs/publication prep).
-4. Add production deployment, backup/restore, monitoring, retention, security, and load-test evidence before release.
+- Backend: Python 3.14, `uv`, `ruff` (lint and format), `pytest`. Integration tests need PostgreSQL (and Mailpit for the delivery test); see the README for how to run them.
+- Frontend: all user-facing text lives in `frontend/messages/en.json` and `frontend/messages/de.json` with identical key sets. Add keys to both files and do not hard-code strings in components or server actions. See `frontend/AGENTS.md`.
+- Respondent-supplied text is untrusted. Exports must never turn it into formulas or markup (see `backend/app/services/export_service.py`).
+- Ask before committing or pushing. Keep changes small and the app working at each step.
 
 ## Documentation
 
-Backend architecture, domain information, implementation phases, and the planned backend folder structure are documented in [`backend/BACKEND_PLAN.md`](backend/BACKEND_PLAN.md).
+- [`README.md`](README.md): overview, scope, local setup, tests.
+- [`backend/BACKEND_PLAN.md`](backend/BACKEND_PLAN.md): backend architecture, domain information, and the original implementation phases (historical).
+- [`frontend/FRONTEND_PLAN.md`](frontend/FRONTEND_PLAN.md): frontend scope, architecture decisions, and session log.
+- [`docs/`](docs): SMTP configuration, release-readiness checklist, and the original frontend handoff (historical).
+- [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md): where the project comes from.
 
 ## Deployment
 
-Docker Compose is managed at the repository root. It will orchestrate the frontend, backend, database, and supporting services so production can be started with one root-level Compose deployment.
+Docker Compose at the repository root orchestrates the frontend, backend, worker, database, Redis, S3-compatible storage, Keycloak, and Mailpit for local use. There is no production Compose file.

@@ -1,5 +1,7 @@
 # Phase 2 Roadmap: Agency Survey Catalogue and Builder
 
+> **Historical planning document.** It was written during the original build, before the OpenPulse rebrand. In it, "clinic" means **workspace**; the REST paths (`/api/v1/clinics/...`) and some identifiers (`clinic_manager`, `require_clinic_permission`) keep the old name for compatibility. Notes about VPS or production deployment are out of scope for v0.1, which is local-only. For the current state see [README.md](../README.md) and [AGENTS.md](../AGENTS.md).
+
 Phase 2 builds the reusable survey catalogue for a survey agency. A survey is created once at agency level, can have multiple immutable published versions, and each published version can be assigned to one or many clinics. Different clinics can therefore run different versions of the same survey.
 
 Phase 2 excludes campaigns, public response links, recipients, email delivery, analytics, and exports. Those phases will select one exact assigned `survey_version_id`; they must never rely on a mutable survey or “latest version”.

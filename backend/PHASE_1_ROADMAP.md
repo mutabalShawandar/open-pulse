@@ -1,5 +1,7 @@
 # Phase 1 Roadmap: Backend Foundation
 
+> **Historical planning document.** It was written during the original build, before the OpenPulse rebrand. In it, "clinic" means **workspace**; the REST paths (`/api/v1/clinics/...`) and some identifiers (`clinic_manager`, `require_clinic_permission`) keep the old name for compatibility. Notes about VPS or production deployment are out of scope for v0.1, which is local-only. For the current state see [README.md](../README.md) and [AGENTS.md](../AGENTS.md).
+
 This checklist takes the backend from the current local FastAPI setup to a secure, database-backed foundation ready for survey development.
 
 ## Current Baseline
@@ -114,7 +116,7 @@ Local configuration:
 
 ~~~env
 APP_ENV=development
-DATABASE_URL=postgresql+asyncpg://umfrage_user:umfrage_password@127.0.0.1:5433/umfrage
+DATABASE_URL=postgresql+asyncpg://openpulse_user:openpulse_password@127.0.0.1:5433/openpulse
 ~~~
 
 ### Check
@@ -169,7 +171,7 @@ cd C:\Users\you\open-pulse-work
 docker compose config
 docker compose up -d postgres
 docker compose ps
-docker compose exec postgres pg_isready -U umfrage_user -d umfrage
+docker compose exec postgres pg_isready -U openpulse_user -d openpulse
 ~~~
 
 The database password is initialized only when the volume is first created. Never delete a production volume to fix credentials.

@@ -17,7 +17,8 @@ Read `FRONTEND_PLAN.md` before starting frontend work. It is the source of truth
 - Next.js 16 App Router application exists in this directory.
 - shadcn/ui is initialised with the `base-nova` style, Base UI primitives, Tailwind CSS 4, `lucide-react`, and the `@/*` alias.
 - Platform pages, Keycloak PKCE authentication, the typed FastAPI client, and Phase 1–3 workflows are implemented.
-- Phase 4 email-distribution work is in progress and must not be described as released until it is committed and verified end to end.
+- Recipient import, SMTP configuration, email templates, and delivery tracking (Phase 4) are implemented.
+- The interface is English-first with a German translation through `next-intl`.
 
 ## Working conventions
 
@@ -26,7 +27,8 @@ Read `FRONTEND_PLAN.md` before starting frontend work. It is the source of truth
 - Reuse installed shadcn components. Before adding or using a new shadcn component, inspect the local component and its current documentation.
 - Use `FieldGroup` and `Field` for forms, `AlertDialog` for destructive actions, semantic design tokens, `gap-*` spacing, and `sonner` for toasts.
 - Keep Keycloak tokens out of local storage. FastAPI remains authoritative for permissions.
-- Keep application UI copy in German.
+- All user-facing text lives in `messages/en.json` and `messages/de.json`, which must have identical keys. Add keys to both files (English first) and never hard-code user-facing strings in components or server actions.
+- Run `npm run lint`, `npm run format:check`, `npm run typecheck`, and `npm run build` before finishing; CI runs the same checks.
 
 ## Progress maintenance
 
