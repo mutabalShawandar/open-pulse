@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -16,6 +16,12 @@ class SmtpConfiguration(Base):
     """
 
     __tablename__ = "smtp_configurations"
+    __table_args__ = (
+        CheckConstraint(
+            "NOT (use_starttls AND use_ssl)", name="ck_smtp_configurations_one_tls_mode"
+        ),
+        CheckConstraint("port BETWEEN 1 AND 65535", name="ck_smtp_configurations_valid_port"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     host: Mapped[str] = mapped_column(String(255), nullable=False)

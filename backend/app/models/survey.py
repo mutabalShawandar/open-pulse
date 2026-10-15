@@ -65,6 +65,7 @@ class Survey(Base):
         nullable=False,
         default=SurveyStatus.DRAFT,
         server_default=SurveyStatus.DRAFT.value,
+        index=True,
     )
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True

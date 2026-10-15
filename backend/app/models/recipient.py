@@ -45,9 +45,7 @@ class Recipient(Base):
         index=True,
     )
 
-    display_name: Mapped[str | None] = mapped_column(
-        String(255), nullable=True, unique=False, index=True
-    )
+    display_name: Mapped[str | None] = mapped_column(String(255), nullable=True, unique=False)
 
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=False, index=False)
 

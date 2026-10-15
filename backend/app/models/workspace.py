@@ -53,4 +53,6 @@ class Workspace(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
-    logo_storage_key: Mapped[str | None] = mapped_column(String(512), nullable=True, unique=True)
+    logo_storage_key: Mapped[str | None] = mapped_column(
+        String(512), nullable=True, unique=True, index=True
+    )
