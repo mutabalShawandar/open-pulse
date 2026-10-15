@@ -177,7 +177,7 @@ export type WizardSubmitPayload = {
 export type WizardSubmitResult = { ok: true; campaignId: string } | { ok: false; error: string };
 
 export async function submitCampaignWizardAction(payload: WizardSubmitPayload): Promise<WizardSubmitResult> {
-  if (!payload.title.trim() || !payload.surveyVersionId) return { ok: false, error: "Titel und Umfrageversion sind erforderlich." };
+  if (!payload.title.trim() || !payload.surveyVersionId) return { ok: false, error: "Title and survey version are required." };
   const accessToken = await token();
   const workspace = await resolveWorkspaceBySlug(accessToken, payload.workspaceId);
   let campaignId: string;

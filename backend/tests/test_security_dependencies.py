@@ -74,7 +74,7 @@ class SecurityDependencyTests(unittest.TestCase):
         self.assertEqual(error.exception.status_code, 401)
 
     def test_wrong_issuer_is_rejected(self) -> None:
-        token, key_data = _token(issuer="https://wrong.example/realms/Umfrage")
+        token, key_data = _token(issuer="https://wrong.example/realms/openpulse")
         original = deps.get_keycloak_jwks
         deps.get_keycloak_jwks = _async_return(key_data)
         try:

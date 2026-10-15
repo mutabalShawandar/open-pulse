@@ -94,7 +94,7 @@ async def test_email_template(
     workspace = await session.get(Workspace, campaign.workspace_id)
     values = {
         "{{recipient_name}}": "Max Mustermann",
-        "{{survey_link}}": "https://example.invalid/umfrage",
+        "{{survey_link}}": "https://example.invalid/survey",
         "{{clinic_name}}": workspace.name if workspace else "",
         "{{campaign_title}}": campaign.title,
     }

@@ -4,8 +4,8 @@ import { authConfig, authEndpoints, isCanonicalPlatformHost, isOrganizationAppHo
 import { getCurrentUser } from "@/lib/api/client";
 import { returnToCookie, sessionCookieOptions, sessionCookies } from "@/lib/auth/session";
 
-const stateCookie = "umfrage_oauth_state";
-const verifierCookie = "umfrage_pkce_verifier";
+const stateCookie = "openpulse_oauth_state";
+const verifierCookie = "openpulse_pkce_verifier";
 
 type TokenResponse = { access_token: string; id_token?: string; refresh_token?: string; expires_in?: number; refresh_expires_in?: number };
 

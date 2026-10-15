@@ -35,7 +35,7 @@ def upgrade() -> None:
             .decode("ascii")
             .lower()
         )
-        base = re.sub(r"[^a-z0-9]+", "-", normalized).strip("-")[:80] or "umfrage"
+        base = re.sub(r"[^a-z0-9]+", "-", normalized).strip("-")[:80] or "survey"
         path = base
         suffix = 2
         while path in used_paths:

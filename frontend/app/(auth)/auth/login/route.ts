@@ -4,8 +4,8 @@ import { authConfig, authEndpoints, isCanonicalPlatformHost, isOrganizationAppHo
 import { createChallenge, createState, createVerifier } from "@/lib/auth/pkce";
 import { returnToCookie, returnToCookieOptions, sessionCookies } from "@/lib/auth/session";
 
-const stateCookie = "umfrage_oauth_state";
-const verifierCookie = "umfrage_pkce_verifier";
+const stateCookie = "openpulse_oauth_state";
+const verifierCookie = "openpulse_pkce_verifier";
 
 export async function GET(request: NextRequest) {
   const hostname = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
