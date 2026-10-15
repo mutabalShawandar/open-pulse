@@ -18,7 +18,11 @@ export function POST(request: NextRequest) {
   const response = NextResponse.redirect(endSession, 303);
   // Match the attributes the cookies were set with: with NEXT_PUBLIC_ROOT_DOMAIN
   // they are domain-wide, and a delete without that domain would not remove them.
-  for (const name of [sessionCookies.accessTokenCookie, sessionCookies.refreshTokenCookie, sessionCookies.idTokenCookie]) {
+  for (const name of [
+    sessionCookies.accessTokenCookie,
+    sessionCookies.refreshTokenCookie,
+    sessionCookies.idTokenCookie,
+  ]) {
     response.cookies.set(name, "", { ...sessionCookies.cookieOptions, maxAge: 0 });
   }
   return response;

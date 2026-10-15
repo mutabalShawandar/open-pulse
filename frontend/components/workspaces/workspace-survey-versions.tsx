@@ -36,7 +36,11 @@ type WorkspaceSurveyVersionsProps = {
   options: PublishedSurveyVersionOption[] | null;
 };
 
-export function WorkspaceSurveyVersions({ assignments, workspaceSlug, options }: WorkspaceSurveyVersionsProps) {
+export function WorkspaceSurveyVersions({
+  assignments,
+  workspaceSlug,
+  options,
+}: WorkspaceSurveyVersionsProps) {
   const t = useTranslations("surveys.assign");
   const format = useFormatter();
   const assignedIds = new Set(assignments.map((assignment) => assignment.survey_version_id));
@@ -61,10 +65,17 @@ export function WorkspaceSurveyVersions({ assignments, workspaceSlug, options }:
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">
-                    {labels.get(assignment.survey_version_id) ?? t("unknownVersion", { id: assignment.survey_version_id })}
+                    {labels.get(assignment.survey_version_id) ??
+                      t("unknownVersion", { id: assignment.survey_version_id })}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {t("assignedOn", { date: format.dateTime(new Date(assignment.assigned_at), { day: "2-digit", month: "2-digit", year: "numeric" }) })}
+                    {t("assignedOn", {
+                      date: format.dateTime(new Date(assignment.assigned_at), {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      }),
+                    })}
                   </p>
                 </div>
                 <Badge variant="secondary">{t("active")}</Badge>
@@ -92,10 +103,20 @@ export function WorkspaceSurveyVersions({ assignments, workspaceSlug, options }:
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="surveyVersionId">{t("published")}</FieldLabel>
-                <NativeSelect id="surveyVersionId" name="surveyVersionId" className="w-full" required defaultValue="">
-                  <NativeSelectOption value="" disabled>{t("choose")}</NativeSelectOption>
+                <NativeSelect
+                  id="surveyVersionId"
+                  name="surveyVersionId"
+                  className="w-full"
+                  required
+                  defaultValue=""
+                >
+                  <NativeSelectOption value="" disabled>
+                    {t("choose")}
+                  </NativeSelectOption>
                   {assignableOptions.map((option) => (
-                    <NativeSelectOption key={option.id} value={option.id}>{option.label}</NativeSelectOption>
+                    <NativeSelectOption key={option.id} value={option.id}>
+                      {option.label}
+                    </NativeSelectOption>
                   ))}
                 </NativeSelect>
                 <FieldDescription>{t("pinHint")}</FieldDescription>
@@ -139,15 +160,21 @@ function UnassignVersionDialog({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogMedia><Trash2Icon /></AlertDialogMedia>
+          <AlertDialogMedia>
+            <Trash2Icon />
+          </AlertDialogMedia>
           <AlertDialogTitle>{t("unassignTitle")}</AlertDialogTitle>
-          <AlertDialogDescription>{t("unassignDescription", { name: surveyVersionName })}</AlertDialogDescription>
+          <AlertDialogDescription>
+            {t("unassignDescription", { name: surveyVersionName })}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
           <form action={unassignSurveyVersionAction.bind(null, workspaceSlug)}>
             <input type="hidden" name="surveyVersionId" value={surveyVersionId} />
-            <AlertDialogAction type="submit" variant="destructive">{t("unassign")}</AlertDialogAction>
+            <AlertDialogAction type="submit" variant="destructive">
+              {t("unassign")}
+            </AlertDialogAction>
           </form>
         </AlertDialogFooter>
       </AlertDialogContent>

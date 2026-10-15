@@ -63,7 +63,9 @@ export function SurveyNewDraftDialog({
             </Field>
           </FieldGroup>
           <DialogFooter className="mt-5">
-            <DialogClose render={<Button type="button" variant="outline" />}>{t("cancel")}</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>
+              {t("cancel")}
+            </DialogClose>
             <Button type="submit">
               <FilePlus2Icon data-icon="inline-start" />
               {t("submit")}

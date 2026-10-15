@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { authConfig, authEndpoints, isCanonicalPlatformHost, isOrganizationAppHost } from "@/lib/auth/config";
+import {
+  authConfig,
+  authEndpoints,
+  isCanonicalPlatformHost,
+  isOrganizationAppHost,
+} from "@/lib/auth/config";
 import { createChallenge, createState, createVerifier } from "@/lib/auth/pkce";
 import { returnToCookie, returnToCookieOptions, sessionCookies } from "@/lib/auth/session";
 
@@ -16,7 +21,8 @@ export async function GET(request: NextRequest) {
   // domain-wide cookie once NEXT_PUBLIC_ROOT_DOMAIN is set) carries the
   // originating subdomain back through to the callback.
   if (isOrganizationAppHost(hostname) && !isCanonicalPlatformHost(hostname)) {
-    const originHeader = request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "");
+    const originHeader =
+      request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "");
     const returnTo = `${originHeader}://${request.headers.get("host")}/`;
     const response = NextResponse.redirect(`${authConfig.appUrl}/auth/login`);
     response.cookies.set(returnToCookie, returnTo, returnToCookieOptions());

@@ -24,7 +24,12 @@ export function sessionCookieOptions(maxAge: number | undefined) {
   return { ...cookieOptions, maxAge: maxAge ?? 300 };
 }
 
-export const sessionCookies = { accessTokenCookie, refreshTokenCookie, idTokenCookie, cookieOptions };
+export const sessionCookies = {
+  accessTokenCookie,
+  refreshTokenCookie,
+  idTokenCookie,
+  cookieOptions,
+};
 
 export const returnToCookie = "openpulse_return_to";
 

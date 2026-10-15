@@ -1,12 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import {
-  ArrowLeftIcon,
-  BarChart3Icon,
-  CheckCircle2Icon,
-  UsersIcon,
-} from "lucide-react";
+import { ArrowLeftIcon, BarChart3Icon, CheckCircle2Icon, UsersIcon } from "lucide-react";
 import { AnalyticsExportActions } from "@/components/workspaces/analytics-export-actions";
 import { AnalyticsQuestionCard } from "@/components/workspaces/analytics-question-card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +23,9 @@ export default async function WorkspaceAnalyticsPage(
 
   let campaigns: Campaign[] = [];
   try {
-    campaigns = (await listCampaigns(token)).filter((campaign) => campaign.clinic_id === workspace.id);
+    campaigns = (await listCampaigns(token)).filter(
+      (campaign) => campaign.clinic_id === workspace.id,
+    );
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) redirect("/login");
     throw error;
@@ -70,7 +67,9 @@ export default async function WorkspaceAnalyticsPage(
                 key={campaign.id}
                 nativeButton={false}
                 variant={campaign.id === selectedCampaignId ? "default" : "outline"}
-                render={<Link href={`/workspaces/${workspaceSlug}/analytics?campaign=${campaign.id}`} />}
+                render={
+                  <Link href={`/workspaces/${workspaceSlug}/analytics?campaign=${campaign.id}`} />
+                }
               >
                 {campaign.title}
               </Button>
@@ -82,7 +81,11 @@ export default async function WorkspaceAnalyticsPage(
               <AnalyticsExportActions workspaceId={workspace.id} campaignId={selectedCampaignId!} />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Metric icon={<UsersIcon />} label={t("started")} value={analytics.started_count} />
-                <Metric icon={<CheckCircle2Icon />} label={t("completed")} value={analytics.completed_count} />
+                <Metric
+                  icon={<CheckCircle2Icon />}
+                  label={t("completed")}
+                  value={analytics.completed_count}
+                />
               </div>
               <section className="grid gap-4">
                 {analytics.questions.map((question) => (

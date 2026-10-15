@@ -41,7 +41,10 @@ function publicApiBaseUrl(): string {
 }
 
 export async function getPublicCampaign(slug: string): Promise<PublicCampaign | null> {
-  const response = await fetch(`${publicApiBaseUrl()}/api/v1/public/campaigns/${encodeURIComponent(slug)}`, { cache: "no-store" });
+  const response = await fetch(
+    `${publicApiBaseUrl()}/api/v1/public/campaigns/${encodeURIComponent(slug)}`,
+    { cache: "no-store" },
+  );
   if (response.status === 404) return null;
   if (!response.ok) throw new Error("Public campaign could not be loaded");
   return response.json() as Promise<PublicCampaign>;

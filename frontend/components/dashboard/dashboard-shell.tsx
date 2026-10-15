@@ -16,7 +16,10 @@ export function DashboardShell({
   return (
     <div className="min-h-screen bg-background lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]">
       <DashboardSidebar user={user} />
-      <main className="min-w-0"><DashboardHeader user={user} organization={organization} />{children}</main>
+      <main className="min-w-0">
+        <DashboardHeader user={user} organization={organization} />
+        {children}
+      </main>
       <NavigationLoadingIndicator />
     </div>
   );

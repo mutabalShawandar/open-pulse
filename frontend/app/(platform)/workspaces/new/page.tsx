@@ -15,16 +15,19 @@ function errorKey(error: string | string[] | undefined) {
   return null;
 }
 
-export default async function NewWorkspacePage({
-  searchParams,
-}: PageProps<"/workspaces/new">) {
+export default async function NewWorkspacePage({ searchParams }: PageProps<"/workspaces/new">) {
   const t = await getTranslations("workspaces");
   const key = errorKey((await searchParams).error);
   const error = key ? t(key) : null;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
-      <Button nativeButton={false} variant="ghost" className="w-fit" render={<Link href="/workspaces" />}>
+      <Button
+        nativeButton={false}
+        variant="ghost"
+        className="w-fit"
+        render={<Link href="/workspaces" />}
+      >
         <ArrowLeftIcon data-icon="inline-start" />
         {t("allWorkspaces")}
       </Button>
@@ -34,7 +37,9 @@ export default async function NewWorkspacePage({
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">{t("eyebrow")}</p>
-          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">{t("newTitle")}</h1>
+          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">
+            {t("newTitle")}
+          </h1>
           <p className="mt-2 text-muted-foreground">{t("newIntro")}</p>
         </div>
       </section>

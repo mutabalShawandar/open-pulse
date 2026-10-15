@@ -29,7 +29,11 @@ export async function createSurveyAction(formData: FormData) {
   if (!title) redirect("/surveys/new?error=validation");
   let survey;
   try {
-    survey = await createSurvey(await token(), { title, description: text(formData, "description") || null, initial_draft_label: text(formData, "draftLabel") || null });
+    survey = await createSurvey(await token(), {
+      title,
+      description: text(formData, "description") || null,
+      initial_draft_label: text(formData, "draftLabel") || null,
+    });
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
     redirect("/surveys/new?error=create");
@@ -42,22 +46,37 @@ export async function updateSurveyAction(surveyId: string, formData: FormData) {
   const title = text(formData, "title");
   if (!title) redirect(`/surveys/${surveyId}?error=validation`);
   try {
-    await updateSurvey(await token(), surveyId, { title, description: text(formData, "description") || null });
+    await updateSurvey(await token(), surveyId, {
+      title,
+      description: text(formData, "description") || null,
+    });
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
     redirect(`/surveys/${surveyId}?error=update`);
   }
-  revalidatePath("/surveys"); revalidatePath(`/surveys/${surveyId}`); redirect(`/surveys/${surveyId}?updated=1`);
+  revalidatePath("/surveys");
+  revalidatePath(`/surveys/${surveyId}`);
+  redirect(`/surveys/${surveyId}?updated=1`);
 }
 
 export async function archiveSurveyAction(surveyId: string) {
-  try { await archiveSurvey(await token(), surveyId); } catch { redirect(`/surveys/${surveyId}?error=archive`); }
-  revalidatePath("/surveys"); redirect("/surveys?archived=1");
+  try {
+    await archiveSurvey(await token(), surveyId);
+  } catch {
+    redirect(`/surveys/${surveyId}?error=archive`);
+  }
+  revalidatePath("/surveys");
+  redirect("/surveys?archived=1");
 }
 
 export async function restoreSurveyAction(surveyId: string) {
-  try { await restoreSurvey(await token(), surveyId); } catch { redirect(`/surveys/${surveyId}?error=restore`); }
-  revalidatePath("/surveys"); redirect("/surveys?restored=1");
+  try {
+    await restoreSurvey(await token(), surveyId);
+  } catch {
+    redirect(`/surveys/${surveyId}?error=restore`);
+  }
+  revalidatePath("/surveys");
+  redirect("/surveys?restored=1");
 }
 
 export async function copySurveyAction(surveyId: string, formData: FormData) {
@@ -65,7 +84,11 @@ export async function copySurveyAction(surveyId: string, formData: FormData) {
   if (!sourceVersionId) redirect(`/surveys/${surveyId}?error=copy`);
   let survey;
   try {
-    survey = await copySurvey(await token(), surveyId, { source_version_id: sourceVersionId, title: text(formData, "copyTitle") || null, description: text(formData, "copyDescription") || null });
+    survey = await copySurvey(await token(), surveyId, {
+      source_version_id: sourceVersionId,
+      title: text(formData, "copyTitle") || null,
+      description: text(formData, "copyDescription") || null,
+    });
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
     redirect(`/surveys/${surveyId}?error=copy`);

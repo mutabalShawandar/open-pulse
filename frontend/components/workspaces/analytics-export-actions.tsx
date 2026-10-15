@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
-export function AnalyticsExportActions({ workspaceId, campaignId }: { workspaceId: string; campaignId: string }) {
+export function AnalyticsExportActions({
+  workspaceId,
+  campaignId,
+}: {
+  workspaceId: string;
+  campaignId: string;
+}) {
   const router = useRouter();
   const t = useTranslations("analytics");
 

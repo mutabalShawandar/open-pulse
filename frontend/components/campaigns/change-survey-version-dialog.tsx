@@ -3,7 +3,18 @@
 import { useTranslations } from "next-intl";
 import { RefreshCwIcon } from "lucide-react";
 
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -18,7 +29,14 @@ type ChangeSurveyVersionDialogProps = {
   disabled?: boolean;
 };
 
-export function ChangeSurveyVersionDialog({ campaignId, currentSurveyVersionId, currentLabel, options, changeAction, disabled }: ChangeSurveyVersionDialogProps) {
+export function ChangeSurveyVersionDialog({
+  campaignId,
+  currentSurveyVersionId,
+  currentLabel,
+  options,
+  changeAction,
+  disabled,
+}: ChangeSurveyVersionDialogProps) {
   const t = useTranslations("campaigns.changeVersion");
   const selectableOptions = options.filter((option) => option.id !== currentSurveyVersionId);
 
@@ -30,7 +48,9 @@ export function ChangeSurveyVersionDialog({ campaignId, currentSurveyVersionId, 
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogMedia><RefreshCwIcon /></AlertDialogMedia>
+          <AlertDialogMedia>
+            <RefreshCwIcon />
+          </AlertDialogMedia>
           <AlertDialogTitle>{t("title")}</AlertDialogTitle>
           <AlertDialogDescription>
             {t("description", { current: currentLabel })}
@@ -43,10 +63,20 @@ export function ChangeSurveyVersionDialog({ campaignId, currentSurveyVersionId, 
           <form action={changeAction.bind(null, campaignId)} className="flex flex-col gap-4">
             <Field>
               <FieldLabel htmlFor="surveyVersionId">{t("newVersion")}</FieldLabel>
-              <NativeSelect id="surveyVersionId" name="surveyVersionId" className="w-full" required defaultValue="">
-                <NativeSelectOption value="" disabled>{t("choose")}</NativeSelectOption>
+              <NativeSelect
+                id="surveyVersionId"
+                name="surveyVersionId"
+                className="w-full"
+                required
+                defaultValue=""
+              >
+                <NativeSelectOption value="" disabled>
+                  {t("choose")}
+                </NativeSelectOption>
                 {selectableOptions.map((option) => (
-                  <NativeSelectOption key={option.id} value={option.id}>{option.label}</NativeSelectOption>
+                  <NativeSelectOption key={option.id} value={option.id}>
+                    {option.label}
+                  </NativeSelectOption>
                 ))}
               </NativeSelect>
               <FieldDescription>{t("pinHint")}</FieldDescription>

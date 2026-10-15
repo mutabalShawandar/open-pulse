@@ -23,7 +23,9 @@ export function LanguageSwitcher() {
       className="h-8 rounded-md border bg-background px-2 text-sm"
     >
       {locales.map((code) => (
-        <option key={code} value={code}>{t(code)}</option>
+        <option key={code} value={code}>
+          {t(code)}
+        </option>
       ))}
     </select>
   );

@@ -59,7 +59,9 @@ export default async function EditWorkspacePage({
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">{t("profile")}</p>
-          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">{t("editTitle")}</h1>
+          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">
+            {t("editTitle")}
+          </h1>
           <p className="mt-2 text-muted-foreground">{workspace.name}</p>
         </div>
       </section>

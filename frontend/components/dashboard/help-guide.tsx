@@ -19,7 +19,10 @@ import { getHelpTopicId } from "@/lib/help/help-content";
 
 function HelpWalkthrough({ topicId, onClose }: { topicId: string; onClose: () => void }) {
   const t = useTranslations("help");
-  const topic = { title: t(`topics.${topicId}.title`), steps: t.raw(`topics.${topicId}.steps`) as { title: string; description: string }[] };
+  const topic = {
+    title: t(`topics.${topicId}.title`),
+    steps: t.raw(`topics.${topicId}.steps`) as { title: string; description: string }[],
+  };
   const [stepIndex, setStepIndex] = useState(0);
   const step = topic.steps[stepIndex];
   const isFirst = stepIndex === 0;
@@ -64,7 +67,9 @@ function HelpWalkthrough({ topicId, onClose }: { topicId: string; onClose: () =>
         {isLast ? (
           <Button onClick={onClose}>{t("done")}</Button>
         ) : (
-          <Button onClick={() => setStepIndex((index) => Math.min(topic.steps.length - 1, index + 1))}>
+          <Button
+            onClick={() => setStepIndex((index) => Math.min(topic.steps.length - 1, index + 1))}
+          >
             {t("next")}
             <ArrowRightIcon data-icon="inline-end" />
           </Button>
@@ -82,15 +87,15 @@ export function HelpGuide() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          <Button variant="ghost" size="icon-sm" aria-label={t("ariaLabel")} />
-        }
-      >
+      <DialogTrigger render={<Button variant="ghost" size="icon-sm" aria-label={t("ariaLabel")} />}>
         <HelpCircleIcon />
       </DialogTrigger>
       <DialogContent>
-        <HelpWalkthrough key={`${pathname}-${open}`} topicId={topicId} onClose={() => setOpen(false)} />
+        <HelpWalkthrough
+          key={`${pathname}-${open}`}
+          topicId={topicId}
+          onClose={() => setOpen(false)}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -22,19 +22,18 @@ export default async function RegisterPage({ searchParams }: PageProps<"/registe
               <MailCheckIcon className="size-6" />
               {t("doneTitle")}
             </h1>
-            <p className="mt-2 text-muted-foreground">
-              {t("doneBody")}
-            </p>
-            <Link href="/login" className="mt-8 block text-center text-sm font-medium text-primary underline-offset-4 hover:underline">
+            <p className="mt-2 text-muted-foreground">{t("doneBody")}</p>
+            <Link
+              href="/login"
+              className="mt-8 block text-center text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
               {t("toLogin")}
             </Link>
           </>
         ) : (
           <>
             <h1 className="mt-10 text-2xl font-semibold tracking-tight">{t("heading")}</h1>
-            <p className="mt-2 text-muted-foreground">
-              {t("description")}
-            </p>
+            <p className="mt-2 text-muted-foreground">{t("description")}</p>
             {typeof error === "string" && errorKeys.includes(error) ? (
               <p className="mt-6 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                 {t(`errors.${error}`)}
@@ -43,7 +42,10 @@ export default async function RegisterPage({ searchParams }: PageProps<"/registe
             <div className="mt-8">
               <RegisterOrganizationForm />
             </div>
-            <Link href="/login" className="mt-6 block text-center text-sm text-muted-foreground underline-offset-4 hover:underline">
+            <Link
+              href="/login"
+              className="mt-6 block text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+            >
               {t("haveAccount")}
             </Link>
           </>

@@ -15,12 +15,25 @@ export function NavigationLoadingIndicator() {
 
   useEffect(() => {
     const onLinkClick = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      )
+        return;
       const link = (event.target as Element | null)?.closest("a");
       if (!link || link.target || link.hasAttribute("download")) return;
       const destination = new URL(link.href, window.location.href);
       const current = new URL(window.location.href);
-      if (destination.origin !== current.origin || destination.href === current.href || destination.hash) return;
+      if (
+        destination.origin !== current.origin ||
+        destination.href === current.href ||
+        destination.hash
+      )
+        return;
       setNavigationSource(`${current.pathname}${current.search}`);
     };
 
@@ -36,7 +49,12 @@ export function NavigationLoadingIndicator() {
   if (!isNavigating) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/30 backdrop-blur-[1px]" role="status" aria-live="polite" aria-label="Seite wird geladen">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/30 backdrop-blur-[1px]"
+      role="status"
+      aria-live="polite"
+      aria-label="Seite wird geladen"
+    >
       <div className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-lg">
         <Spinner className="text-primary" />
         <span className="text-sm font-medium">Seite wird geladen …</span>

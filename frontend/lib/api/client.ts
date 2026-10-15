@@ -33,7 +33,10 @@ import type {
 } from "@/lib/api/types";
 
 export class ApiError extends Error {
-  constructor(public readonly status: number, public readonly detail?: string) {
+  constructor(
+    public readonly status: number,
+    public readonly detail?: string,
+  ) {
     super(detail ?? `API request failed with status ${status}`);
   }
 }
@@ -65,7 +68,9 @@ export function listPlatformUsers(accessToken: string): Promise<PlatformUser[]> 
   return apiFetch<PlatformUser[]>("/api/v1/users", accessToken);
 }
 
-export async function registerOrganization(payload: OrganizationRegisterInput): Promise<Organization> {
+export async function registerOrganization(
+  payload: OrganizationRegisterInput,
+): Promise<Organization> {
   const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/organizations/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -77,19 +82,28 @@ export async function registerOrganization(payload: OrganizationRegisterInput): 
 }
 
 export async function checkOrganizationSlugAvailable(slug: string): Promise<boolean> {
-  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/organizations/slug-available/${encodeURIComponent(slug)}`, {
-    cache: "no-store",
-  });
+  const response = await fetch(
+    `${authConfig.apiBaseUrl}/api/v1/organizations/slug-available/${encodeURIComponent(slug)}`,
+    {
+      cache: "no-store",
+    },
+  );
   if (!response.ok) throw new ApiError(response.status, await readErrorDetail(response));
   const body = (await response.json()) as { available: boolean };
   return body.available;
 }
 
-export async function getOrganizationBySlug(accessToken: string, slug: string): Promise<Organization | null> {
-  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/organizations/by-slug/${encodeURIComponent(slug)}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: "no-store",
-  });
+export async function getOrganizationBySlug(
+  accessToken: string,
+  slug: string,
+): Promise<Organization | null> {
+  const response = await fetch(
+    `${authConfig.apiBaseUrl}/api/v1/organizations/by-slug/${encodeURIComponent(slug)}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    },
+  );
   if (response.status === 404) return null;
   if (!response.ok) throw new ApiError(response.status, await readErrorDetail(response));
   return response.json() as Promise<Organization>;
@@ -122,7 +136,10 @@ export async function saveSmtpConfiguration(
   return response.json() as Promise<SmtpConfiguration>;
 }
 
-export async function sendSmtpTestEmail(accessToken: string, recipientEmail: string): Promise<void> {
+export async function sendSmtpTestEmail(
+  accessToken: string,
+  recipientEmail: string,
+): Promise<void> {
   const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/administration/smtp/test`, {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
@@ -144,64 +161,151 @@ export function getCampaign(accessToken: string, campaignId: string): Promise<Ca
   return apiFetch<Campaign>(`/api/v1/campaigns/${campaignId}`, accessToken);
 }
 
-export function getCampaignEmailTemplate(accessToken: string, campaignId: string): Promise<CampaignEmailTemplate | null> { return apiFetch<CampaignEmailTemplate | null>(`/api/v1/campaigns/${campaignId}/email-template`, accessToken); }
-
-export function saveCampaignEmailTemplate(accessToken: string, campaignId: string, payload: Omit<CampaignEmailTemplate, "campaign_id" | "locked_at">): Promise<CampaignEmailTemplate> { return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/email-template`, "PUT", payload); }
-
-export function testCampaignEmailTemplate(accessToken: string, campaignId: string, recipientEmail: string): Promise<void> {
-  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/email-template/test`, "POST", { recipient_email: recipientEmail });
+export function getCampaignEmailTemplate(
+  accessToken: string,
+  campaignId: string,
+): Promise<CampaignEmailTemplate | null> {
+  return apiFetch<CampaignEmailTemplate | null>(
+    `/api/v1/campaigns/${campaignId}/email-template`,
+    accessToken,
+  );
 }
 
-export function listCampaignDeliveries(accessToken: string, campaignId: string): Promise<CampaignDelivery[]> {
+export function saveCampaignEmailTemplate(
+  accessToken: string,
+  campaignId: string,
+  payload: Omit<CampaignEmailTemplate, "campaign_id" | "locked_at">,
+): Promise<CampaignEmailTemplate> {
+  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/email-template`, "PUT", payload);
+}
+
+export function testCampaignEmailTemplate(
+  accessToken: string,
+  campaignId: string,
+  recipientEmail: string,
+): Promise<void> {
+  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/email-template/test`, "POST", {
+    recipient_email: recipientEmail,
+  });
+}
+
+export function listCampaignDeliveries(
+  accessToken: string,
+  campaignId: string,
+): Promise<CampaignDelivery[]> {
   return apiFetch<CampaignDelivery[]>(`/api/v1/campaigns/${campaignId}/deliveries`, accessToken);
 }
 
-export function queueCampaignDeliveries(accessToken: string, campaignId: string): Promise<CampaignDeliveryQueueResult> {
+export function queueCampaignDeliveries(
+  accessToken: string,
+  campaignId: string,
+): Promise<CampaignDeliveryQueueResult> {
   return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/send`, "POST");
 }
 
-export function retryFailedCampaignDeliveries(accessToken: string, campaignId: string): Promise<CampaignDeliveryQueueResult> {
-  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/deliveries/retry-failed`, "POST");
+export function retryFailedCampaignDeliveries(
+  accessToken: string,
+  campaignId: string,
+): Promise<CampaignDeliveryQueueResult> {
+  return writeSurvey(
+    accessToken,
+    `/api/v1/campaigns/${campaignId}/deliveries/retry-failed`,
+    "POST",
+  );
 }
 
 export function listRecipients(accessToken: string, workspaceId: string): Promise<Recipient[]> {
   return apiFetch<Recipient[]>(`/api/v1/clinics/${workspaceId}/recipients`, accessToken);
 }
 
-export function listCampaignRecipients(accessToken: string, campaignId: string): Promise<CampaignRecipient[]> {
+export function listCampaignRecipients(
+  accessToken: string,
+  campaignId: string,
+): Promise<CampaignRecipient[]> {
   return apiFetch<CampaignRecipient[]>(`/api/v1/campaigns/${campaignId}/recipients`, accessToken);
 }
 
-export function importRecipients(accessToken: string, workspaceId: string, recipients: Array<{ email: string; display_name: string | null }>): Promise<RecipientImportResult> {
-  return writeSurvey(accessToken, `/api/v1/clinics/${workspaceId}/recipients/import`, "POST", { recipients });
+export function importRecipients(
+  accessToken: string,
+  workspaceId: string,
+  recipients: Array<{ email: string; display_name: string | null }>,
+): Promise<RecipientImportResult> {
+  return writeSurvey(accessToken, `/api/v1/clinics/${workspaceId}/recipients/import`, "POST", {
+    recipients,
+  });
 }
 
-export function optOutRecipient(accessToken: string, workspaceId: string, recipientId: string): Promise<Recipient> {
-  return writeSurvey(accessToken, `/api/v1/clinics/${workspaceId}/recipients/${recipientId}/opt-out`, "POST");
+export function optOutRecipient(
+  accessToken: string,
+  workspaceId: string,
+  recipientId: string,
+): Promise<Recipient> {
+  return writeSurvey(
+    accessToken,
+    `/api/v1/clinics/${workspaceId}/recipients/${recipientId}/opt-out`,
+    "POST",
+  );
 }
 
-export function assignCampaignRecipients(accessToken: string, campaignId: string, recipientIds: string[]): Promise<CampaignRecipient[]> {
-  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/recipients`, "POST", { recipient_ids: recipientIds });
+export function assignCampaignRecipients(
+  accessToken: string,
+  campaignId: string,
+  recipientIds: string[],
+): Promise<CampaignRecipient[]> {
+  return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}/recipients`, "POST", {
+    recipient_ids: recipientIds,
+  });
 }
 
-export function removeCampaignRecipient(accessToken: string, campaignId: string, recipientId: string): Promise<void> {
-  return deleteSurveyResource(accessToken, `/api/v1/campaigns/${campaignId}/recipients/${recipientId}`);
+export function removeCampaignRecipient(
+  accessToken: string,
+  campaignId: string,
+  recipientId: string,
+): Promise<void> {
+  return deleteSurveyResource(
+    accessToken,
+    `/api/v1/campaigns/${campaignId}/recipients/${recipientId}`,
+  );
 }
 
-export function getCampaignAnalytics(accessToken: string, workspaceId: string, campaignId: string): Promise<CampaignAnalytics> {
-  return apiFetch<CampaignAnalytics>(`/api/v1/clinics/${workspaceId}/analytics/campaigns/${campaignId}`, accessToken);
+export function getCampaignAnalytics(
+  accessToken: string,
+  workspaceId: string,
+  campaignId: string,
+): Promise<CampaignAnalytics> {
+  return apiFetch<CampaignAnalytics>(
+    `/api/v1/clinics/${workspaceId}/analytics/campaigns/${campaignId}`,
+    accessToken,
+  );
 }
 
-export function createCampaign(accessToken: string, payload: { clinic_id: string; survey_version_id: string; title: string; description: string | null; ends_at?: string | null }): Promise<Campaign> {
+export function createCampaign(
+  accessToken: string,
+  payload: {
+    clinic_id: string;
+    survey_version_id: string;
+    title: string;
+    description: string | null;
+    ends_at?: string | null;
+  },
+): Promise<Campaign> {
   return writeSurvey(accessToken, "/api/v1/campaigns", "POST", payload);
 }
 
-export function updateCampaign(accessToken: string, campaignId: string, payload: { status?: Campaign["status"]; survey_version_id?: string; ends_at?: string | null }): Promise<Campaign> {
+export function updateCampaign(
+  accessToken: string,
+  campaignId: string,
+  payload: { status?: Campaign["status"]; survey_version_id?: string; ends_at?: string | null },
+): Promise<Campaign> {
   return writeSurvey(accessToken, `/api/v1/campaigns/${campaignId}`, "PATCH", payload);
 }
 
 export async function deleteCampaign(accessToken: string, campaignId: string): Promise<void> {
-  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/campaigns/${campaignId}`, { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" });
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/campaigns/${campaignId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
   if (!response.ok) throw new ApiError(response.status);
 }
 
@@ -209,7 +313,10 @@ export function getWorkspace(accessToken: string, workspaceId: string): Promise<
   return apiFetch<WorkspaceDetail>(`/api/v1/clinics/${workspaceId}`, accessToken);
 }
 
-export function listWorkspaceMembers(accessToken: string, workspaceId: string): Promise<WorkspaceMember[]> {
+export function listWorkspaceMembers(
+  accessToken: string,
+  workspaceId: string,
+): Promise<WorkspaceMember[]> {
   return apiFetch<WorkspaceMember[]>(`/api/v1/clinics/${workspaceId}/members`, accessToken);
 }
 
@@ -218,7 +325,10 @@ export function listRoles(accessToken: string): Promise<Role[]> {
 }
 
 export function listSurveys(accessToken: string, includeArchived = false): Promise<Survey[]> {
-  return apiFetch<Survey[]>(`/api/v1/surveys${includeArchived ? "?include_archived=true" : ""}`, accessToken);
+  return apiFetch<Survey[]>(
+    `/api/v1/surveys${includeArchived ? "?include_archived=true" : ""}`,
+    accessToken,
+  );
 }
 
 export function getSurvey(accessToken: string, surveyId: string): Promise<SurveyDetail> {
@@ -230,16 +340,21 @@ export function getSurveyDraft(
   surveyId: string,
   draftId: string,
 ): Promise<SurveyDraftDetail> {
-  return apiFetch<SurveyDraftDetail>(
-    `/api/v1/surveys/${surveyId}/drafts/${draftId}`,
-    accessToken,
-  );
+  return apiFetch<SurveyDraftDetail>(`/api/v1/surveys/${surveyId}/drafts/${draftId}`, accessToken);
 }
 
-async function writeSurvey<T>(accessToken: string, path: string, method: "POST" | "PATCH" | "PUT", payload?: unknown): Promise<T> {
+async function writeSurvey<T>(
+  accessToken: string,
+  path: string,
+  method: "POST" | "PATCH" | "PUT",
+  payload?: unknown,
+): Promise<T> {
   const response = await fetch(`${authConfig.apiBaseUrl}${path}`, {
     method,
-    headers: { Authorization: `Bearer ${accessToken}`, ...(payload ? { "Content-Type": "application/json" } : {}) },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      ...(payload ? { "Content-Type": "application/json" } : {}),
+    },
     body: payload ? JSON.stringify(payload) : undefined,
     cache: "no-store",
   });
@@ -316,7 +431,13 @@ export function createSurveyQuestion(
   surveyId: string,
   draftId: string,
   sectionId: string,
-  payload: { question_type: SurveyQuestionType; title: string; help_text: string | null; is_required: boolean; allow_other: boolean },
+  payload: {
+    question_type: SurveyQuestionType;
+    title: string;
+    help_text: string | null;
+    is_required: boolean;
+    allow_other: boolean;
+  },
 ): Promise<SurveyQuestion> {
   return writeSurvey(
     accessToken,
@@ -356,57 +477,134 @@ export function deleteSurveyQuestion(
 }
 
 export function reorderSurveyQuestions(
-  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionIds: string[],
+  accessToken: string,
+  surveyId: string,
+  draftId: string,
+  sectionId: string,
+  questionIds: string[],
 ): Promise<SurveyQuestion[]> {
-  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/reorder`, "POST", { question_ids: questionIds });
+  return writeSurvey(
+    accessToken,
+    `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/reorder`,
+    "POST",
+    { question_ids: questionIds },
+  );
 }
 
 export function createSurveyQuestionOption(
-  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, label: string,
+  accessToken: string,
+  surveyId: string,
+  draftId: string,
+  sectionId: string,
+  questionId: string,
+  label: string,
 ): Promise<{ id: string }> {
-  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options`, "POST", { label, value: label });
+  return writeSurvey(
+    accessToken,
+    `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options`,
+    "POST",
+    { label, value: label },
+  );
 }
 
 export function deleteSurveyQuestionOption(
-  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, optionId: string,
+  accessToken: string,
+  surveyId: string,
+  draftId: string,
+  sectionId: string,
+  questionId: string,
+  optionId: string,
 ): Promise<void> {
-  return deleteSurveyResource(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options/${optionId}`);
+  return deleteSurveyResource(
+    accessToken,
+    `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options/${optionId}`,
+  );
 }
 
 export function updateSurveyQuestionOption(
-  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, optionId: string,
+  accessToken: string,
+  surveyId: string,
+  draftId: string,
+  sectionId: string,
+  questionId: string,
+  optionId: string,
   payload: { label: string; value: string },
 ): Promise<SurveyQuestionOption> {
-  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options/${optionId}`, "PATCH", payload);
+  return writeSurvey(
+    accessToken,
+    `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options/${optionId}`,
+    "PATCH",
+    payload,
+  );
 }
 
 export function reorderSurveyQuestionOptions(
-  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, optionIds: string[],
+  accessToken: string,
+  surveyId: string,
+  draftId: string,
+  sectionId: string,
+  questionId: string,
+  optionIds: string[],
 ): Promise<SurveyQuestionOption[]> {
-  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options/reorder`, "POST", { option_ids: optionIds });
+  return writeSurvey(
+    accessToken,
+    `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/options/reorder`,
+    "POST",
+    { option_ids: optionIds },
+  );
 }
 
 export function createSurveyQuestionValidation(
-  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string,
+  accessToken: string,
+  surveyId: string,
+  draftId: string,
+  sectionId: string,
+  questionId: string,
   payload: { rule_type: string; rule_value: { value: string | number } },
 ): Promise<SurveyQuestionValidation> {
-  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/validations`, "POST", payload);
+  return writeSurvey(
+    accessToken,
+    `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/validations`,
+    "POST",
+    payload,
+  );
 }
 
 export function updateSurveyQuestionValidation(
-  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, validationId: string,
+  accessToken: string,
+  surveyId: string,
+  draftId: string,
+  sectionId: string,
+  questionId: string,
+  validationId: string,
   payload: { rule_value: { value: string | number } },
 ): Promise<SurveyQuestionValidation> {
-  return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/validations/${validationId}`, "PATCH", payload);
+  return writeSurvey(
+    accessToken,
+    `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/validations/${validationId}`,
+    "PATCH",
+    payload,
+  );
 }
 
 export function deleteSurveyQuestionValidation(
-  accessToken: string, surveyId: string, draftId: string, sectionId: string, questionId: string, validationId: string,
+  accessToken: string,
+  surveyId: string,
+  draftId: string,
+  sectionId: string,
+  questionId: string,
+  validationId: string,
 ): Promise<void> {
-  return deleteSurveyResource(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/validations/${validationId}`);
+  return deleteSurveyResource(
+    accessToken,
+    `/api/v1/surveys/${surveyId}/drafts/${draftId}/sections/${sectionId}/questions/${questionId}/validations/${validationId}`,
+  );
 }
 
-export function createSurvey(accessToken: string, payload: { title: string; description: string | null; initial_draft_label: string | null }): Promise<SurveyDetail> {
+export function createSurvey(
+  accessToken: string,
+  payload: { title: string; description: string | null; initial_draft_label: string | null },
+): Promise<SurveyDetail> {
   return writeSurvey(accessToken, "/api/v1/surveys", "POST", payload);
 }
 
@@ -418,7 +616,11 @@ export function createSurveyDraft(
   return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts`, "POST", payload);
 }
 
-export function updateSurvey(accessToken: string, surveyId: string, payload: { title: string; description: string | null }): Promise<Survey> {
+export function updateSurvey(
+  accessToken: string,
+  surveyId: string,
+  payload: { title: string; description: string | null },
+): Promise<Survey> {
   return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}`, "PATCH", payload);
 }
 
@@ -430,7 +632,11 @@ export function restoreSurvey(accessToken: string, surveyId: string): Promise<Su
   return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/restore`, "POST");
 }
 
-export function copySurvey(accessToken: string, surveyId: string, payload: { source_version_id: string; title: string | null; description: string | null }): Promise<SurveyDetail> {
+export function copySurvey(
+  accessToken: string,
+  surveyId: string,
+  payload: { source_version_id: string; title: string | null; description: string | null },
+): Promise<SurveyDetail> {
   return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/copy`, "POST", payload);
 }
 
@@ -442,13 +648,20 @@ export function listPublishedSurveyVersions(
 }
 
 export function getPublishedSurveyVersion(
-  accessToken: string, surveyId: string, versionNumber: number,
+  accessToken: string,
+  surveyId: string,
+  versionNumber: number,
 ): Promise<PublishedSurveyVersionDetail> {
-  return apiFetch<PublishedSurveyVersionDetail>(`/api/v1/surveys/${surveyId}/versions/${versionNumber}`, accessToken);
+  return apiFetch<PublishedSurveyVersionDetail>(
+    `/api/v1/surveys/${surveyId}/versions/${versionNumber}`,
+    accessToken,
+  );
 }
 
 export function publishSurveyDraft(
-  accessToken: string, surveyId: string, draftId: string,
+  accessToken: string,
+  surveyId: string,
+  draftId: string,
 ): Promise<SurveyVersion> {
   return writeSurvey(accessToken, `/api/v1/surveys/${surveyId}/drafts/${draftId}/publish`, "POST");
 }
@@ -558,7 +771,11 @@ export function updateWorkspace(
   return writeWorkspace(accessToken, `/api/v1/clinics/${workspaceId}`, "PATCH", payload);
 }
 
-export async function uploadWorkspaceLogo(accessToken: string, workspaceId: string, logo: File): Promise<Workspace> {
+export async function uploadWorkspaceLogo(
+  accessToken: string,
+  workspaceId: string,
+  logo: File,
+): Promise<Workspace> {
   const body = new FormData();
   body.append("logo", logo);
   const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/clinics/${workspaceId}/logo`, {
@@ -602,14 +819,11 @@ export async function reactivatePlatformUser(
   accessToken: string,
   userId: string,
 ): Promise<PlatformUser> {
-  const response = await fetch(
-    `${authConfig.apiBaseUrl}/api/v1/users/${userId}/reactivate`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
-      cache: "no-store",
-    },
-  );
+  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/users/${userId}/reactivate`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
   if (!response.ok) throw new ApiError(response.status);
   return response.json() as Promise<PlatformUser>;
 }
@@ -627,10 +841,13 @@ export async function permanentlyDeletePlatformUser(
 }
 
 export async function grantPlatformAdmin(accessToken: string, userId: string): Promise<void> {
-  const response = await fetch(`${authConfig.apiBaseUrl}/api/v1/users/${userId}/roles/platform-admin`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: "no-store",
-  });
+  const response = await fetch(
+    `${authConfig.apiBaseUrl}/api/v1/users/${userId}/roles/platform-admin`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    },
+  );
   if (!response.ok) throw new ApiError(response.status);
 }

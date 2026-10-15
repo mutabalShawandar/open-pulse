@@ -12,11 +12,30 @@ import { Input } from "@/components/ui/input";
 
 export function CreateUserForm() {
   const t = useTranslations("admin.users.form");
-  return <form action={createUserAction}><FieldGroup><Field><FieldLabel htmlFor="displayName">{t("displayName")}</FieldLabel><Input id="displayName" name="displayName" required /></Field><Field><FieldLabel htmlFor="email">{t("email")}</FieldLabel><Input id="email" name="email" type="email" required /></Field><SubmitButton /></FieldGroup></form>;
+  return (
+    <form action={createUserAction}>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="displayName">{t("displayName")}</FieldLabel>
+          <Input id="displayName" name="displayName" required />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
+          <Input id="email" name="email" type="email" required />
+        </Field>
+        <SubmitButton />
+      </FieldGroup>
+    </form>
+  );
 }
 
 function SubmitButton() {
   const t = useTranslations("admin.users.form");
   const { pending } = useFormStatus();
-  return <Button type="submit" className="w-full" disabled={pending}>{pending ? <Spinner data-icon="inline-start" /> : <UserPlusIcon data-icon="inline-start" />}{pending ? t("pending") : t("submit")}</Button>;
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? <Spinner data-icon="inline-start" /> : <UserPlusIcon data-icon="inline-start" />}
+      {pending ? t("pending") : t("submit")}
+    </Button>
+  );
 }

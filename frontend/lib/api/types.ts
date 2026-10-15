@@ -201,7 +201,21 @@ export type CampaignAnalytics = {
   campaign_title: string;
   started_count: number;
   completed_count: number;
-  questions: Array<{ question_id: string; title: string; question_type: string; answer_count: number; average: number | null; median: number | null; minimum: number | null; maximum: number | null; choices: Array<{ label: string; count: number }>; distribution: Array<{ label: string; count: number }>; text_answers: string[]; earliest_date: string | null; latest_date: string | null }>;
+  questions: Array<{
+    question_id: string;
+    title: string;
+    question_type: string;
+    answer_count: number;
+    average: number | null;
+    median: number | null;
+    minimum: number | null;
+    maximum: number | null;
+    choices: Array<{ label: string; count: number }>;
+    distribution: Array<{ label: string; count: number }>;
+    text_answers: string[];
+    earliest_date: string | null;
+    latest_date: string | null;
+  }>;
 };
 
 export type SmtpConfiguration = {
@@ -249,7 +263,15 @@ export type CampaignRecipient = {
   created_at: string;
 };
 
-export type CampaignEmailTemplate = { campaign_id: string; subject: string; html_body: string; text_body: string; sender_name: string | null; reply_to: string | null; locked_at: string | null };
+export type CampaignEmailTemplate = {
+  campaign_id: string;
+  subject: string;
+  html_body: string;
+  text_body: string;
+  sender_name: string | null;
+  reply_to: string | null;
+  locked_at: string | null;
+};
 
 export type CampaignDelivery = {
   id: string;
