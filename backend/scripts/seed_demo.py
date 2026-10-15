@@ -1,6 +1,8 @@
-"""Create an idempotent local Phase-3 demo campaign with anonymous responses.
+"""Create idempotent local demo data: a workspace, a published survey, a campaign with
+anonymous responses for analytics, and a second campaign with recipients that is ready
+to be sent to the local Mailpit inbox from the UI.
 
-Run inside the backend container: python -m scripts.seed_phase3_demo
+Run inside the backend container: python -m scripts.seed_demo
 Never run this against production data.
 """
 
@@ -12,9 +14,14 @@ from sqlalchemy import select
 from app.db.session import async_session_factory
 from app.models import (
     Campaign,
+    CampaignEmailTemplate,
+    CampaignRecipient,
+    CampaignRecipientStatus,
     CampaignStatus,
     Organization,
     QuestionType,
+    Recipient,
+    RecipientStatus,
     ResponseAnswer,
     ResponseAnswerOption,
     ResponseIdentityMode,
@@ -31,6 +38,7 @@ from app.models import (
     User,
     Workspace,
 )
+from app.models.campaign import generate_response_token, hash_response_token
 
 
 async def seed() -> None:
@@ -54,13 +62,9 @@ async def seed() -> None:
         actor = await session.scalar(select(User).where(User.is_active.is_(True)).limit(1))
         if actor is None:
             raise RuntimeError("Create a platform user before seeding demo data")
-        organization = await session.scalar(
-            select(Organization).where(Organization.slug == "demo-organization")
-        )
+        organization = await session.scalar(select(Organization).order_by(Organization.created_at))
         if organization is None:
-            organization = Organization(name="Demo Organization", slug="demo-organization")
-            session.add(organization)
-            await session.flush()
+            raise RuntimeError("Run `alembic upgrade head` before seeding demo data")
         clinic = Workspace(
             name="Demo Workspace", slug="demo-workspace", organization_id=organization.id
         )
@@ -123,7 +127,7 @@ async def seed() -> None:
         campaign = Campaign(
             workspace_id=clinic.id,
             survey_version_id=version.id,
-            title="September satisfaction survey",
+            title="Customer satisfaction survey",
             public_slug="demo-analytics",
             status=CampaignStatus.ACTIVE,
             response_identity_mode=ResponseIdentityMode.ANONYMOUS,
@@ -158,6 +162,52 @@ async def seed() -> None:
             session.add(ResponseAnswerOption(answer_id=selected.id, option_id=option.id))
             session.add(
                 ResponseAnswer(response_id=response.id, question_id=comment.id, text_value=text)
+            )
+        # A second, unsent campaign: recipients and an email template are in place, so
+        # the invitations can be sent from the UI and read in Mailpit (http://localhost:8025).
+        send_campaign = Campaign(
+            workspace_id=clinic.id,
+            survey_version_id=version.id,
+            title="Invitation demo (not yet sent)",
+            public_slug="demo-invitations",
+            status=CampaignStatus.DRAFT,
+            response_identity_mode=ResponseIdentityMode.ANONYMOUS,
+            created_by_user_id=actor.id,
+        )
+        session.add(send_campaign)
+        await session.flush()
+        session.add(
+            CampaignEmailTemplate(
+                campaign_id=send_campaign.id,
+                subject="We would love your feedback: {{campaign_title}}",
+                html_body=(
+                    "<p>Hello {{recipient_name}},</p>"
+                    '<p><a href="{{survey_link}}">Take the survey</a></p>'
+                ),
+                text_body="Hello {{recipient_name}}, take the survey: {{survey_link}}",
+            )
+        )
+        for name, email in [
+            ("Alex Example", "alex@example.com"),
+            ("Sam Sample", "sam@example.com"),
+            ("Robin Demo", "robin@example.com"),
+        ]:
+            recipient = Recipient(
+                workspace_id=clinic.id,
+                display_name=name,
+                email=email,
+                email_normalized=email,
+                status=RecipientStatus.ACTIVE,
+            )
+            session.add(recipient)
+            await session.flush()
+            session.add(
+                CampaignRecipient(
+                    campaign_id=send_campaign.id,
+                    recipient_id=recipient.id,
+                    token_hash=hash_response_token(generate_response_token()),
+                    status=CampaignRecipientStatus.PENDING,
+                )
             )
         await session.commit()
         print(f"Seeded workspace={clinic.id} campaign={campaign.id} slug={campaign.public_slug}")

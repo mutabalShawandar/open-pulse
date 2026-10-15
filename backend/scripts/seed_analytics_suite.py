@@ -38,7 +38,7 @@ async def seed() -> None:
         actor = await session.scalar(select(User).where(User.is_active.is_(True)).limit(1))
         clinic = await session.scalar(select(Workspace).where(Workspace.slug == "demo-workspace"))
         if actor is None or clinic is None:
-            raise RuntimeError("Run seed_phase3_demo first")
+            raise RuntimeError("Run seed_demo first")
         survey = Survey(
             organization_id=clinic.organization_id,
             title="Complete demo report",
