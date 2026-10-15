@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { FilePlus2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -29,46 +30,43 @@ export function SurveyNewDraftDialog({
   action: (formData: FormData) => void | Promise<void>;
   sourceVersions: SourceVersion[];
 }) {
+  const t = useTranslations("surveys.newDraft");
   return (
     <Dialog>
       <DialogTrigger render={<Button className="w-full" variant="outline" />}>
         <FilePlus2Icon data-icon="inline-start" />
-        Neuen Entwurf anlegen
+        {t("trigger")}
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Neuen Entwurf anlegen</DialogTitle>
-          <DialogDescription>
-            Erstelle eine leere Arbeitsversion oder übernimm eine vorhandene Version, um sie sicher weiterzuentwickeln.
-          </DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <form action={action}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="draft-label">Bezeichnung</FieldLabel>
-              <Input id="draft-label" name="draftLabel" placeholder="z. B. Überarbeitung 2026" />
-              <FieldDescription>Optional. Die Bezeichnung hilft bei mehreren parallelen Entwürfen.</FieldDescription>
+              <FieldLabel htmlFor="draft-label">{t("label")}</FieldLabel>
+              <Input id="draft-label" name="draftLabel" placeholder={t("labelPlaceholder")} />
+              <FieldDescription>{t("labelHint")}</FieldDescription>
             </Field>
             <Field>
-              <FieldLabel htmlFor="draft-source-version">Inhalt übernehmen</FieldLabel>
+              <FieldLabel htmlFor="draft-source-version">{t("takeOver")}</FieldLabel>
               <NativeSelect defaultValue="" id="draft-source-version" name="sourceVersionId">
-                <NativeSelectOption value="">Leer beginnen</NativeSelectOption>
+                <NativeSelectOption value="">{t("empty")}</NativeSelectOption>
                 {sourceVersions.map((sourceVersion) => (
                   <NativeSelectOption key={sourceVersion.id} value={sourceVersion.id}>
                     {sourceVersion.label}
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
-              <FieldDescription>
-                Beim Übernehmen werden Abschnitte, Fragen, Optionen und Validierungen in einen neuen bearbeitbaren Entwurf kopiert.
-              </FieldDescription>
+              <FieldDescription>{t("takeOverHint")}</FieldDescription>
             </Field>
           </FieldGroup>
           <DialogFooter className="mt-5">
-            <DialogClose render={<Button type="button" variant="outline" />}>Abbrechen</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>{t("cancel")}</DialogClose>
             <Button type="submit">
               <FilePlus2Icon data-icon="inline-start" />
-              Entwurf anlegen
+              {t("submit")}
             </Button>
           </DialogFooter>
         </form>

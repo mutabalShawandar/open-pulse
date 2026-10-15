@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -17,6 +18,7 @@ type Question = CampaignAnalytics["questions"][number];
 const TEXT_ANSWER_PREVIEW_COUNT = 5;
 
 export function AnalyticsQuestionCard({ question }: { question: Question }) {
+  const t = useTranslations("analytics");
   if (question.question_type === "yes_no") return <YesNoCard question={question} />;
   if (question.question_type === "short_text" || question.question_type === "long_text") {
     return <TextCard question={question} />;
@@ -27,24 +29,24 @@ export function AnalyticsQuestionCard({ question }: { question: Question }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">{question.title}</CardTitle>
-        <CardDescription>{question.answer_count} Antworten</CardDescription>
+        <CardDescription>{t("answers", { count: question.answer_count })}</CardDescription>
       </CardHeader>
       <CardContent>
         {question.average !== null ? (
           <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Stat label="Ø" value={question.average} />
-            <Stat label="Median" value={question.median} />
-            <Stat label="Minimum" value={question.minimum} />
-            <Stat label="Maximum" value={question.maximum} />
+            <Stat label={t("average")} value={question.average} />
+            <Stat label={t("median")} value={question.median} />
+            <Stat label={t("minimum")} value={question.minimum} />
+            <Stat label={t("maximum")} value={question.maximum} />
           </div>
         ) : null}
         {question.earliest_date ? (
-          <p className="mb-4 text-sm">Zeitraum: {question.earliest_date} – {question.latest_date}</p>
+          <p className="mb-4 text-sm">{t("period", { from: question.earliest_date, to: question.latest_date ?? "—" })}</p>
         ) : null}
         {data.length ? (
           <AnalyticsBarChart data={data} />
         ) : (
-          <p className="text-sm text-muted-foreground">Keine auswertbaren Antworten vorhanden.</p>
+          <p className="text-sm text-muted-foreground">{t("noData")}</p>
         )}
       </CardContent>
     </Card>
@@ -52,35 +54,39 @@ export function AnalyticsQuestionCard({ question }: { question: Question }) {
 }
 
 function YesNoCard({ question }: { question: Question }) {
-  const yes = question.choices.find((item) => item.label === "Ja")?.count ?? 0;
-  const no = question.choices.find((item) => item.label === "Nein")?.count ?? 0;
+  const t = useTranslations("analytics");
+  // The backend always returns [yes, no] in that order; labels are not matched.
+  const yes = question.choices[0]?.count ?? 0;
+  const no = question.choices[1]?.count ?? 0;
   const total = question.answer_count || 1;
 
   return (
     <Card className="overflow-hidden">
       <CardHeader className="bg-secondary/50">
         <CardTitle className="text-lg">{question.title}</CardTitle>
-        <CardDescription>{question.answer_count} Antworten</CardDescription>
+        <CardDescription>{t("answers", { count: question.answer_count })}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
-        <Outcome icon={<ThumbsUpIcon />} label="Ja" count={yes} percent={Math.round((yes / total) * 100)} />
-        <Outcome icon={<ThumbsDownIcon />} label="Nein" count={no} percent={Math.round((no / total) * 100)} />
+        <Outcome icon={<ThumbsUpIcon />} label={t("yes")} count={yes} percent={Math.round((yes / total) * 100)} />
+        <Outcome icon={<ThumbsDownIcon />} label={t("no")} count={no} percent={Math.round((no / total) * 100)} />
       </CardContent>
     </Card>
   );
 }
 
 function Outcome({ icon, label, count, percent }: { icon: React.ReactNode; label: string; count: number; percent: number }) {
+  const t = useTranslations("analytics");
   return (
     <div className="rounded-xl border p-4">
       <div className="flex items-center gap-2 text-sm font-medium">{icon}{label}</div>
       <p className="mt-4 text-3xl font-semibold">{percent}%</p>
-      <p className="mt-1 text-sm text-muted-foreground">{count} Antworten</p>
+      <p className="mt-1 text-sm text-muted-foreground">{t("answers", { count })}</p>
     </div>
   );
 }
 
 function TextCard({ question }: { question: Question }) {
+  const t = useTranslations("analytics");
   const [isExpanded, setIsExpanded] = useState(false);
   const hasMoreAnswers = question.text_answers.length > TEXT_ANSWER_PREVIEW_COUNT;
   const answers = isExpanded
@@ -94,7 +100,7 @@ function TextCard({ question }: { question: Question }) {
           <MessageSquareTextIcon className="size-5 text-primary" />
           <div>
             <CardTitle className="text-lg">{question.title}</CardTitle>
-            <CardDescription>{question.answer_count} Antworten · Freitext</CardDescription>
+            <CardDescription>{t("answersFree", { count: question.answer_count })}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -109,14 +115,14 @@ function TextCard({ question }: { question: Question }) {
           </div>
         ) : (
           <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-            Keine Freitextantworten vorhanden.
+            {t("noText")}
           </p>
         )}
 
         {hasMoreAnswers ? (
           <Button variant="outline" size="sm" className="w-fit" onClick={() => setIsExpanded((value) => !value)}>
             {isExpanded ? <ChevronUpIcon data-icon="inline-start" /> : <ChevronDownIcon data-icon="inline-start" />}
-            {isExpanded ? "Weniger anzeigen" : `Alle ${question.text_answers.length} Antworten anzeigen`}
+            {isExpanded ? t("showLess") : t("showAll", { count: question.text_answers.length })}
           </Button>
         ) : null}
       </CardContent>
@@ -125,11 +131,12 @@ function TextCard({ question }: { question: Question }) {
 }
 
 function Stat({ label, value }: { label: string; value: number | null }) {
+  const format = useFormatter();
   return (
     <div className="rounded-lg bg-muted p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-lg font-semibold">
-        {value === null ? "—" : value.toLocaleString("de-DE", { maximumFractionDigits: 2 })}
+        {value === null ? "—" : format.number(value, { maximumFractionDigits: 2 })}
       </p>
     </div>
   );

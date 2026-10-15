@@ -1,15 +1,16 @@
-from fastapi import HTTPException, status
 from uuid import UUID
+
+from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.identity import ExternalIdentityLink
 from app.models.authorization import Role, UserRole
+from app.models.identity import ExternalIdentityLink
 from app.models.user import User
 from app.schemas.user import UserCreateRequest
-from app.services.keycloak_admin import KeycloakAdminClient
 from app.services.audit_service import add_audit_event
+from app.services.keycloak_admin import KeycloakAdminClient
 
 
 async def create_platform_user(
@@ -260,15 +261,17 @@ async def permanently_delete_platform_user(
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    platform_admin_role = await session.scalar(
-        select(Role).where(Role.name == "platform_admin")
-    )
-    is_platform_admin = platform_admin_role is not None and await session.scalar(
-        select(UserRole).where(
-            UserRole.user_id == user.id,
-            UserRole.role_id == platform_admin_role.id,
+    platform_admin_role = await session.scalar(select(Role).where(Role.name == "platform_admin"))
+    is_platform_admin = (
+        platform_admin_role is not None
+        and await session.scalar(
+            select(UserRole).where(
+                UserRole.user_id == user.id,
+                UserRole.role_id == platform_admin_role.id,
+            )
         )
-    ) is not None
+        is not None
+    )
     if is_platform_admin and platform_admin_role is not None:
         active_admin_count = await session.scalar(
             select(func.count(User.id))

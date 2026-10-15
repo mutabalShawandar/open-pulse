@@ -4,34 +4,45 @@
 
 OpenPulse is a self-hostable, multi-tenant survey platform. Organizations can build reusable surveys, publish immutable versions, distribute campaigns through public links, collect anonymous responses, and review campaign analytics.
 
-The interface and documentation are English-first. The product is deliberately industry-neutral: it is designed for teams, communities, agencies, events, and customer-feedback workflows.
+The interface and documentation are English-first, with a German translation available from the language switcher. The product is deliberately industry-neutral: it is designed for teams, communities, agencies, events, and customer-feedback workflows.
 
-## Planned feature set
+## Features
 
-- Organization-based multi-tenancy: each organization has many users and manages many client workspaces
-- Organization-scoped roles, permissions, reusable survey catalogue, and workspace access boundaries
-- Keycloak authentication with application-controlled user activation
-- Reusable surveys with drafts and immutable published versions
-- Sections, typed questions, options, validation, and ordering
-- Campaigns tied to one exact published survey version
-- Public anonymous survey links
-- Secure response sessions, rate limiting, and typed answer persistence
-- Campaign analytics and export workflows
-- Docker Compose for local development and reference VPS deployment
+- Reusable surveys with multiple drafts and immutable published versions
+- Sections, typed questions, choice options, validation rules, and ordering
+- Workspaces (client accounts, teams, projects, or locations) that surveys are assigned to
+- Campaigns tied to one exact published survey version, with per-campaign branding
+- Public anonymous survey links with secure response sessions, rate limiting, and typed answer persistence
+- Recipient import and email campaigns with SMTP configuration, templates, and retry/delivery-status tracking
+- Campaign analytics with PDF and Excel export
+- Keycloak authentication with application-controlled user activation, roles, and permissions
+- English-first interface with German translation (`next-intl`, language switcher; PDF/Excel exports and default email templates are English only)
+- Docker Compose for local development and a reference VPS deployment
 
-## Scope
+## Scope of the first release (v0.1)
 
-OpenPulse supports anonymous responses. Identified-response workflows are out of scope for the initial public edition.
+**v0.1 is a single-organization, self-hosted release.**
+
+- The data model is organization-based: surveys belong to an organization's catalogue, workspaces belong to exactly one organization, and authorization is scoped to the organization and workspace. A single default organization is used, and platform administrators manage users, roles, and email (SMTP) settings.
+- **Self-serve organization registration is disabled** (`ORGANIZATION_REGISTRATION_ENABLED=false`, the default). The `/register` page and the `POST /api/v1/organizations/register` endpoint return 404 unless you enable it. It is not supported in this release: a newly registered organization cannot yet manage its own users or email settings, so do not turn it on for real deployments.
+- Per-organization subdomains (`app.{org-slug}.{root}`) are opt-in through `NEXT_PUBLIC_ROOT_DOMAIN` and are likewise not part of the supported v0.1 scope.
+- Responses are anonymous only. Identified-response workflows are out of scope for the initial public edition.
+
+### Roadmap: multi-organization support with Zitadel
+
+Full multi-organization handling (self-serve sign-up, organization-scoped user and email administration, organization switcher, per-organization login) is planned for a later release and will be built on [Zitadel](https://zitadel.com), which supports organizations natively, instead of extending the Keycloak setup. Identity stays separate from authorization: whichever identity provider is used, membership, roles, and permissions remain in the application database, and a valid login alone never grants access. No migration work has started yet.
 
 ### Organization model
 
-An **Organization** is the tenant account. It has many member users and manages one or more **Workspaces**—for example, client accounts, teams, projects, or locations. Surveys belong to the organization’s reusable catalogue and can be assigned to its workspaces. A user can access only the organizations and workspaces where they hold membership and permission.
+An **Organization** is the tenant account. It has member users and manages one or more **Workspaces**. Surveys belong to the organization's reusable catalogue and can be assigned only to workspaces of the same organization. A user can access only the organizations and workspaces where they hold membership and permission.
 
-This repository is intended to be self-hosted, but it is not automatically production-ready. A real deployment needs a security review, encrypted backups, monitoring, retention/deletion policies, and load/security testing.
+### Production readiness
 
-## Intended tech stack
+This repository is intended to be self-hosted, but it is **not production-ready**. A real deployment needs a security review, encrypted backups, monitoring, retention/deletion policies, and load/security testing.
 
-- Frontend: Next.js, TypeScript, Tailwind CSS, shadcn/ui
+## Tech stack
+
+- Frontend: Next.js, TypeScript, Tailwind CSS, shadcn/ui, next-intl
 - Backend: FastAPI, SQLAlchemy, Alembic
 - Database: PostgreSQL
 - Authentication: Keycloak

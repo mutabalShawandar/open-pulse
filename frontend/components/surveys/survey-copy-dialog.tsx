@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { CopyIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,11 +35,12 @@ export function SurveyCopyDialog({
   sourceVersions: SourceVersion[];
   surveyTitle: string;
 }) {
+  const t = useTranslations("surveys.copy");
   if (!sourceVersions.length) {
     return (
       <Button disabled variant="outline">
         <CopyIcon data-icon="inline-start" />
-        Kopie erstellen
+        {t("trigger")}
       </Button>
     );
   }
@@ -47,19 +49,17 @@ export function SurveyCopyDialog({
     <Dialog>
       <DialogTrigger render={<Button variant="outline" />}>
         <CopyIcon data-icon="inline-start" />
-        Kopie erstellen
+        {t("trigger")}
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Vorlage für eine Klinik kopieren</DialogTitle>
-          <DialogDescription>
-            Inhalt, Fragen und Regeln werden in einen eigenständigen Entwurf kopiert. Passe den Titel für die Klinik jetzt an.
-          </DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <form action={action}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="source-version">Ausgangsversion</FieldLabel>
+              <FieldLabel htmlFor="source-version">{t("source")}</FieldLabel>
               <NativeSelect defaultValue={sourceVersions[0].id} id="source-version" name="sourceVersionId" required>
                 {sourceVersions.map((sourceVersion) => (
                   <NativeSelectOption key={sourceVersion.id} value={sourceVersion.id}>
@@ -67,22 +67,22 @@ export function SurveyCopyDialog({
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
-              <FieldDescription>Wähle den Entwurf oder die veröffentlichte Version, die als Vorlage dienen soll.</FieldDescription>
+              <FieldDescription>{t("sourceHint")}</FieldDescription>
             </Field>
             <Field>
-              <FieldLabel htmlFor="copy-title">Titel der Kopie</FieldLabel>
-              <Input defaultValue={`${surveyTitle} – Klinik`} id="copy-title" name="copyTitle" required />
+              <FieldLabel htmlFor="copy-title">{t("copyTitle")}</FieldLabel>
+              <Input defaultValue={`${surveyTitle} – ${t("copySuffix")}`} id="copy-title" name="copyTitle" required />
             </Field>
             <Field>
-              <FieldLabel htmlFor="copy-description">Beschreibung</FieldLabel>
+              <FieldLabel htmlFor="copy-description">{t("fDescription")}</FieldLabel>
               <Textarea defaultValue={description ?? ""} id="copy-description" name="copyDescription" rows={3} />
             </Field>
           </FieldGroup>
           <DialogFooter className="mt-5">
-            <DialogClose render={<Button type="button" variant="outline" />}>Abbrechen</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>{t("cancel")}</DialogClose>
             <Button type="submit">
               <CopyIcon data-icon="inline-start" />
-              Kopie anlegen
+              {t("submit")}
             </Button>
           </DialogFooter>
         </form>

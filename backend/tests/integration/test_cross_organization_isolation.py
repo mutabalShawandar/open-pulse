@@ -50,20 +50,32 @@ class CrossOrganizationIsolationTests(unittest.IsolatedAsyncioTestCase):
         session.add_all([org_a, org_b])
         await session.flush()
 
-        workspace_a = Workspace(name="Workspace A", slug=f"isolation-ws-a-{uuid4()}", organization_id=org_a.id)
-        workspace_b = Workspace(name="Workspace B", slug=f"isolation-ws-b-{uuid4()}", organization_id=org_b.id)
+        workspace_a = Workspace(
+            name="Workspace A", slug=f"isolation-ws-a-{uuid4()}", organization_id=org_a.id
+        )
+        workspace_b = Workspace(
+            name="Workspace B", slug=f"isolation-ws-b-{uuid4()}", organization_id=org_b.id
+        )
         session.add_all([workspace_a, workspace_b])
         await session.flush()
 
-        actor_a = User(email=f"actor-a-{uuid4()}@example.com", display_name="Actor A", is_active=True)
+        actor_a = User(
+            email=f"actor-a-{uuid4()}@example.com", display_name="Actor A", is_active=True
+        )
         session.add(actor_a)
         await session.flush()
-        session.add(WorkspaceMember(user_id=actor_a.id, workspace_id=workspace_a.id, role_id=manager_role.id))
+        session.add(
+            WorkspaceMember(
+                user_id=actor_a.id, workspace_id=workspace_a.id, role_id=manager_role.id
+            )
+        )
         await session.flush()
 
         return org_a, org_b, workspace_a, workspace_b, actor_a
 
-    async def test_workspace_scoped_permissions_reject_a_different_organizations_workspace(self) -> None:
+    async def test_workspace_scoped_permissions_reject_a_different_organizations_workspace(
+        self,
+    ) -> None:
         _, _, workspace_a, workspace_b, actor_a = await self._build_two_organizations()
 
         # Every permission name campaigns.py, recipients.py, analytics.py, and
@@ -79,11 +91,15 @@ class CrossOrganizationIsolationTests(unittest.IsolatedAsyncioTestCase):
         for permission_name in permissions_used_by_workspace_scoped_routes:
             with self.subTest(permission=permission_name):
                 # Actor A holds this permission in their own workspace.
-                await require_clinic_permission(self.session, actor_a, workspace_a.id, permission_name)
+                await require_clinic_permission(
+                    self.session, actor_a, workspace_a.id, permission_name
+                )
 
                 # But not in workspace B, which belongs to a different organization.
                 with self.assertRaises(HTTPException) as error:
-                    await require_clinic_permission(self.session, actor_a, workspace_b.id, permission_name)
+                    await require_clinic_permission(
+                        self.session, actor_a, workspace_b.id, permission_name
+                    )
                 self.assertEqual(error.exception.status_code, 403)
 
     async def test_organization_scoped_permissions_reject_a_different_organization(self) -> None:
@@ -118,8 +134,12 @@ class CrossOrganizationIsolationTests(unittest.IsolatedAsyncioTestCase):
         session.add_all([org_a, org_b])
         await session.flush()
 
-        workspace_a = Workspace(name="Fallback Workspace A", slug=f"fallback-ws-a-{uuid4()}", organization_id=org_a.id)
-        workspace_b = Workspace(name="Fallback Workspace B", slug=f"fallback-ws-b-{uuid4()}", organization_id=org_b.id)
+        workspace_a = Workspace(
+            name="Fallback Workspace A", slug=f"fallback-ws-a-{uuid4()}", organization_id=org_a.id
+        )
+        workspace_b = Workspace(
+            name="Fallback Workspace B", slug=f"fallback-ws-b-{uuid4()}", organization_id=org_b.id
+        )
         session.add_all([workspace_a, workspace_b])
         await session.flush()
 
@@ -128,7 +148,9 @@ class CrossOrganizationIsolationTests(unittest.IsolatedAsyncioTestCase):
         await session.flush()
         # Deliberately no WorkspaceMember row — only OrganizationMember, matching
         # what organization_service.register_organization actually creates.
-        session.add(OrganizationMember(user_id=owner.id, organization_id=org_a.id, role_id=owner_role.id))
+        session.add(
+            OrganizationMember(user_id=owner.id, organization_id=org_a.id, role_id=owner_role.id)
+        )
         await session.flush()
 
         # Allowed on their own org's workspace via the OrganizationMember fallback.
@@ -142,16 +164,26 @@ class CrossOrganizationIsolationTests(unittest.IsolatedAsyncioTestCase):
     async def test_list_permitted_ids_are_scoped_per_actor(self) -> None:
         org_a, org_b, workspace_a, workspace_b, actor_a = await self._build_two_organizations()
 
-        organization_ids = await list_permitted_organization_ids(self.session, actor_a, "survey.create")
-        self.assertEqual(organization_ids, [])  # actor_a is workspace-scoped only, not an org member
+        organization_ids = await list_permitted_organization_ids(
+            self.session, actor_a, "survey.create"
+        )
+        self.assertEqual(
+            organization_ids, []
+        )  # actor_a is workspace-scoped only, not an org member
 
         workspace_ids = await list_permitted_workspace_ids(self.session, actor_a, "campaign.create")
         assert workspace_ids is not None
         self.assertIn(workspace_a.id, workspace_ids)
         self.assertNotIn(workspace_b.id, workspace_ids)
 
-        no_access_user = User(email=f"no-access-{uuid4()}@example.com", display_name="No Access", is_active=True)
+        no_access_user = User(
+            email=f"no-access-{uuid4()}@example.com", display_name="No Access", is_active=True
+        )
         self.session.add(no_access_user)
         await self.session.flush()
-        self.assertEqual(await list_permitted_workspace_ids(self.session, no_access_user, "campaign.create"), [])
-        self.assertEqual(await list_permitted_organization_ids(self.session, no_access_user, "survey.create"), [])
+        self.assertEqual(
+            await list_permitted_workspace_ids(self.session, no_access_user, "campaign.create"), []
+        )
+        self.assertEqual(
+            await list_permitted_organization_ids(self.session, no_access_user, "survey.create"), []
+        )

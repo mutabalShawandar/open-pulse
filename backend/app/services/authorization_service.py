@@ -1,18 +1,24 @@
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.models import User, Workspace, WorkspaceMember, OrganizationMember, Permission, Role, RolePermission, UserRole
+from app.models import (
+    OrganizationMember,
+    Permission,
+    Role,
+    RolePermission,
+    User,
+    UserRole,
+    Workspace,
+    WorkspaceMember,
+)
 
 
 async def require_clinic_permission(
-    session: AsyncSession,
-    user: User,
-    clinic_id: UUID,
-    permission_name: str
+    session: AsyncSession, user: User, clinic_id: UUID, permission_name: str
 ) -> None:
     """
     Raise HTTP 403 if the user lacks permission in this clinic.
@@ -21,8 +27,7 @@ async def require_clinic_permission(
     # Get permissions for the user's roles in the clinic
     if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"User {user.id} is not active"
+            status_code=status.HTTP_403_FORBIDDEN, detail=f"User {user.id} is not active"
         )
 
     try:
@@ -39,10 +44,11 @@ async def require_clinic_permission(
         ) from error
     if is_platform_admin is not None:
         return
-    
+
     try:
         permission_id = await session.scalar(
-            select(Permission.id).select_from(WorkspaceMember)
+            select(Permission.id)
+            .select_from(WorkspaceMember)
             .join(RolePermission, RolePermission.role_id == WorkspaceMember.role_id)
             .join(Permission, Permission.id == RolePermission.permission_id)
             .where(
@@ -67,8 +73,11 @@ async def require_clinic_permission(
     # rejecting.
     try:
         organization_permission_id = await session.scalar(
-            select(Permission.id).select_from(Workspace)
-            .join(OrganizationMember, OrganizationMember.organization_id == Workspace.organization_id)
+            select(Permission.id)
+            .select_from(Workspace)
+            .join(
+                OrganizationMember, OrganizationMember.organization_id == Workspace.organization_id
+            )
             .join(RolePermission, RolePermission.role_id == OrganizationMember.role_id)
             .join(Permission, Permission.id == RolePermission.permission_id)
             .where(
@@ -87,15 +96,12 @@ async def require_clinic_permission(
     if organization_permission_id is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"User {user.id} does not have permission '{permission_name}' in clinic {clinic_id}"
+            detail=f"User {user.id} does not have permission '{permission_name}' in clinic {clinic_id}",
         )
 
 
 async def require_organization_permission(
-    session: AsyncSession,
-    user: User,
-    organization_id: UUID,
-    permission_name: str
+    session: AsyncSession, user: User, organization_id: UUID, permission_name: str
 ) -> None:
     """
     Raise HTTP 403 if the user lacks permission in this organization.
@@ -103,8 +109,7 @@ async def require_organization_permission(
     """
     if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"User {user.id} is not active"
+            status_code=status.HTTP_403_FORBIDDEN, detail=f"User {user.id} is not active"
         )
 
     try:
@@ -124,7 +129,8 @@ async def require_organization_permission(
 
     try:
         permission_id = await session.scalar(
-            select(Permission.id).select_from(OrganizationMember)
+            select(Permission.id)
+            .select_from(OrganizationMember)
             .join(RolePermission, RolePermission.role_id == OrganizationMember.role_id)
             .join(Permission, Permission.id == RolePermission.permission_id)
             .where(
@@ -143,7 +149,7 @@ async def require_organization_permission(
     if permission_id is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"User {user.id} does not have permission '{permission_name}' in organization {organization_id}"
+            detail=f"User {user.id} does not have permission '{permission_name}' in organization {organization_id}",
         )
 
 
@@ -206,7 +212,9 @@ async def list_permitted_workspace_ids(
         )
         via_organization = await session.scalars(
             select(Workspace.id)
-            .join(OrganizationMember, OrganizationMember.organization_id == Workspace.organization_id)
+            .join(
+                OrganizationMember, OrganizationMember.organization_id == Workspace.organization_id
+            )
             .join(RolePermission, RolePermission.role_id == OrganizationMember.role_id)
             .join(Permission, Permission.id == RolePermission.permission_id)
             .where(OrganizationMember.user_id == user.id, Permission.name == permission_name)
@@ -217,4 +225,3 @@ async def list_permitted_workspace_ids(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Authorization storage is unavailable",
         ) from error
-

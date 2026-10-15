@@ -1,0 +1,1048 @@
+{
+  "language": {
+    "label": "Sprache",
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "auth": {
+    "login": {
+      "title": "Anmelden",
+      "description": "Melden Sie sich mit Ihrem Plattformkonto an.",
+      "error": "Die Anmeldung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+      "submit": "Mit Keycloak anmelden",
+      "register": "Noch keine Organisation? Jetzt registrieren"
+    },
+    "register": {
+      "heading": "Organisation registrieren",
+      "description": "Legen Sie Ihre Organisation an und werden Sie deren erste:r Administrator:in.",
+      "doneTitle": "Fast geschafft",
+      "doneBody": "Wir haben Ihnen eine E-Mail geschickt. Bestätigen Sie Ihre Adresse und legen Sie ein Passwort fest, um sich anzumelden.",
+      "toLogin": "Zur Anmeldung",
+      "haveAccount": "Bereits registriert? Anmelden",
+      "errors": {
+        "slug-taken": "Diese Adresse ist bereits vergeben. Bitte wählen Sie eine andere.",
+        "validation": "Bitte füllen Sie alle Felder korrekt aus.",
+        "rate-limited": "Zu viele Versuche. Bitte versuchen Sie es in einer Minute erneut.",
+        "unknown": "Die Organisation konnte nicht angelegt werden. Bitte versuchen Sie es erneut."
+      },
+      "form": {
+        "name": "Name der Organisation",
+        "slug": "Adresse",
+        "slugHint": "Nur Kleinbuchstaben, Ziffern und Bindestriche.",
+        "ownerName": "Ihr Name",
+        "email": "E-Mail-Adresse",
+        "emailHint": "Wir senden Ihnen einen Link zur Bestätigung und Passwort-Einrichtung.",
+        "submit": "Organisation registrieren",
+        "pending": "Organisation wird angelegt …"
+      }
+    },
+    "accessDenied": {
+      "title": "Zugriff nicht eingerichtet",
+      "body": "Ihr Keycloak-Konto hat noch keinen aktiven Zugriff auf die Plattform. Wenden Sie sich an Ihre Administration.",
+      "toLogin": "Zur Anmeldung"
+    }
+  },
+  "publicSurvey": {
+    "loading": "Umfrage wird geladen",
+    "badge": "Umfrage",
+    "unavailable": "Nicht verfügbar",
+    "closedTitle": "Diese Umfrage ist geschlossen.",
+    "closedBody": "Der Befragungszeitraum ist beendet oder dieser Link ist nicht mehr gültig. Es können keine weiteren Antworten abgegeben werden.",
+    "closedNote": "Ihre bisherigen Antworten bleiben geschützt. Bei Fragen wenden Sie sich bitte direkt an die Organisation, die Sie eingeladen hat.",
+    "page": {
+      "logoAlt": "Logo von {name}",
+      "tagline": "Ihre Meinung zählt",
+      "anonymous": "Diese Umfrage wird anonym verarbeitet.",
+      "legalNav": "Rechtliche Informationen",
+      "legalNotice": "Impressum",
+      "privacy": "Datenschutz",
+      "terms": "AGB"
+    },
+    "form": {
+      "unreachable": "Die Umfrage ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.",
+      "submitFailed": "Die Antworten konnten nicht übermittelt werden. Bitte versuchen Sie es erneut.",
+      "thanks": "Vielen Dank für Ihre Rückmeldung.",
+      "thanksBody": "Ihre Antworten wurden übermittelt.",
+      "section": "Abschnitt {number}",
+      "legalRequired": "Bitte bestätigen Sie die Datenschutzerklärung und Teilnahmebedingungen, bevor Sie die Umfrage absenden.",
+      "requiredMissing": "Bitte beantworten Sie alle Pflichtfragen, bevor Sie die Umfrage absenden.",
+      "legalIntro": "Ich habe die",
+      "legalPrivacy": "Datenschutzerklärung",
+      "legalAnd": "zur Kenntnis genommen und akzeptiere die",
+      "legalTerms": "Teilnahmebedingungen (AGB)",
+      "legalOutro": ". Das",
+      "legalNotice": "Impressum",
+      "legalEnd": "habe ich zur Kenntnis genommen.",
+      "requiredCount": "{count} Pflichtfragen sind mit",
+      "submit": "Umfrage absenden",
+      "sending": "Wird übermittelt …",
+      "yes": "Ja",
+      "no": "Nein",
+      "other": "Sonstiges",
+      "otherAnswer": "Sonstige Antwort",
+      "selectRating": "Bewertung {value} auswählen",
+      "scale": "Skala von {min} bis {max}",
+      "ratingOf": "{value} von {max}",
+      "errors": {
+        "tooMany": "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+        "completed": "Diese Umfrage wurde bereits abgeschlossen.",
+        "check": "Bitte prüfen Sie Ihre Eingaben und versuchen Sie es erneut.",
+        "Choice question requires selected options": "Bitte wählen Sie mindestens eine Antwort aus oder geben Sie eine sonstige Antwort ein.",
+        "Too few options selected": "Bitte wählen Sie mehr Antworten aus.",
+        "Too many options selected": "Sie haben zu viele Antworten ausgewählt.",
+        "Numeric answer is below the permitted range": "Eine Zahl liegt unter dem erlaubten Mindestwert.",
+        "Numeric answer is above the permitted range": "Eine Zahl liegt über dem erlaubten Höchstwert.",
+        "Date answer is before the permitted range": "Ein Datum liegt vor dem erlaubten Zeitraum.",
+        "Date answer is after the permitted range": "Ein Datum liegt nach dem erlaubten Zeitraum.",
+        "Required questions are missing": "Bitte beantworten Sie alle Pflichtfragen."
+      }
+    }
+  },
+  "dashboard": {
+    "nav": {
+      "label": "Hauptnavigation",
+      "overview": "Übersicht",
+      "surveys": "Umfragen",
+      "workspaces": "Workspaces",
+      "administration": "Administration",
+      "email": "E-Mail-Versand"
+    },
+    "platformUser": "Plattformbenutzer",
+    "workspaceFallback": "Arbeitsbereich",
+    "myAccount": "Mein Konto",
+    "logout": "Abmelden"
+  },
+  "welcome": {
+    "eyebrow": "Arbeitsbereich",
+    "greeting": "Willkommen, {name}.",
+    "intro": "Verwalten Sie Workspaces und die ihnen zugeordneten Umfragen an einem Ort.",
+    "workspacesTitle": "Workspaces im Blick",
+    "workspacesDescription": "Stammdaten und Umfragezuordnungen werden pro Workspace gepflegt.",
+    "workspacesCount": "verfügbare Workspaces",
+    "openWorkspaces": "Workspaces öffnen",
+    "accessTitle": "Plattformzugang aktiv",
+    "accessDescription": "Ihre Identität und Ihr aktiver Plattformzugang wurden geprüft.",
+    "sessionVerified": "Sitzung verifiziert",
+    "catalogTitle": "Umfragekatalog",
+    "catalogDescription": "Erstellen, pflegen und veröffentlichen Sie wiederverwendbare Umfragen.",
+    "publishedCount": "davon {count} veröffentlicht",
+    "openSurveys": "Umfragen öffnen"
+  },
+  "workspaces": {
+    "eyebrow": "Organisation",
+    "listTitle": "Workspaces",
+    "listIntro": "Alle verfügbaren Workspaces und ihre Plattformdaten.",
+    "total": "{count} gesamt",
+    "new": "Neuer Workspace",
+    "emptyTitle": "Noch keine Workspaces verfügbar",
+    "emptyDescription": "Sobald Workspaces für Ihren Zugriff eingerichtet sind, erscheinen sie hier.",
+    "logoAlt": "Logo von {name}",
+    "locationPending": "Standortdaten ausstehend",
+    "loading": "Workspace wird geladen",
+    "loadingText": "Workspace wird geladen …",
+    "newTitle": "Neuer Workspace",
+    "newIntro": "Legen Sie einen Workspace auf der Plattform an.",
+    "allWorkspaces": "Alle Workspaces",
+    "createFailedTitle": "Workspace nicht angelegt",
+    "masterData": "Stammdaten",
+    "masterDataHint": "Name und interne Kennung werden für die Organisation der Plattform benötigt.",
+    "create": "Workspace anlegen",
+    "editTitle": "Workspace bearbeiten",
+    "profile": "Workspace-Profil",
+    "toWorkspace": "Zum Workspace",
+    "saveFailedTitle": "Änderungen nicht gespeichert",
+    "editMasterData": "Stammdaten bearbeiten",
+    "editHint": "Änderungen werden in der Historie des Workspace festgehalten.",
+    "saveChanges": "Änderungen speichern",
+    "errors": {
+      "exists": "Diese interne Kennung wird bereits von einem anderen Workspace verwendet.",
+      "validation": "Bitte prüfen Sie die Pflichtfelder und die Hausnummer.",
+      "createUnknown": "Der Workspace konnte nicht angelegt werden. Bitte versuchen Sie es erneut.",
+      "saveUnknown": "Die Änderungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    },
+    "form": {
+      "name": "Workspace-Name",
+      "slug": "Interne Kennung",
+      "slugHint": "Nur Kleinbuchstaben, Zahlen und Bindestriche.",
+      "logo": "Workspace-Logo",
+      "logoCurrent": "Aktuelles Workspace-Logo",
+      "logoHint": "Optional: PNG, JPG oder WebP, maximal 2 MB. Das Logo wird sicher gespeichert und für Umfragen und Kampagnen verwendet.",
+      "location": "Standort",
+      "locationHint": "Diese Angaben können später für die Umfrageausspielung verwendet werden.",
+      "street": "Straße",
+      "houseNumber": "Hausnummer",
+      "postalCode": "PLZ",
+      "city": "Ort",
+      "saving": "Wird gespeichert …"
+    },
+    "detail": {
+      "all": "Alle Workspaces",
+      "profile": "Workspace-Profil",
+      "badge": "Stammdaten",
+      "edit": "Bearbeiten",
+      "campaigns": "Kampagnen",
+      "recipients": "Empfänger",
+      "analytics": "Auswertungen",
+      "createdTitle": "Workspace angelegt",
+      "updatedTitle": "Änderungen gespeichert",
+      "createdBody": "Der Workspace steht jetzt für die weitere Einrichtung bereit.",
+      "updatedBody": "Die Stammdaten des Workspace wurden aktualisiert.",
+      "assignmentAdded": "Version zugeordnet",
+      "assignmentRemoved": "Zuordnung aufgehoben",
+      "addedBody": "Die veröffentlichte Version kann jetzt für diesen Workspace verwendet werden.",
+      "removedBody": "Die Version steht nicht mehr für neue Kampagnen dieses Workspace bereit.",
+      "assignErrorTitle": "Zuordnung nicht aktualisiert",
+      "exists": "Diese veröffentlichte Version ist bereits dem Workspace zugeordnet.",
+      "validation": "Bitte wählen Sie eine veröffentlichte Version aus.",
+      "unknown": "Die Änderung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+      "locationTitle": "Standortdaten",
+      "locationHint": "Diese Angaben bilden die Grundlage für die spätere workspacespezifische Umfrageausspielung.",
+      "noLocation": "Für diesen Workspace sind noch keine Standortdaten hinterlegt.",
+      "versionsTitle": "Veröffentlichte Umfrageversionen",
+      "versionsHint": "Kampagnen wählen später ausschließlich aus diesen aktiven, unveränderlichen Versionen."
+    }
+  },
+  "admin": {
+    "eyebrow": "Administration",
+    "users": {
+      "title": "Benutzer",
+      "intro": "Plattformzugänge erstellen und verwalten.",
+      "created": "Benutzer angelegt. Keycloak sendet die Konto-Einladung.",
+      "deactivated": "Benutzer erfolgreich deaktiviert.",
+      "reactivated": "Benutzer erfolgreich reaktiviert.",
+      "deleted": "Benutzer dauerhaft gelöscht.",
+      "errorExists": "Für diese E-Mail-Adresse existiert bereits ein Benutzer.",
+      "errorGeneric": "Die Aktion konnte nicht durchgeführt werden.",
+      "allUsers": "Alle Benutzer",
+      "count": "{count} Plattformbenutzer",
+      "colName": "Name",
+      "colEmail": "E-Mail",
+      "colStatus": "Status",
+      "colActions": "Aktionen",
+      "active": "Aktiv",
+      "inactive": "Deaktiviert",
+      "addTitle": "Benutzer hinzufügen",
+      "addDescription": "Keycloak erstellt den Zugang und sendet eine Einladungs-E-Mail.",
+      "form": {
+        "displayName": "Anzeigename",
+        "email": "E-Mail-Adresse",
+        "submit": "Benutzer einladen",
+        "pending": "Benutzer wird eingeladen …"
+      },
+      "deactivate": {
+        "trigger": "Deaktivieren",
+        "title": "Benutzer deaktivieren?",
+        "description": "{name} kann sich danach nicht mehr in der Plattform anmelden. Diese Aktion deaktiviert auch das zugehörige Keycloak-Konto.",
+        "cancel": "Abbrechen",
+        "confirm": "Deaktivieren"
+      },
+      "delete": {
+        "trigger": "Löschen",
+        "title": "Benutzer endgültig löschen?",
+        "description": "{name} wird aus Keycloak und der Plattform gelöscht. Workspace-Zuordnungen und Rollen werden entfernt. Die Aktion kann nicht rückgängig gemacht werden.",
+        "cancel": "Abbrechen",
+        "confirm": "Endgültig löschen"
+      },
+      "grantAdmin": {
+        "trigger": "Vollzugriff",
+        "title": "Vollzugriff erteilen?",
+        "description": "{name} erhält Zugriff auf alle Workspaces, Kampagnen, Umfragen und die Benutzerverwaltung.",
+        "cancel": "Abbrechen",
+        "confirm": "Vollzugriff erteilen"
+      },
+      "reactivate": "Reaktivieren"
+    },
+    "email": {
+      "title": "E-Mail-Versand",
+      "intro": "Globale SMTP-Verbindung für Kampagnen-E-Mails einrichten.",
+      "unavailable404": "Die SMTP-Funktion ist im verbundenen Backend noch nicht verfügbar. Starten Sie das Backend mit der aktuellen Version neu und führen Sie die Datenbankmigration aus.",
+      "unavailableGeneric": "Die SMTP-Konfiguration kann momentan nicht geladen werden. Bitte versuchen Sie es später erneut.",
+      "actionError": "Die Aktion konnte nicht abgeschlossen werden. Prüfen Sie Server, Zugangsdaten und den Verschlüsselungs-Schlüssel.",
+      "saved": "SMTP-Konfiguration gespeichert",
+      "savedBody": "Sie können jetzt eine Test-E-Mail versenden.",
+      "tested": "Test-E-Mail an SMTP-Server übergeben",
+      "testedBody": "Prüfen Sie das Postfach des Empfängers.",
+      "failedTitle": "Aktion fehlgeschlagen",
+      "unavailableTitle": "SMTP-Konfiguration nicht verfügbar",
+      "cardTitle": "SMTP-Verbindung",
+      "cardDescription": "Nur Plattformadministratoren können diese Zugangsdaten verwalten.",
+      "form": {
+        "senderName": "Absendername",
+        "senderEmail": "Absender-E-Mail-Adresse",
+        "host": "SMTP-Server",
+        "port": "Port",
+        "encryption": "Verschlüsselung",
+        "starttls": "STARTTLS (empfohlen, meist Port 587)",
+        "ssl": "SSL/TLS (meist Port 465)",
+        "none": "Keine Verschlüsselung (nur lokaler Testserver)",
+        "username": "Benutzername",
+        "optional": "(optional)",
+        "password": "Passwort",
+        "stored": "gespeichert",
+        "keepPassword": "Leer lassen, um es beizubehalten",
+        "passwordPlaceholder": "SMTP-Passwort",
+        "passwordHint": "Das Passwort wird verschlüsselt gespeichert und nie wieder angezeigt.",
+        "save": "SMTP-Konfiguration speichern",
+        "saving": "Wird gespeichert …",
+        "testTo": "Test-E-Mail an",
+        "testHint": "Der Versand wird im Audit-Protokoll vermerkt. Die E-Mail enthält keine Umfragedaten.",
+        "sendTest": "Test-E-Mail senden",
+        "sending": "Wird gesendet …"
+      }
+    }
+  },
+  "surveys": {
+    "status": {
+      "archived": "Archiviert",
+      "published": "Veröffentlicht",
+      "draft": "Entwurf"
+    },
+    "list": {
+      "eyebrow": "Umfragekatalog",
+      "title": "Umfragen",
+      "hideArchive": "Archiv ausblenden",
+      "showArchive": "Archiv anzeigen",
+      "new": "Neue Umfrage",
+      "noDescription": "Ohne Beschreibung",
+      "openDetails": "Details öffnen",
+      "emptyArchived": "Keine archivierten Umfragen",
+      "empty": "Noch keine Umfragen",
+      "emptyHint": "Erstellen Sie die erste Umfrage für den Katalog."
+    },
+    "new": {
+      "all": "Alle Umfragen",
+      "title": "Neue Umfrage",
+      "cardTitle": "Grundlage anlegen",
+      "cardDescription": "Die Umfrage startet als bearbeitbarer Entwurf.",
+      "fTitle": "Titel",
+      "fDescription": "Beschreibung",
+      "fDraftLabel": "Entwurfsbezeichnung",
+      "fDraftPlaceholder": "z. B. Erste Fassung",
+      "submit": "Umfrage anlegen"
+    },
+    "detail": {
+      "all": "Alle Umfragen",
+      "unnamedDraft": "Unbenannter Entwurf",
+      "editableDraft": "bearbeitbarer Entwurf",
+      "versionPublished": "Version {number} · veröffentlicht",
+      "restore": "Wiederherstellen",
+      "archive": "Archivieren",
+      "masterData": "Stammdaten",
+      "masterDataHint": "Änderungen betreffen nicht bereits veröffentlichte Versionen.",
+      "fTitle": "Titel",
+      "fDescription": "Beschreibung",
+      "save": "Speichern",
+      "versions": "Versionen",
+      "versionsCount": "{drafts} Entwürfe · {published} veröffentlicht",
+      "editable": "Bearbeitbar",
+      "editDraft": "Entwurf bearbeiten",
+      "immutable": "Unveränderlich veröffentlicht",
+      "version": "Version {number}",
+      "viewVersion": "Version ansehen",
+      "noVersions": "Noch keine Versionen."
+    },
+    "versionPage": {
+      "toSurvey": "Zur Umfrage",
+      "immutable": "Unveränderliche Version",
+      "publishedOn": "Veröffentlicht am {date}.",
+      "section": "Abschnitt {number}",
+      "rules": "Regeln"
+    },
+    "draftPage": {
+      "toSurvey": "Zur Umfrage",
+      "edit": "Entwurf bearbeiten",
+      "intro": "Baue die Struktur deiner Umfrage auf. Veröffentlicht wird später immer eine unveränderliche Version.",
+      "errorTitle": "Fehler",
+      "actionFailed": "Aktion fehlgeschlagen."
+    },
+    "copy": {
+      "trigger": "Kopie erstellen",
+      "title": "Vorlage für einen Workspace kopieren",
+      "description": "Inhalt, Fragen und Regeln werden in einen eigenständigen Entwurf kopiert. Passe den Titel für den Workspace jetzt an.",
+      "source": "Ausgangsversion",
+      "sourceHint": "Wähle den Entwurf oder die veröffentlichte Version, die als Vorlage dienen soll.",
+      "copyTitle": "Titel der Kopie",
+      "copySuffix": "Workspace",
+      "fDescription": "Beschreibung",
+      "cancel": "Abbrechen",
+      "submit": "Kopie anlegen"
+    },
+    "newDraft": {
+      "trigger": "Neuen Entwurf anlegen",
+      "title": "Neuen Entwurf anlegen",
+      "description": "Erstelle eine leere Arbeitsversion oder übernimm eine vorhandene Version, um sie sicher weiterzuentwickeln.",
+      "label": "Bezeichnung",
+      "labelPlaceholder": "z. B. Überarbeitung 2026",
+      "labelHint": "Optional. Die Bezeichnung hilft bei mehreren parallelen Entwürfen.",
+      "takeOver": "Inhalt übernehmen",
+      "empty": "Leer beginnen",
+      "takeOverHint": "Beim Übernehmen werden Abschnitte, Fragen, Optionen und Validierungen in einen neuen bearbeitbaren Entwurf kopiert.",
+      "cancel": "Abbrechen",
+      "submit": "Entwurf anlegen"
+    },
+    "preview": {
+      "button": "Vorschau",
+      "description": "Vorschau aus Sicht der befragten Person. Antworten werden nicht gespeichert.",
+      "section": "Abschnitt {number}",
+      "noSections": "Dieser Entwurf enthält noch keine Abschnitte.",
+      "close": "Schließen",
+      "publish": "Veröffentlichen",
+      "publishTitle": "Entwurf veröffentlichen?",
+      "publishDescription": "Die aktuelle Struktur wird als unveränderliche Version gespeichert. Änderungen sind danach nur über einen neuen Entwurf möglich.",
+      "publishNow": "Jetzt veröffentlichen",
+      "scale": "Skala von {min} bis {max}",
+      "yes": "Ja",
+      "no": "Nein"
+    },
+    "errors": {
+      "ratingNumbers": "Minimal- und Maximalwert müssen Zahlen sein.",
+      "ratingSaveFailed": "Bewertungsskala konnte nicht gespeichert werden.",
+      "publishFailed": "Veröffentlichung fehlgeschlagen."
+    },
+    "assign": {
+      "none": "Noch keine Umfrageversion zugeordnet",
+      "noneHint": "Wählen Sie rechts eine veröffentlichte Version aus.",
+      "unknownVersion": "Version {id}",
+      "assignedOn": "Zugeordnet am {date}",
+      "active": "Aktiv",
+      "thisVersion": "diese Umfrageversion",
+      "title": "Version zuordnen",
+      "hint": "Nur veröffentlichte Versionen können für Kampagnen verwendet werden.",
+      "noAccess": "Sie können die Zuordnungen sehen, benötigen aber Zugriff auf den Umfragekatalog, um sie zu verwalten.",
+      "noMore": "Es sind keine weiteren veröffentlichten Versionen verfügbar.",
+      "published": "Veröffentlichte Version",
+      "choose": "Version auswählen",
+      "pinHint": "Der spätere Kampagnenstart bindet exakt diese unveränderliche Version.",
+      "assign": "Version zuordnen",
+      "assigning": "Wird zugeordnet …",
+      "remove": "{name} entfernen",
+      "unassignTitle": "Zuordnung aufheben?",
+      "unassignDescription": "{name} steht anschließend nicht mehr für neue Kampagnen dieses Workspace bereit.",
+      "cancel": "Abbrechen",
+      "unassign": "Zuordnung aufheben"
+    },
+    "editor": {
+      "types": {
+        "short_text": "Kurzantwort",
+        "long_text": "Langer Text",
+        "single_choice": "Einfachauswahl",
+        "multiple_choice": "Mehrfachauswahl",
+        "yes_no": "Ja / Nein",
+        "rating": "Bewertung",
+        "number": "Zahl",
+        "date": "Datum"
+      },
+      "addSection": "Abschnitt hinzufügen",
+      "addSectionHint": "Gliedere die Befragung in verständliche Themenblöcke.",
+      "title": "Titel",
+      "sectionPlaceholder": "z. B. Ihr Besuch",
+      "intro": "Einleitung",
+      "optional": "(optional)",
+      "sectionIntroPlaceholder": "Worum geht es in diesem Abschnitt?",
+      "section": "Abschnitt {number}",
+      "addQuestion": "Frage hinzufügen",
+      "editSection": "Abschnitt bearbeiten",
+      "saveChanges": "Änderungen speichern",
+      "noSections": "Noch keine Abschnitte",
+      "noSectionsHint": "Lege den ersten Themenblock an, um Fragen darin zu organisieren.",
+      "item": {
+        "section": "Abschnitt",
+        "question": "Frage",
+        "option": "Option"
+      },
+      "moveUp": "{item} nach oben verschieben",
+      "moveDown": "{item} nach unten verschieben",
+      "noQuestions": "In diesem Abschnitt sind noch keine Fragen.",
+      "question": "Frage {number}",
+      "editQuestion": "Frage bearbeiten",
+      "answerOptions": "Antwortoptionen",
+      "optionsHint": "Mindestens zwei unterschiedliche Optionen sind zum Veröffentlichen erforderlich.",
+      "deleteOption": "Option löschen",
+      "displayText": "Anzeigetext",
+      "storedValue": "Gespeicherter Wert",
+      "saveOption": "Option speichern",
+      "newOption": "Neue Antwortoption",
+      "addOption": "Option hinzufügen",
+      "ratingScale": "Bewertungsskala",
+      "minValue": "Minimalwert",
+      "maxValue": "Maximalwert",
+      "save": "Speichern",
+      "deleteQuestionLabel": "Frage löschen",
+      "deleteQuestionTitle": "Frage löschen?",
+      "deleteQuestionDescription": "Diese Frage wird unwiderruflich aus dem Entwurf entfernt.",
+      "cancel": "Abbrechen",
+      "delete": "Löschen",
+      "deleteSection": "Abschnitt löschen",
+      "deleteSectionTitle": "Abschnitt löschen?",
+      "deleteSectionDescription": "Der Abschnitt und seine enthaltenen Fragen werden unwiderruflich aus diesem Entwurf entfernt.",
+      "questionType": "Fragetyp",
+      "question_": "Frage",
+      "questionPlaceholder": "Wie zufrieden waren Sie?",
+      "hint": "Hinweis",
+      "initialOptionsHint": "Lege mindestens zwei Optionen an; sie werden mit der Frage gespeichert.",
+      "optionN": "Option {number}",
+      "removeOptionN": "Option {number} entfernen",
+      "required": "Pflichtfrage",
+      "allowOther": "Sonstiges mit Freitext erlauben",
+      "saveQuestion": "Frage speichern"
+    }
+  },
+  "campaigns": {
+    "status": {
+      "draft": "Entwurf",
+      "scheduled": "Geplant",
+      "active": "Versendet",
+      "paused": "Pausiert",
+      "completed": "Abgeschlossen",
+      "cancelled": "Abgebrochen"
+    },
+    "versionLine": "{survey} · Version {number}",
+    "list": {
+      "showCompleted": "Abgeschlossene anzeigen ({count})",
+      "emptyTitle": "Noch keine Kampagnen",
+      "emptyDescription": "Erstellen Sie eine Kampagne aus einer diesem Workspace zugewiesenen veröffentlichten Umfrage."
+    },
+    "page": {
+      "toWorkspace": "← Zum Workspace",
+      "title": "Kampagnen",
+      "create": "Kampagne erstellen"
+    },
+    "newPage": {
+      "back": "← Kampagnen",
+      "title": "Kampagne erstellen"
+    },
+    "detail": {
+      "back": "← Kampagnen",
+      "eyebrow": "Kampagne · {status}",
+      "tabs": {
+        "overview": "Übersicht",
+        "recipients": "Empfänger ({count})",
+        "email": "E-Mail-Vorlage",
+        "deliveries": "Zustellungen",
+        "analytics": "Analytics"
+      },
+      "http": {
+        "400": "Ungültige Eingabe.",
+        "401": "Ihre Sitzung ist abgelaufen. Bitte erneut anmelden.",
+        "403": "Sie haben keine Berechtigung für diese Änderung.",
+        "404": "Kampagne oder Vorlage wurde nicht gefunden.",
+        "409": "Die Kampagne wurde bereits aktiviert oder die Vorlage ist gesperrt und kann nicht mehr geändert werden.",
+        "422": "Bitte prüfen Sie die Eingaben.",
+        "fallback": "Bitte versuchen Sie es erneut."
+      },
+      "emailTest": "Test-E-Mail konnte nicht gesendet werden. {detail}",
+      "emailTemplate": "Vorlage konnte nicht gespeichert werden. {detail}",
+      "status409": "Statusänderung nicht möglich: Nach dem Versand kann die Kampagne nicht mehr zu „Entwurf“ oder „Geplant“ zurückgesetzt werden.",
+      "statusFailed": "Status konnte nicht geändert werden. {detail}",
+      "send409": "Versand konnte nicht in die Warteschlange gestellt werden. Häufige Ursachen: Es ist noch kein SMTP-Server unter „E-Mail-Versand“ in der Administration konfiguriert, es wurde noch keine E-Mail-Vorlage gespeichert, oder die Kampagne befindet sich nicht mehr im Status „draft“/„scheduled“.",
+      "sendFailed": "Versand konnte nicht in die Warteschlange gestellt werden. {detail}",
+      "sendFailedTitle": "Versand fehlgeschlagen",
+      "statusNotChanged": "Status nicht geändert",
+      "sendStarted": "Versand erfolgreich gestartet",
+      "sentCount": "{count} E-Mail(s) wurden in die Versandwarteschlange gestellt.",
+      "sentNone": "Es wurden keine neuen E-Mails in die Warteschlange gestellt — alle ausgewählten Empfänger waren bereits versendet.",
+      "sentStatusNote": "Der Status wurde auf „Versendet“ gesetzt.",
+      "runningTitle": "Kampagne läuft bereits",
+      "runningBody": "Es liegen bereits Antworten vor. Umfrageversion und Löschen sind deshalb gesperrt.",
+      "deliveryOverview": "Versandübersicht",
+      "queued": "in Warteschlange",
+      "sent": "versendet",
+      "failed": "fehlgeschlagen",
+      "publicLink": "Öffentlicher Umfragelink",
+      "open": "Öffnen",
+      "runtime": "Laufzeit",
+      "endsOn": "Die Kampagne endet am {date}.",
+      "noEnd": "Diese Kampagne hat aktuell kein Enddatum.",
+      "locked": "Abgeschlossene oder abgebrochene Kampagnen können nicht mehr geändert werden.",
+      "statusTitle": "Status",
+      "statusSentHint": "Es wurden bereits E-Mails versendet — die Kampagne kann nicht mehr zu „Entwurf“ oder „Geplant“ zurückgesetzt werden.",
+      "statusEditHint": "Empfänger und Vorlage können nur im Status „Entwurf“ oder „Geplant“ bearbeitet werden. Der Versand setzt den Status automatisch auf „Versendet“.",
+      "importDone": "Import abgeschlossen",
+      "importSummary": "{created} neu, {duplicates} bereits vorhanden, {assigned} dieser Kampagne hinzugefügt.",
+      "importFailed": "Import fehlgeschlagen",
+      "importFailedBody": "Prüfen Sie Format, E-Mail-Adressen und die maximale Anzahl von 2.000 Empfängern.",
+      "importTitle": "Empfänger importieren",
+      "notEditable": "Die Kampagne ist nicht mehr bearbeitbar.",
+      "addTitle": "Zur Kampagne hinzufügen",
+      "addSelection": "Auswahl hinzufügen",
+      "noneAvailable": "Keine weiteren aktiven Empfänger verfügbar.",
+      "selected": "Ausgewählt ({count})",
+      "remove": "Entfernen",
+      "noneSelected": "Noch keine Empfänger ausgewählt.",
+      "errorTitle": "Fehler",
+      "testSent": "Test-E-Mail gesendet",
+      "testSentBody": "Bitte prüfen Sie den Posteingang des Testempfängers.",
+      "retry": "Fehlgeschlagene Zustellungen erneut prüfen",
+      "deliveriesCount": "{count} Zustellungen",
+      "colRecipient": "Empfänger",
+      "colStatus": "Status",
+      "colAttempts": "Versuche",
+      "colTime": "Zeitpunkt",
+      "colNote": "Hinweis",
+      "noName": "Ohne Namen",
+      "deliveryStatus": {
+        "queued": "in Warteschlange",
+        "sending": "wird gesendet",
+        "sent": "versendet",
+        "failed": "fehlgeschlagen"
+      },
+      "started": "Gestartet",
+      "completed": "Abgeschlossen",
+      "noPermission": "Keine Berechtigung für Auswertungen dieses Workspace."
+    },
+    "wizard": {
+      "steps": {
+        "1": "Details",
+        "2": "Empfänger",
+        "3": "E-Mail-Vorlage",
+        "4": "Umfrage & Überprüfung"
+      },
+      "detailsHint": "Titel und Beschreibung der Kampagne.",
+      "title": "Titel",
+      "description": "Beschreibung",
+      "endsAt": "Endet am",
+      "optional": "(optional)",
+      "endsAtHint": "Nach diesem Zeitpunkt wird die Kampagne automatisch beendet und nimmt keine Antworten mehr an.",
+      "recipientsTitle": "Empfänger",
+      "recipientsHint": "Importieren Sie Empfänger und wählen Sie aus, wer dieser Kampagne zugeordnet werden soll. Dieser Schritt ist optional und kann später ergänzt werden.",
+      "name": "Name",
+      "email": "E-Mail-Adresse",
+      "addRow": "Weitere Zeile",
+      "import": "Importieren",
+      "importing": "Wird importiert …",
+      "csvLabel": "Oder CSV-Datei importieren",
+      "csvHint": "Spalten „Name;E-Mail“ oder nur „E-Mail“. Maximal 2.000 Empfänger und 2 MB.",
+      "importResult": "{created} neu importiert, {duplicates} bereits vorhanden.",
+      "csvEmpty": "Die Datei enthielt keine gültigen E-Mail-Adressen.",
+      "selectFor": "Für diese Kampagne auswählen ({count} ausgewählt)",
+      "noRecipients": "Noch keine Empfänger für diesen Workspace vorhanden.",
+      "emailIntro": "Eine sinnvolle Standardvorlage ist bereits ausgefüllt — passen Sie sie an oder übernehmen Sie sie unverändert. Kann auch später auf der Kampagnenseite ergänzt werden.",
+      "defaultCampaign": "Ihre Kampagne",
+      "surveyTitle": "Umfrage & Überprüfung",
+      "surveyHint": "Wählen Sie die veröffentlichte Umfrageversion, die für diese Kampagne verwendet wird.",
+      "surveyVersion": "Veröffentlichte Umfrageversion",
+      "chooseVersion": "Version auswählen",
+      "noVersions": "Diesem Workspace ist noch keine veröffentlichte Umfrageversion zugeordnet. Ordnen Sie zuerst eine Version über die Workspace-Seite zu.",
+      "summary": "Zusammenfassung",
+      "sumTitle": "Titel",
+      "sumRecipients": "Empfänger",
+      "sumSelected": "{count} ausgewählt",
+      "sumTemplate": "E-Mail-Vorlage",
+      "sumSubject": "Betreff: {subject}",
+      "sumNoTemplate": "Noch nicht hinterlegt",
+      "sumSurvey": "Umfrageversion",
+      "errorTitle": "Fehler",
+      "back": "Zurück",
+      "next": "Weiter",
+      "create": "Kampagne erstellen",
+      "creating": "Wird erstellt …"
+    },
+    "emailFields": {
+      "editTitle": "Vorlage bearbeiten",
+      "editHint": "Die Vorlage wird beim ersten Versand gesperrt. Nutzen Sie die Platzhalter unten, sie werden beim Versand automatisch ersetzt.",
+      "subject": "Betreff",
+      "senderName": "Absendername",
+      "replyTo": "Antwortadresse",
+      "html": "HTML-Inhalt",
+      "text": "Text-Inhalt",
+      "textHint": "(Fallback ohne HTML)",
+      "placeholders": "Platzhalter (in den HTML- oder Text-Inhalt einfügen):",
+      "preview": "Live-Vorschau",
+      "previewHint": "Mit Beispielwerten befüllt. Die HTML-Vorschau wird vor der Darstellung bereinigt.",
+      "noSubject": "(Kein Betreff)",
+      "noText": "(Kein Text-Inhalt)",
+      "iframeTitle": "Sichere E-Mail-Vorschau"
+    },
+    "emailEditor": {
+      "locked": "Diese Vorlage ist gesperrt, da bereits E-Mails versendet wurden. Sie kann nicht mehr geändert werden.",
+      "save": "Vorlage speichern",
+      "testRecipient": "Testempfänger",
+      "testPlaceholder": "name@beispiel.de",
+      "sendTest": "Test-E-Mail senden"
+    },
+    "recipientImport": {
+      "submit": "Empfänger importieren und hinzufügen",
+      "name": "Name",
+      "email": "E-Mail-Adresse",
+      "removeN": "Empfänger {number} entfernen",
+      "addAnother": "Weiteren Empfänger hinzufügen",
+      "csvLabel": "Oder CSV-Datei importieren",
+      "csvHint": "Für größere Listen: Spalten „Name;E-Mail“ oder nur „E-Mail“. Maximal 2.000 Empfänger und 2 MB."
+    },
+    "endDate": {
+      "endsAt": "Endet am",
+      "hint": "Die Kampagne wird zu diesem Zeitpunkt automatisch abgeschlossen. Laufende oder neue Antworten sind danach nicht mehr möglich.",
+      "remove": "Enddatum entfernen",
+      "save": "Enddatum speichern",
+      "saving": "Wird gespeichert …"
+    },
+    "changeVersion": {
+      "trigger": "Umfrage ändern",
+      "title": "Verknüpfte Umfrage ändern",
+      "description": "Aktuell zugeordnet: {current}. Nur veröffentlichte Versionen, die diesem Workspace zugeordnet sind, stehen zur Auswahl.",
+      "locked": "Sobald Antworten vorliegen, kann die Version nicht mehr geändert werden.",
+      "none": "Es ist keine andere veröffentlichte Version für diesen Workspace verfügbar.",
+      "newVersion": "Neue Umfrageversion",
+      "choose": "Version auswählen",
+      "pinHint": "Die Kampagne wird exakt an diese unveränderliche Version gebunden.",
+      "cancel": "Abbrechen",
+      "submit": "Umfrage ändern"
+    },
+    "sendDialog": {
+      "trigger": "Kampagne jetzt versenden",
+      "title": "E-Mails jetzt versenden?",
+      "campaign": "Kampagne: „{title}“",
+      "summary": "Empfänger: {count} · Betreff: {subject}",
+      "warning": "Der Versand startet sofort im Hintergrund. Die Vorlage wird dabei gesperrt und bereits versandte E-Mails können nicht zurückgerufen werden.",
+      "cancel": "Abbrechen",
+      "submit": "Jetzt versenden",
+      "starting": "Versand wird gestartet …"
+    },
+    "deleteDialog": {
+      "trigger": "Kampagne löschen",
+      "title": "Kampagne löschen?",
+      "description": "„{title}“ wird dauerhaft gelöscht. Dies ist nur möglich, solange noch keine Antworten gestartet wurden.",
+      "cancel": "Abbrechen",
+      "confirm": "Endgültig löschen"
+    },
+    "actionErrors": {
+      "recipients": "Bitte prüfen Sie das Format und die maximale Anzahl von 2.000 Empfängern.",
+      "createFailed": "Die Kampagne konnte nicht erstellt werden. Bitte prüfen Sie die ausgewählte Umfrageversion.",
+      "importFailed": "Der Import konnte nicht verarbeitet werden."
+    }
+  },
+  "analytics": {
+    "back": "Zum Workspace",
+    "eyebrow": "Workspace · Auswertungen",
+    "title": "Antworten auswerten",
+    "selectCampaign": "Kampagne auswählen",
+    "started": "Gestartet",
+    "completed": "Abgeschlossen",
+    "noCampaigns": "Für diesen Workspace gibt es noch keine Kampagnen.",
+    "answers": "{count} Antworten",
+    "answersFree": "{count} Antworten · Freitext",
+    "average": "Ø",
+    "median": "Median",
+    "minimum": "Minimum",
+    "maximum": "Maximum",
+    "period": "Zeitraum: {from} – {to}",
+    "noData": "Keine auswertbaren Antworten vorhanden.",
+    "yes": "Ja",
+    "no": "Nein",
+    "noText": "Keine Freitextantworten vorhanden.",
+    "showLess": "Weniger anzeigen",
+    "showAll": "Alle {count} Antworten anzeigen",
+    "export": "Export",
+    "pdf": "PDF-Bericht",
+    "xlsx": "Excel-Datei"
+  },
+  "recipients": {
+    "back": "Zum Workspace",
+    "title": "Empfängerverzeichnis",
+    "imported": "Import abgeschlossen: {created} neu, {duplicates} bereits vorhanden.",
+    "optedOut": "Der Empfänger wurde für weitere E-Mails abgemeldet.",
+    "error": "Die Änderung konnte nicht gespeichert werden. Prüfen Sie die Eingaben und versuchen Sie es erneut.",
+    "addTitle": "Empfänger hinzufügen",
+    "addHint": "Einzelne Kontakte werden über Formularfelder erfasst. Für größere Listen verwenden Sie die CSV-Datei.",
+    "save": "Empfänger speichern",
+    "savedTitle": "Gespeicherte Empfänger ({count})",
+    "savedHint": "Nur aktive Empfänger können später einer E-Mail-Kampagne zugeordnet werden.",
+    "noName": "Ohne Namen",
+    "status": {
+      "active": "Aktiv",
+      "opted_out": "Abgemeldet",
+      "bounced": "Unzustellbar"
+    },
+    "none": "Noch keine Empfänger für diesen Workspace gespeichert.",
+    "optOut": {
+      "trigger": "Abmelden",
+      "title": "Empfänger abmelden?",
+      "description": "{name} erhält keine weiteren Kampagnen-E-Mails dieses Workspace. Diese Aktion kann derzeit nicht über die Oberfläche rückgängig gemacht werden.",
+      "cancel": "Abbrechen",
+      "confirm": "Abmeldung bestätigen"
+    }
+  },
+  "help": {
+    "ariaLabel": "Hilfe für diesen Bereich anzeigen",
+    "step": "Schritt {current} von {total}",
+    "back": "Zurück",
+    "done": "Fertig",
+    "next": "Weiter",
+    "topics": {
+      "overview": {
+        "title": "Übersicht",
+        "steps": [
+          {
+            "title": "Willkommen im Arbeitsbereich",
+            "description": "Die Übersicht ist Ihr Startpunkt. Von hier gelangen Sie über die linke Navigation zu Umfragen, Workspaces und der Administration."
+          },
+          {
+            "title": "Navigation nutzen",
+            "description": "Die Seitenleiste links zeigt alle Bereiche, auf die Sie Zugriff haben. Klicken Sie auf einen Eintrag, um dorthin zu wechseln."
+          },
+          {
+            "title": "Nächster Schritt",
+            "description": "Beginnen Sie in der Regel mit „Umfragen“, um eine Vorlage zu erstellen, oder mit „Workspaces“, um einen Workspace zu verwalten."
+          }
+        ]
+      },
+      "surveys": {
+        "title": "Umfragenkatalog",
+        "steps": [
+          {
+            "title": "Was ist der Katalog?",
+            "description": "Hier sehen Sie alle Umfragen der Organisation. Umfragen sind wiederverwendbar und gehören nicht einem einzelnen Workspace."
+          },
+          {
+            "title": "Neue Umfrage anlegen",
+            "description": "Klicken Sie oben rechts auf „Neue Umfrage“, um einen ersten Entwurf zu erstellen."
+          },
+          {
+            "title": "Status verstehen",
+            "description": "Umfragen können Entwurf, Veröffentlicht oder Archiviert sein. Nur veröffentlichte Versionen können Workspaces zugewiesen werden."
+          },
+          {
+            "title": "Archiv anzeigen",
+            "description": "Mit dem Button „Archiv anzeigen“ blenden Sie archivierte Umfragen ein oder aus."
+          }
+        ]
+      },
+      "surveyNew": {
+        "title": "Neue Umfrage erstellen",
+        "steps": [
+          {
+            "title": "Grunddaten festlegen",
+            "description": "Vergeben Sie einen Titel und optional eine Beschreibung für die neue Umfrage."
+          },
+          {
+            "title": "Entwurf wird angelegt",
+            "description": "Nach dem Speichern entsteht ein bearbeitbarer Entwurf, den Sie mit Abschnitten und Fragen füllen können."
+          },
+          {
+            "title": "Weiter geht es im Editor",
+            "description": "Sie werden anschließend zum Entwurfs-Editor weitergeleitet, um Fragen, Optionen und Validierungsregeln zu ergänzen."
+          }
+        ]
+      },
+      "draft": {
+        "title": "Entwurf bearbeiten",
+        "steps": [
+          {
+            "title": "Abschnitte und Fragen",
+            "description": "Strukturieren Sie die Umfrage in Abschnitte und fügen Sie typisierte Fragen (Text, Auswahl, Skala usw.) hinzu."
+          },
+          {
+            "title": "Antwortoptionen & Validierung",
+            "description": "Bei Auswahlfragen definieren Sie die Antwortoptionen. Legen Sie zusätzlich Validierungsregeln wie Pflichtfelder fest."
+          },
+          {
+            "title": "Reihenfolge anpassen",
+            "description": "Die Reihenfolge von Abschnitten und Fragen bestimmt, wie Teilnehmende die Umfrage später sehen."
+          },
+          {
+            "title": "Veröffentlichen",
+            "description": "Sobald der Entwurf fertig ist, veröffentlichen Sie ihn. Veröffentlichte Versionen sind unveränderlich und können Workspaces zugewiesen werden."
+          }
+        ]
+      },
+      "version": {
+        "title": "Veröffentlichte Version",
+        "steps": [
+          {
+            "title": "Unveränderliche Version",
+            "description": "Diese Ansicht zeigt eine veröffentlichte, fixierte Version der Umfrage. Inhalte können hier nicht mehr geändert werden."
+          },
+          {
+            "title": "Workspaces zuweisen",
+            "description": "Weisen Sie diese Version einem oder mehreren Workspaces zu, damit dort Kampagnen darauf aufbauen können."
+          }
+        ]
+      },
+      "surveyDetail": {
+        "title": "Umfragedetails",
+        "steps": [
+          {
+            "title": "Entwürfe & Versionen",
+            "description": "Hier sehen Sie alle Entwürfe und veröffentlichten Versionen dieser Umfrage sowie deren Status."
+          },
+          {
+            "title": "Neuen Entwurf erstellen",
+            "description": "Sie können jederzeit einen neuen Entwurf aus dieser Umfrage oder einer bestehenden Version ableiten (Deep Copy)."
+          },
+          {
+            "title": "Archivieren",
+            "description": "Nicht mehr benötigte Umfragen können archiviert und bei Bedarf wiederhergestellt werden."
+          }
+        ]
+      },
+      "workspaces": {
+        "title": "Workspaces",
+        "steps": [
+          {
+            "title": "Workspace-Verwaltung",
+            "description": "Diese Liste zeigt alle Workspaces, auf die Sie Zugriff haben, als eigenständige Mandanten."
+          },
+          {
+            "title": "Neuen Workspace anlegen",
+            "description": "Über „Neuer Workspace“ legen Sie einen neuen Workspace mit Basisdaten an."
+          },
+          {
+            "title": "Workspace öffnen",
+            "description": "Klicken Sie auf einen Workspace, um Kampagnen, Empfänger und Analysen dafür zu verwalten."
+          }
+        ]
+      },
+      "workspaceNew": {
+        "title": "Neuen Workspace anlegen",
+        "steps": [
+          {
+            "title": "Stammdaten erfassen",
+            "description": "Geben Sie Name, Adresse und weitere Basisdaten des Workspace ein."
+          },
+          {
+            "title": "Zuständigkeit",
+            "description": "Nach dem Anlegen können Sie Plattformbenutzer diesem Workspace zuordnen, damit diese dort arbeiten können."
+          }
+        ]
+      },
+      "workspaceEdit": {
+        "title": "Workspace bearbeiten",
+        "steps": [
+          {
+            "title": "Stammdaten aktualisieren",
+            "description": "Passen Sie Name, Adresse und weitere Angaben des Workspace an."
+          },
+          {
+            "title": "Änderungen speichern",
+            "description": "Speichern Sie die Änderungen, damit sie in der gesamten Anwendung sichtbar werden."
+          }
+        ]
+      },
+      "campaignNew": {
+        "title": "Kampagne erstellen",
+        "steps": [
+          {
+            "title": "Umfrageversion wählen",
+            "description": "Wählen Sie eine veröffentlichte Umfrageversion, die diesem Workspace bereits zugewiesen wurde. Kampagnen binden sich fest an genau diese Version."
+          },
+          {
+            "title": "Branding festlegen",
+            "description": "Passen Sie das Erscheinungsbild der Kampagne an, z. B. Titel und Begrüßungstext für Teilnehmende."
+          },
+          {
+            "title": "Empfänger auswählen",
+            "description": "Wählen Sie die aktiven Empfänger aus, die die Kampagne per E-Mail erhalten sollen."
+          },
+          {
+            "title": "Öffentlicher Link",
+            "description": "Beim Erstellen wird zusätzlich ein nicht erratbarer öffentlicher Link erzeugt, über den anonym teilgenommen werden kann."
+          }
+        ]
+      },
+      "campaignDetail": {
+        "title": "Kampagnendetails",
+        "steps": [
+          {
+            "title": "Status verfolgen",
+            "description": "Hier sehen Sie den aktuellen Status der Kampagne sowie den öffentlichen Teilnahme-Link."
+          },
+          {
+            "title": "Empfänger & Versand",
+            "description": "Prüfen Sie, an welche Empfänger die Kampagne gesendet wurde und wie der Zustellstatus ist."
+          },
+          {
+            "title": "Auswertung",
+            "description": "Sobald Antworten vorliegen, finden Sie diese in der Analytics-Ansicht des Workspace."
+          }
+        ]
+      },
+      "campaigns": {
+        "title": "Kampagnen des Workspace",
+        "steps": [
+          {
+            "title": "Kampagnenübersicht",
+            "description": "Alle Umfrage-Kampagnen dieses Workspace werden hier mit Status und Zeitraum aufgelistet."
+          },
+          {
+            "title": "Neue Kampagne starten",
+            "description": "Über „Kampagne erstellen“ binden Sie eine zugewiesene, veröffentlichte Umfrageversion an Empfänger dieses Workspace."
+          }
+        ]
+      },
+      "recipients": {
+        "title": "Empfänger",
+        "steps": [
+          {
+            "title": "Empfängerliste pflegen",
+            "description": "Verwalten Sie die E-Mail-Empfänger dieses Workspace, die für Kampagnen ausgewählt werden können."
+          },
+          {
+            "title": "Status beachten",
+            "description": "Nur aktive Empfänger stehen bei der Kampagnenerstellung zur Auswahl."
+          }
+        ]
+      },
+      "analytics": {
+        "title": "Analytics",
+        "steps": [
+          {
+            "title": "Antworten auswerten",
+            "description": "Diese Ansicht fasst die eingegangenen Antworten der Kampagnen dieses Workspace zusammen."
+          },
+          {
+            "title": "Export nutzen",
+            "description": "Sie können Ergebnisse als PDF oder Excel exportieren, um sie weiterzuverarbeiten."
+          }
+        ]
+      },
+      "workspaceDetail": {
+        "title": "Workspace-Übersicht",
+        "steps": [
+          {
+            "title": "Zentrale Anlaufstelle",
+            "description": "Von hier erreichen Sie Kampagnen, Empfänger und Analysen dieses Workspace."
+          },
+          {
+            "title": "Zugewiesene Umfragen",
+            "description": "Prüfen Sie, welche veröffentlichten Umfrageversionen diesem Workspace aktuell zugewiesen sind."
+          }
+        ]
+      },
+      "users": {
+        "title": "Benutzerverwaltung",
+        "steps": [
+          {
+            "title": "Plattformbenutzer verwalten",
+            "description": "Ein gültiger Keycloak-Login allein gewährt keinen Zugriff. Benutzer müssen hier freigegeben und Rollen zugewiesen werden."
+          },
+          {
+            "title": "Rollen & Workspace-Zuordnung",
+            "description": "Weisen Sie Benutzern Rollen zu und legen Sie fest, welche Workspaces sie verwalten dürfen."
+          }
+        ]
+      },
+      "email": {
+        "title": "E-Mail-Versand",
+        "steps": [
+          {
+            "title": "SMTP-Konfiguration",
+            "description": "Hier konfigurieren Sie den E-Mail-Versand für Kampagnen-Einladungen."
+          },
+          {
+            "title": "Test-E-Mail",
+            "description": "Senden Sie eine Test-E-Mail, um die Verbindung zu prüfen, bevor Sie eine Kampagne versenden."
+          }
+        ]
+      },
+      "default": {
+        "title": "Hilfe",
+        "steps": [
+          {
+            "title": "Kontexthilfe",
+            "description": "Für diesen Bereich gibt es noch keine spezifische Anleitung. Nutzen Sie die Navigation links, um zu Umfragen, Workspaces oder der Administration zu wechseln."
+          }
+        ]
+      }
+    }
+  }
+}

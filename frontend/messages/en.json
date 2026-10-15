@@ -1,0 +1,1048 @@
+{
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "description": "Sign in with your platform account.",
+      "error": "Sign-in could not be completed. Please try again.",
+      "submit": "Sign in with Keycloak",
+      "register": "No organization yet? Register now"
+    },
+    "register": {
+      "heading": "Register your organization",
+      "description": "Create your organization and become its first administrator.",
+      "doneTitle": "Almost done",
+      "doneBody": "We sent you an email. Confirm your address and set a password to sign in.",
+      "toLogin": "Go to sign in",
+      "haveAccount": "Already registered? Sign in",
+      "errors": {
+        "slug-taken": "This address is already taken. Please choose another.",
+        "validation": "Please fill in all fields correctly.",
+        "rate-limited": "Too many attempts. Please try again in a minute.",
+        "unknown": "The organization could not be created. Please try again."
+      },
+      "form": {
+        "name": "Organization name",
+        "slug": "Address",
+        "slugHint": "Lowercase letters, digits and hyphens only.",
+        "ownerName": "Your name",
+        "email": "Email address",
+        "emailHint": "We will email you a link to confirm your address and set a password.",
+        "submit": "Register organization",
+        "pending": "Creating organization …"
+      }
+    },
+    "accessDenied": {
+      "title": "Access not set up",
+      "body": "Your Keycloak account does not have active access to the platform yet. Please contact your administrator.",
+      "toLogin": "Back to sign in"
+    }
+  },
+  "publicSurvey": {
+    "loading": "Loading survey",
+    "badge": "Survey",
+    "unavailable": "Unavailable",
+    "closedTitle": "This survey is closed.",
+    "closedBody": "The survey period has ended or this link is no longer valid. No further responses can be submitted.",
+    "closedNote": "Your previous answers remain protected. If you have questions, please contact the organization that invited you.",
+    "page": {
+      "logoAlt": "{name} logo",
+      "tagline": "Your opinion matters",
+      "anonymous": "This survey is processed anonymously.",
+      "legalNav": "Legal information",
+      "legalNotice": "Legal notice",
+      "privacy": "Privacy policy",
+      "terms": "Terms"
+    },
+    "form": {
+      "unreachable": "The survey is currently unavailable. Please try again later.",
+      "submitFailed": "Your answers could not be submitted. Please try again.",
+      "thanks": "Thank you for your feedback.",
+      "thanksBody": "Your answers have been submitted.",
+      "section": "Section {number}",
+      "legalRequired": "Please confirm the privacy policy and terms of participation before submitting the survey.",
+      "requiredMissing": "Please answer all required questions before submitting the survey.",
+      "legalIntro": "I have read the",
+      "legalPrivacy": "privacy policy",
+      "legalAnd": "and accept the",
+      "legalTerms": "terms of participation",
+      "legalOutro": ". I have taken note of the",
+      "legalNotice": "legal notice",
+      "legalEnd": ".",
+      "requiredCount": "{count} required questions are marked with",
+      "submit": "Submit survey",
+      "sending": "Submitting …",
+      "yes": "Yes",
+      "no": "No",
+      "other": "Other",
+      "otherAnswer": "Other answer",
+      "selectRating": "Select rating {value}",
+      "scale": "Scale from {min} to {max}",
+      "ratingOf": "{value} of {max}",
+      "errors": {
+        "tooMany": "Too many requests. Please wait a moment and try again.",
+        "completed": "This survey has already been completed.",
+        "check": "Please check your input and try again.",
+        "Choice question requires selected options": "Please select at least one answer or enter another answer.",
+        "Too few options selected": "Please select more answers.",
+        "Too many options selected": "You have selected too many answers.",
+        "Numeric answer is below the permitted range": "A number is below the permitted minimum.",
+        "Numeric answer is above the permitted range": "A number is above the permitted maximum.",
+        "Date answer is before the permitted range": "A date is before the permitted period.",
+        "Date answer is after the permitted range": "A date is after the permitted period.",
+        "Required questions are missing": "Please answer all required questions."
+      }
+    }
+  },
+  "dashboard": {
+    "nav": {
+      "label": "Main navigation",
+      "overview": "Overview",
+      "surveys": "Surveys",
+      "workspaces": "Workspaces",
+      "administration": "Administration",
+      "email": "Email delivery"
+    },
+    "platformUser": "Platform user",
+    "workspaceFallback": "Workspace",
+    "myAccount": "My account",
+    "logout": "Sign out"
+  },
+  "welcome": {
+    "eyebrow": "Workspace",
+    "greeting": "Welcome, {name}.",
+    "intro": "Manage workspaces and their assigned surveys in one place.",
+    "workspacesTitle": "Workspaces at a glance",
+    "workspacesDescription": "Master data and survey assignments are maintained per workspace.",
+    "workspacesCount": "available workspaces",
+    "openWorkspaces": "Open workspaces",
+    "accessTitle": "Platform access active",
+    "accessDescription": "Your identity and active platform access have been verified.",
+    "sessionVerified": "Session verified",
+    "catalogTitle": "Survey catalogue",
+    "catalogDescription": "Create, maintain and publish reusable surveys.",
+    "publishedCount": "{count} published",
+    "openSurveys": "Open surveys"
+  },
+  "workspaces": {
+    "eyebrow": "Organization",
+    "listTitle": "Workspaces",
+    "listIntro": "All available workspaces and their platform data.",
+    "total": "{count} total",
+    "new": "New workspace",
+    "emptyTitle": "No workspaces available yet",
+    "emptyDescription": "Once workspaces are set up for your access, they will appear here.",
+    "logoAlt": "{name} logo",
+    "locationPending": "Location details pending",
+    "loading": "Loading workspace",
+    "loadingText": "Loading workspace …",
+    "newTitle": "New workspace",
+    "newIntro": "Create a workspace on the platform.",
+    "allWorkspaces": "All workspaces",
+    "createFailedTitle": "Workspace not created",
+    "masterData": "Master data",
+    "masterDataHint": "A name and internal identifier are required to organize the platform.",
+    "create": "Create workspace",
+    "editTitle": "Edit workspace",
+    "profile": "Workspace profile",
+    "toWorkspace": "To workspace",
+    "saveFailedTitle": "Changes not saved",
+    "editMasterData": "Edit master data",
+    "editHint": "Changes are recorded in the workspace history.",
+    "saveChanges": "Save changes",
+    "errors": {
+      "exists": "This internal identifier is already used by another workspace.",
+      "validation": "Please check the required fields and the house number.",
+      "createUnknown": "The workspace could not be created. Please try again.",
+      "saveUnknown": "The changes could not be saved. Please try again."
+    },
+    "form": {
+      "name": "Workspace name",
+      "slug": "Internal identifier",
+      "slugHint": "Lowercase letters, digits and hyphens only.",
+      "logo": "Workspace logo",
+      "logoCurrent": "Current workspace logo",
+      "logoHint": "Optional: PNG, JPG or WebP, 2 MB at most. The logo is stored securely and used for surveys and campaigns.",
+      "location": "Location",
+      "locationHint": "These details can later be used for survey distribution.",
+      "street": "Street",
+      "houseNumber": "House number",
+      "postalCode": "Postal code",
+      "city": "City",
+      "saving": "Saving …"
+    },
+    "detail": {
+      "all": "All workspaces",
+      "profile": "Workspace profile",
+      "badge": "Master data",
+      "edit": "Edit",
+      "campaigns": "Campaigns",
+      "recipients": "Recipients",
+      "analytics": "Analytics",
+      "createdTitle": "Workspace created",
+      "updatedTitle": "Changes saved",
+      "createdBody": "The workspace is now ready for further setup.",
+      "updatedBody": "The workspace master data has been updated.",
+      "assignmentAdded": "Version assigned",
+      "assignmentRemoved": "Assignment removed",
+      "addedBody": "The published version can now be used for this workspace.",
+      "removedBody": "The version is no longer available for new campaigns of this workspace.",
+      "assignErrorTitle": "Assignment not updated",
+      "exists": "This published version is already assigned to the workspace.",
+      "validation": "Please select a published version.",
+      "unknown": "The change could not be saved. Please try again.",
+      "locationTitle": "Location data",
+      "locationHint": "These details are the basis for later workspace-specific survey distribution.",
+      "noLocation": "No location data has been stored for this workspace yet.",
+      "versionsTitle": "Published survey versions",
+      "versionsHint": "Campaigns later choose exclusively from these active, immutable versions."
+    }
+  },
+  "admin": {
+    "eyebrow": "Administration",
+    "users": {
+      "title": "Users",
+      "intro": "Create and manage platform access.",
+      "created": "User created. Keycloak is sending the account invitation.",
+      "deactivated": "User deactivated.",
+      "reactivated": "User reactivated.",
+      "deleted": "User permanently deleted.",
+      "errorExists": "A user with this email address already exists.",
+      "errorGeneric": "The action could not be completed.",
+      "allUsers": "All users",
+      "count": "{count} platform users",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colStatus": "Status",
+      "colActions": "Actions",
+      "active": "Active",
+      "inactive": "Deactivated",
+      "addTitle": "Add user",
+      "addDescription": "Keycloak creates the account and sends an invitation email.",
+      "form": {
+        "displayName": "Display name",
+        "email": "Email address",
+        "submit": "Invite user",
+        "pending": "Inviting user …"
+      },
+      "deactivate": {
+        "trigger": "Deactivate",
+        "title": "Deactivate user?",
+        "description": "{name} will no longer be able to sign in to the platform. This also deactivates the linked Keycloak account.",
+        "cancel": "Cancel",
+        "confirm": "Deactivate"
+      },
+      "delete": {
+        "trigger": "Delete",
+        "title": "Permanently delete user?",
+        "description": "{name} will be deleted from Keycloak and the platform. Workspace assignments and roles are removed. This cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete permanently"
+      },
+      "grantAdmin": {
+        "trigger": "Full access",
+        "title": "Grant full access?",
+        "description": "{name} will get access to all workspaces, campaigns, surveys and user management.",
+        "cancel": "Cancel",
+        "confirm": "Grant full access"
+      },
+      "reactivate": "Reactivate"
+    },
+    "email": {
+      "title": "Email delivery",
+      "intro": "Set up the global SMTP connection for campaign emails.",
+      "unavailable404": "The SMTP feature is not yet available in the connected backend. Restart the backend with the current version and run the database migration.",
+      "unavailableGeneric": "The SMTP configuration cannot be loaded right now. Please try again later.",
+      "actionError": "The action could not be completed. Check the server, credentials and encryption key.",
+      "saved": "SMTP configuration saved",
+      "savedBody": "You can now send a test email.",
+      "tested": "Test email handed to the SMTP server",
+      "testedBody": "Check the recipient's mailbox.",
+      "failedTitle": "Action failed",
+      "unavailableTitle": "SMTP configuration unavailable",
+      "cardTitle": "SMTP connection",
+      "cardDescription": "Only platform administrators can manage these credentials.",
+      "form": {
+        "senderName": "Sender name",
+        "senderEmail": "Sender email address",
+        "host": "SMTP server",
+        "port": "Port",
+        "encryption": "Encryption",
+        "starttls": "STARTTLS (recommended, usually port 587)",
+        "ssl": "SSL/TLS (usually port 465)",
+        "none": "No encryption (local test server only)",
+        "username": "Username",
+        "optional": "(optional)",
+        "password": "Password",
+        "stored": "stored",
+        "keepPassword": "Leave empty to keep it",
+        "passwordPlaceholder": "SMTP password",
+        "passwordHint": "The password is stored encrypted and never shown again.",
+        "save": "Save SMTP configuration",
+        "saving": "Saving …",
+        "testTo": "Send test email to",
+        "testHint": "Sending is recorded in the audit log. The email contains no survey data.",
+        "sendTest": "Send test email",
+        "sending": "Sending …"
+      }
+    }
+  },
+  "surveys": {
+    "status": {
+      "archived": "Archived",
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "list": {
+      "eyebrow": "Survey catalogue",
+      "title": "Surveys",
+      "hideArchive": "Hide archive",
+      "showArchive": "Show archive",
+      "new": "New survey",
+      "noDescription": "No description",
+      "openDetails": "Open details",
+      "emptyArchived": "No archived surveys",
+      "empty": "No surveys yet",
+      "emptyHint": "Create the first survey for the catalogue."
+    },
+    "new": {
+      "all": "All surveys",
+      "title": "New survey",
+      "cardTitle": "Create the basics",
+      "cardDescription": "The survey starts as an editable draft.",
+      "fTitle": "Title",
+      "fDescription": "Description",
+      "fDraftLabel": "Draft label",
+      "fDraftPlaceholder": "e.g. First version",
+      "submit": "Create survey"
+    },
+    "detail": {
+      "all": "All surveys",
+      "unnamedDraft": "Untitled draft",
+      "editableDraft": "editable draft",
+      "versionPublished": "Version {number} · published",
+      "restore": "Restore",
+      "archive": "Archive",
+      "masterData": "Master data",
+      "masterDataHint": "Changes do not affect versions that are already published.",
+      "fTitle": "Title",
+      "fDescription": "Description",
+      "save": "Save",
+      "versions": "Versions",
+      "versionsCount": "{drafts} drafts · {published} published",
+      "editable": "Editable",
+      "editDraft": "Edit draft",
+      "immutable": "Published, immutable",
+      "version": "Version {number}",
+      "viewVersion": "View version",
+      "noVersions": "No versions yet."
+    },
+    "versionPage": {
+      "toSurvey": "To survey",
+      "immutable": "Immutable version",
+      "publishedOn": "Published on {date}.",
+      "section": "Section {number}",
+      "rules": "Rules"
+    },
+    "draftPage": {
+      "toSurvey": "To survey",
+      "edit": "Edit draft",
+      "intro": "Build the structure of your survey. What gets published is always an immutable version.",
+      "errorTitle": "Error",
+      "actionFailed": "Action failed."
+    },
+    "copy": {
+      "trigger": "Create copy",
+      "title": "Copy template for a workspace",
+      "description": "Content, questions and rules are copied into a standalone draft. Adjust the title for the workspace now.",
+      "source": "Source version",
+      "sourceHint": "Choose the draft or published version to use as the template.",
+      "copyTitle": "Copy title",
+      "copySuffix": "Workspace",
+      "fDescription": "Description",
+      "cancel": "Cancel",
+      "submit": "Save copy"
+    },
+    "newDraft": {
+      "trigger": "Create new draft",
+      "title": "Create new draft",
+      "description": "Create an empty working version or take over an existing version to develop it safely.",
+      "label": "Label",
+      "labelPlaceholder": "e.g. 2026 revision",
+      "labelHint": "Optional. The label helps when several drafts exist in parallel.",
+      "takeOver": "Take over content",
+      "empty": "Start empty",
+      "takeOverHint": "Taking over content copies sections, questions, options and validations into a new editable draft.",
+      "cancel": "Cancel",
+      "submit": "Create draft"
+    },
+    "preview": {
+      "button": "Preview",
+      "description": "Preview from the respondent's point of view. Answers are not saved.",
+      "section": "Section {number}",
+      "noSections": "This draft has no sections yet.",
+      "close": "Close",
+      "publish": "Publish",
+      "publishTitle": "Publish draft?",
+      "publishDescription": "The current structure is saved as an immutable version. Afterwards, changes are only possible through a new draft.",
+      "publishNow": "Publish now",
+      "scale": "Scale from {min} to {max}",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "errors": {
+      "ratingNumbers": "Minimum and maximum must be numbers.",
+      "ratingSaveFailed": "The rating scale could not be saved.",
+      "publishFailed": "Publishing failed."
+    },
+    "assign": {
+      "none": "No survey version assigned yet",
+      "noneHint": "Choose a published version on the right.",
+      "unknownVersion": "Version {id}",
+      "assignedOn": "Assigned on {date}",
+      "active": "Active",
+      "thisVersion": "this survey version",
+      "title": "Assign version",
+      "hint": "Only published versions can be used for campaigns.",
+      "noAccess": "You can see the assignments but need access to the survey catalogue to manage them.",
+      "noMore": "No further published versions are available.",
+      "published": "Published version",
+      "choose": "Select version",
+      "pinHint": "A campaign created later is bound to exactly this immutable version.",
+      "assign": "Assign version",
+      "assigning": "Assigning …",
+      "remove": "Remove {name}",
+      "unassignTitle": "Remove assignment?",
+      "unassignDescription": "{name} will no longer be available for new campaigns of this workspace.",
+      "cancel": "Cancel",
+      "unassign": "Remove assignment"
+    },
+    "editor": {
+      "types": {
+        "short_text": "Short answer",
+        "long_text": "Long text",
+        "single_choice": "Single choice",
+        "multiple_choice": "Multiple choice",
+        "yes_no": "Yes / No",
+        "rating": "Rating",
+        "number": "Number",
+        "date": "Date"
+      },
+      "addSection": "Add section",
+      "addSectionHint": "Structure the survey into clear topic blocks.",
+      "title": "Title",
+      "sectionPlaceholder": "e.g. Your visit",
+      "intro": "Introduction",
+      "optional": "(optional)",
+      "sectionIntroPlaceholder": "What is this section about?",
+      "section": "Section {number}",
+      "addQuestion": "Add question",
+      "editSection": "Edit section",
+      "saveChanges": "Save changes",
+      "noSections": "No sections yet",
+      "noSectionsHint": "Create the first topic block to organize questions in it.",
+      "item": {
+        "section": "Section",
+        "question": "Question",
+        "option": "Option"
+      },
+      "moveUp": "Move {item} up",
+      "moveDown": "Move {item} down",
+      "noQuestions": "There are no questions in this section yet.",
+      "question": "Question {number}",
+      "editQuestion": "Edit question",
+      "answerOptions": "Answer options",
+      "optionsHint": "At least two distinct options are required to publish.",
+      "deleteOption": "Delete option",
+      "displayText": "Display text",
+      "storedValue": "Stored value",
+      "saveOption": "Save option",
+      "newOption": "New answer option",
+      "addOption": "Add option",
+      "ratingScale": "Rating scale",
+      "minValue": "Minimum",
+      "maxValue": "Maximum",
+      "save": "Save",
+      "deleteQuestionLabel": "Delete question",
+      "deleteQuestionTitle": "Delete question?",
+      "deleteQuestionDescription": "This question will be permanently removed from the draft.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleteSection": "Delete section",
+      "deleteSectionTitle": "Delete section?",
+      "deleteSectionDescription": "The section and its questions will be permanently removed from this draft.",
+      "questionType": "Question type",
+      "question_": "Question",
+      "questionPlaceholder": "How satisfied were you?",
+      "hint": "Hint",
+      "initialOptionsHint": "Create at least two options; they are saved with the question.",
+      "optionN": "Option {number}",
+      "removeOptionN": "Remove option {number}",
+      "required": "Required question",
+      "allowOther": "Allow \"Other\" with free text",
+      "saveQuestion": "Save question"
+    }
+  },
+  "campaigns": {
+    "status": {
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "active": "Sent",
+      "paused": "Paused",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "versionLine": "{survey} · Version {number}",
+    "list": {
+      "showCompleted": "Show completed ({count})",
+      "emptyTitle": "No campaigns yet",
+      "emptyDescription": "Create a campaign from a published survey assigned to this workspace."
+    },
+    "page": {
+      "toWorkspace": "← To workspace",
+      "title": "Campaigns",
+      "create": "Create campaign"
+    },
+    "newPage": {
+      "back": "← Campaigns",
+      "title": "Create campaign"
+    },
+    "detail": {
+      "back": "← Campaigns",
+      "eyebrow": "Campaign · {status}",
+      "tabs": {
+        "overview": "Overview",
+        "recipients": "Recipients ({count})",
+        "email": "Email template",
+        "deliveries": "Deliveries",
+        "analytics": "Analytics"
+      },
+      "http": {
+        "400": "Invalid input.",
+        "401": "Your session has expired. Please sign in again.",
+        "403": "You do not have permission for this change.",
+        "404": "Campaign or template not found.",
+        "409": "The campaign has already been activated or the template is locked and can no longer be changed.",
+        "422": "Please check your input.",
+        "fallback": "Please try again."
+      },
+      "emailTest": "The test email could not be sent. {detail}",
+      "emailTemplate": "The template could not be saved. {detail}",
+      "status409": "Status change not possible: once sent, the campaign can no longer be reset to \"Draft\" or \"Scheduled\".",
+      "statusFailed": "The status could not be changed. {detail}",
+      "send409": "The send could not be queued. Common causes: no SMTP server is configured under \"Email delivery\" in Administration, no email template has been saved yet, or the campaign is no longer in \"draft\"/\"scheduled\" status.",
+      "sendFailed": "The send could not be queued. {detail}",
+      "sendFailedTitle": "Sending failed",
+      "statusNotChanged": "Status not changed",
+      "sendStarted": "Sending started successfully",
+      "sentCount": "{count} email(s) were queued for sending.",
+      "sentNone": "No new emails were queued — all selected recipients had already been sent to.",
+      "sentStatusNote": "The status was set to \"Sent\".",
+      "runningTitle": "Campaign already running",
+      "runningBody": "Responses already exist, so changing the survey version and deleting are locked.",
+      "deliveryOverview": "Delivery overview",
+      "queued": "queued",
+      "sent": "sent",
+      "failed": "failed",
+      "publicLink": "Public survey link",
+      "open": "Open",
+      "runtime": "Runtime",
+      "endsOn": "The campaign ends on {date}.",
+      "noEnd": "This campaign currently has no end date.",
+      "locked": "Completed or cancelled campaigns can no longer be changed.",
+      "statusTitle": "Status",
+      "statusSentHint": "Emails have already been sent — the campaign can no longer be reset to \"Draft\" or \"Scheduled\".",
+      "statusEditHint": "Recipients and template can only be edited in the \"Draft\" or \"Scheduled\" status. Sending sets the status to \"Sent\" automatically.",
+      "importDone": "Import completed",
+      "importSummary": "{created} new, {duplicates} already existed, {assigned} added to this campaign.",
+      "importFailed": "Import failed",
+      "importFailedBody": "Check the format, email addresses and the maximum of 2,000 recipients.",
+      "importTitle": "Import recipients",
+      "notEditable": "The campaign can no longer be edited.",
+      "addTitle": "Add to campaign",
+      "addSelection": "Add selection",
+      "noneAvailable": "No further active recipients available.",
+      "selected": "Selected ({count})",
+      "remove": "Remove",
+      "noneSelected": "No recipients selected yet.",
+      "errorTitle": "Error",
+      "testSent": "Test email sent",
+      "testSentBody": "Please check the test recipient's inbox.",
+      "retry": "Re-check failed deliveries",
+      "deliveriesCount": "{count} deliveries",
+      "colRecipient": "Recipient",
+      "colStatus": "Status",
+      "colAttempts": "Attempts",
+      "colTime": "Time",
+      "colNote": "Note",
+      "noName": "No name",
+      "deliveryStatus": {
+        "queued": "queued",
+        "sending": "sending",
+        "sent": "sent",
+        "failed": "failed"
+      },
+      "started": "Started",
+      "completed": "Completed",
+      "noPermission": "No permission to view analytics for this workspace."
+    },
+    "wizard": {
+      "steps": {
+        "1": "Details",
+        "2": "Recipients",
+        "3": "Email template",
+        "4": "Survey & review"
+      },
+      "detailsHint": "Title and description of the campaign.",
+      "title": "Title",
+      "description": "Description",
+      "endsAt": "Ends on",
+      "optional": "(optional)",
+      "endsAtHint": "After this time the campaign is closed automatically and no longer accepts responses.",
+      "recipientsTitle": "Recipients",
+      "recipientsHint": "Import recipients and choose who should be assigned to this campaign. This step is optional and can be completed later.",
+      "name": "Name",
+      "email": "Email address",
+      "addRow": "Add another row",
+      "import": "Import",
+      "importing": "Importing …",
+      "csvLabel": "Or import a CSV file",
+      "csvHint": "Columns \"Name;Email\" or just \"Email\". Up to 2,000 recipients and 2 MB.",
+      "importResult": "{created} newly imported, {duplicates} already existed.",
+      "csvEmpty": "The file contained no valid email addresses.",
+      "selectFor": "Select for this campaign ({count} selected)",
+      "noRecipients": "No recipients for this workspace yet.",
+      "emailIntro": "A sensible default template is already filled in — adjust it or keep it as is. It can also be completed later on the campaign page.",
+      "defaultCampaign": "Your campaign",
+      "surveyTitle": "Survey & review",
+      "surveyHint": "Choose the published survey version used for this campaign.",
+      "surveyVersion": "Published survey version",
+      "chooseVersion": "Select version",
+      "noVersions": "No published survey version has been assigned to this workspace yet. Assign a version on the workspace page first.",
+      "summary": "Summary",
+      "sumTitle": "Title",
+      "sumRecipients": "Recipients",
+      "sumSelected": "{count} selected",
+      "sumTemplate": "Email template",
+      "sumSubject": "Subject: {subject}",
+      "sumNoTemplate": "Not set yet",
+      "sumSurvey": "Survey version",
+      "errorTitle": "Error",
+      "back": "Back",
+      "next": "Next",
+      "create": "Create campaign",
+      "creating": "Creating …"
+    },
+    "emailFields": {
+      "editTitle": "Edit template",
+      "editHint": "The template is locked on first send. Use the placeholders below; they are replaced automatically when sending.",
+      "subject": "Subject",
+      "senderName": "Sender name",
+      "replyTo": "Reply-to address",
+      "html": "HTML content",
+      "text": "Text content",
+      "textHint": "(fallback without HTML)",
+      "placeholders": "Placeholders (insert into the HTML or text content):",
+      "preview": "Live preview",
+      "previewHint": "Filled with sample values. The HTML preview is sanitized before it is displayed.",
+      "noSubject": "(No subject)",
+      "noText": "(No text content)",
+      "iframeTitle": "Safe email preview"
+    },
+    "emailEditor": {
+      "locked": "This template is locked because emails have already been sent. It can no longer be changed.",
+      "save": "Save template",
+      "testRecipient": "Test recipient",
+      "testPlaceholder": "name@example.com",
+      "sendTest": "Send test email"
+    },
+    "recipientImport": {
+      "submit": "Import and add recipients",
+      "name": "Name",
+      "email": "Email address",
+      "removeN": "Remove recipient {number}",
+      "addAnother": "Add another recipient",
+      "csvLabel": "Or import a CSV file",
+      "csvHint": "For larger lists: columns \"Name;Email\" or just \"Email\". Up to 2,000 recipients and 2 MB."
+    },
+    "endDate": {
+      "endsAt": "Ends on",
+      "hint": "The campaign is closed automatically at this time. Running or new responses are no longer possible afterwards.",
+      "remove": "Remove end date",
+      "save": "Save end date",
+      "saving": "Saving …"
+    },
+    "changeVersion": {
+      "trigger": "Change survey",
+      "title": "Change linked survey",
+      "description": "Currently assigned: {current}. Only published versions assigned to this workspace can be selected.",
+      "locked": "Once responses exist, the version can no longer be changed.",
+      "none": "No other published version is available for this workspace.",
+      "newVersion": "New survey version",
+      "choose": "Select version",
+      "pinHint": "The campaign is bound to exactly this immutable version.",
+      "cancel": "Cancel",
+      "submit": "Change survey"
+    },
+    "sendDialog": {
+      "trigger": "Send campaign now",
+      "title": "Send emails now?",
+      "campaign": "Campaign: \"{title}\"",
+      "summary": "Recipients: {count} · Subject: {subject}",
+      "warning": "Sending starts immediately in the background. The template is locked and emails that have already been sent cannot be recalled.",
+      "cancel": "Cancel",
+      "submit": "Send now",
+      "starting": "Starting send …"
+    },
+    "deleteDialog": {
+      "trigger": "Delete campaign",
+      "title": "Delete campaign?",
+      "description": "\"{title}\" will be permanently deleted. This is only possible as long as no responses have been started.",
+      "cancel": "Cancel",
+      "confirm": "Delete permanently"
+    },
+    "actionErrors": {
+      "recipients": "Please check the format and the maximum of 2,000 recipients.",
+      "createFailed": "The campaign could not be created. Please check the selected survey version.",
+      "importFailed": "The import could not be processed."
+    }
+  },
+  "analytics": {
+    "back": "To workspace",
+    "eyebrow": "Workspace · Analytics",
+    "title": "Analyze responses",
+    "selectCampaign": "Select campaign",
+    "started": "Started",
+    "completed": "Completed",
+    "noCampaigns": "There are no campaigns for this workspace yet.",
+    "answers": "{count} answers",
+    "answersFree": "{count} answers · Free text",
+    "average": "Ø",
+    "median": "Median",
+    "minimum": "Minimum",
+    "maximum": "Maximum",
+    "period": "Period: {from} – {to}",
+    "noData": "No evaluable answers available.",
+    "yes": "Yes",
+    "no": "No",
+    "noText": "No free-text answers available.",
+    "showLess": "Show fewer",
+    "showAll": "Show all {count} answers",
+    "export": "Export",
+    "pdf": "PDF report",
+    "xlsx": "Excel file"
+  },
+  "recipients": {
+    "back": "To workspace",
+    "title": "Recipient directory",
+    "imported": "Import completed: {created} new, {duplicates} already existed.",
+    "optedOut": "The recipient has been unsubscribed from further emails.",
+    "error": "The change could not be saved. Check your input and try again.",
+    "addTitle": "Add recipients",
+    "addHint": "Add individual contacts via the form fields. For larger lists, use the CSV file.",
+    "save": "Save recipients",
+    "savedTitle": "Saved recipients ({count})",
+    "savedHint": "Only active recipients can later be assigned to an email campaign.",
+    "noName": "No name",
+    "status": {
+      "active": "Active",
+      "opted_out": "Unsubscribed",
+      "bounced": "Undeliverable"
+    },
+    "none": "No recipients saved for this workspace yet.",
+    "optOut": {
+      "trigger": "Unsubscribe",
+      "title": "Unsubscribe recipient?",
+      "description": "{name} will receive no further campaign emails from this workspace. This action cannot currently be undone through the interface.",
+      "cancel": "Cancel",
+      "confirm": "Confirm unsubscribe"
+    }
+  },
+  "help": {
+    "ariaLabel": "Show help for this area",
+    "step": "Step {current} of {total}",
+    "back": "Back",
+    "done": "Done",
+    "next": "Next",
+    "topics": {
+      "overview": {
+        "title": "Overview",
+        "steps": [
+          {
+            "title": "Welcome to the workspace",
+            "description": "The overview is your starting point. From here, the navigation on the left takes you to surveys, workspaces and administration."
+          },
+          {
+            "title": "Use the navigation",
+            "description": "The sidebar on the left shows all areas you have access to. Click an entry to switch to it."
+          },
+          {
+            "title": "Next step",
+            "description": "Usually you start with “Surveys” to create a template, or with “Workspaces” to manage a workspace."
+          }
+        ]
+      },
+      "surveys": {
+        "title": "Survey catalogue",
+        "steps": [
+          {
+            "title": "What is the catalogue?",
+            "description": "Here you see all surveys of the organization. Surveys are reusable and do not belong to a single workspace."
+          },
+          {
+            "title": "Create a new survey",
+            "description": "Click “New survey” at the top right to create a first draft."
+          },
+          {
+            "title": "Understand the status",
+            "description": "Surveys can be Draft, Published or Archived. Only published versions can be assigned to workspaces."
+          },
+          {
+            "title": "Show the archive",
+            "description": "The “Show archive” button shows or hides archived surveys."
+          }
+        ]
+      },
+      "surveyNew": {
+        "title": "Create a new survey",
+        "steps": [
+          {
+            "title": "Set the basics",
+            "description": "Give the new survey a title and, optionally, a description."
+          },
+          {
+            "title": "A draft is created",
+            "description": "After saving, an editable draft is created that you can fill with sections and questions."
+          },
+          {
+            "title": "Continue in the editor",
+            "description": "You are then taken to the draft editor to add questions, options and validation rules."
+          }
+        ]
+      },
+      "draft": {
+        "title": "Edit draft",
+        "steps": [
+          {
+            "title": "Sections and questions",
+            "description": "Structure the survey into sections and add typed questions (text, choice, scale, etc.)."
+          },
+          {
+            "title": "Answer options & validation",
+            "description": "For choice questions you define the answer options. You can also set validation rules such as required fields."
+          },
+          {
+            "title": "Adjust the order",
+            "description": "The order of sections and questions determines how participants see the survey later."
+          },
+          {
+            "title": "Publish",
+            "description": "Once the draft is ready, publish it. Published versions are immutable and can be assigned to workspaces."
+          }
+        ]
+      },
+      "version": {
+        "title": "Published version",
+        "steps": [
+          {
+            "title": "Immutable version",
+            "description": "This view shows a published, fixed version of the survey. Its content can no longer be changed here."
+          },
+          {
+            "title": "Assign to workspaces",
+            "description": "Assign this version to one or more workspaces so campaigns there can be built on it."
+          }
+        ]
+      },
+      "surveyDetail": {
+        "title": "Survey details",
+        "steps": [
+          {
+            "title": "Drafts & versions",
+            "description": "Here you see all drafts and published versions of this survey and their status."
+          },
+          {
+            "title": "Create a new draft",
+            "description": "You can derive a new draft from this survey or an existing version at any time (deep copy)."
+          },
+          {
+            "title": "Archive",
+            "description": "Surveys you no longer need can be archived and restored if necessary."
+          }
+        ]
+      },
+      "workspaces": {
+        "title": "Workspaces",
+        "steps": [
+          {
+            "title": "Workspace management",
+            "description": "This list shows all workspaces you have access to, each as a separate tenant."
+          },
+          {
+            "title": "Create a new workspace",
+            "description": "Use “New workspace” to create a workspace with its master data."
+          },
+          {
+            "title": "Open a workspace",
+            "description": "Click a workspace to manage its campaigns, recipients and analytics."
+          }
+        ]
+      },
+      "workspaceNew": {
+        "title": "Create a new workspace",
+        "steps": [
+          {
+            "title": "Enter master data",
+            "description": "Enter the name, address and other basic details of the workspace."
+          },
+          {
+            "title": "Responsibility",
+            "description": "After creating it, you can assign platform users to this workspace so they can work there."
+          }
+        ]
+      },
+      "workspaceEdit": {
+        "title": "Edit workspace",
+        "steps": [
+          {
+            "title": "Update master data",
+            "description": "Adjust the name, address and other details of the workspace."
+          },
+          {
+            "title": "Save changes",
+            "description": "Save your changes so they become visible throughout the application."
+          }
+        ]
+      },
+      "campaignNew": {
+        "title": "Create a campaign",
+        "steps": [
+          {
+            "title": "Choose a survey version",
+            "description": "Choose a published survey version that has already been assigned to this workspace. Campaigns are bound to exactly that version."
+          },
+          {
+            "title": "Set the branding",
+            "description": "Adjust the campaign's appearance, e.g. the title and welcome text for participants."
+          },
+          {
+            "title": "Select recipients",
+            "description": "Select the active recipients who should receive the campaign by email."
+          },
+          {
+            "title": "Public link",
+            "description": "On creation, a non-guessable public link is also generated through which people can participate anonymously."
+          }
+        ]
+      },
+      "campaignDetail": {
+        "title": "Campaign details",
+        "steps": [
+          {
+            "title": "Track the status",
+            "description": "Here you see the campaign's current status and its public participation link."
+          },
+          {
+            "title": "Recipients & sending",
+            "description": "Check which recipients the campaign was sent to and what the delivery status is."
+          },
+          {
+            "title": "Analysis",
+            "description": "Once responses exist, you will find them in the workspace's analytics view."
+          }
+        ]
+      },
+      "campaigns": {
+        "title": "Workspace campaigns",
+        "steps": [
+          {
+            "title": "Campaign overview",
+            "description": "All survey campaigns of this workspace are listed here with their status and period."
+          },
+          {
+            "title": "Start a new campaign",
+            "description": "Use “Create campaign” to bind an assigned, published survey version to recipients of this workspace."
+          }
+        ]
+      },
+      "recipients": {
+        "title": "Recipients",
+        "steps": [
+          {
+            "title": "Maintain the recipient list",
+            "description": "Manage this workspace's email recipients that can be selected for campaigns."
+          },
+          {
+            "title": "Mind the status",
+            "description": "Only active recipients are available when creating a campaign."
+          }
+        ]
+      },
+      "analytics": {
+        "title": "Analytics",
+        "steps": [
+          {
+            "title": "Analyze responses",
+            "description": "This view summarizes the responses received for this workspace's campaigns."
+          },
+          {
+            "title": "Use the export",
+            "description": "You can export results as PDF or Excel to process them further."
+          }
+        ]
+      },
+      "workspaceDetail": {
+        "title": "Workspace overview",
+        "steps": [
+          {
+            "title": "Central hub",
+            "description": "From here you reach this workspace's campaigns, recipients and analytics."
+          },
+          {
+            "title": "Assigned surveys",
+            "description": "Check which published survey versions are currently assigned to this workspace."
+          }
+        ]
+      },
+      "users": {
+        "title": "User management",
+        "steps": [
+          {
+            "title": "Manage platform users",
+            "description": "A valid Keycloak login alone does not grant access. Users must be approved here and assigned roles."
+          },
+          {
+            "title": "Roles & workspace assignment",
+            "description": "Assign roles to users and decide which workspaces they may manage."
+          }
+        ]
+      },
+      "email": {
+        "title": "Email delivery",
+        "steps": [
+          {
+            "title": "SMTP configuration",
+            "description": "Here you configure email delivery for campaign invitations."
+          },
+          {
+            "title": "Test email",
+            "description": "Send a test email to verify the connection before you send a campaign."
+          }
+        ]
+      },
+      "default": {
+        "title": "Help",
+        "steps": [
+          {
+            "title": "Contextual help",
+            "description": "There is no specific guide for this area yet. Use the navigation on the left to switch to surveys, workspaces or administration."
+          }
+        ]
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { Building2Icon } from "lucide-react";
 
 import { registerOrganizationAction } from "@/app/(auth)/register/actions";
@@ -19,6 +20,7 @@ function slugify(value: string): string {
 }
 
 export function RegisterOrganizationForm() {
+  const t = useTranslations("auth.register.form");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
@@ -27,7 +29,7 @@ export function RegisterOrganizationForm() {
     <form action={registerOrganizationAction}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="organizationName">Name der Organisation</FieldLabel>
+          <FieldLabel htmlFor="organizationName">{t("name")}</FieldLabel>
           <Input
             id="organizationName"
             name="organizationName"
@@ -41,7 +43,7 @@ export function RegisterOrganizationForm() {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="organizationSlug">Adresse</FieldLabel>
+          <FieldLabel htmlFor="organizationSlug">{t("slug")}</FieldLabel>
           <Input
             id="organizationSlug"
             name="organizationSlug"
@@ -53,16 +55,16 @@ export function RegisterOrganizationForm() {
               setSlugTouched(true);
             }}
           />
-          <FieldDescription>Nur Kleinbuchstaben, Ziffern und Bindestriche.</FieldDescription>
+          <FieldDescription>{t("slugHint")}</FieldDescription>
         </Field>
         <Field>
-          <FieldLabel htmlFor="ownerDisplayName">Ihr Name</FieldLabel>
+          <FieldLabel htmlFor="ownerDisplayName">{t("ownerName")}</FieldLabel>
           <Input id="ownerDisplayName" name="ownerDisplayName" required />
         </Field>
         <Field>
-          <FieldLabel htmlFor="ownerEmail">E-Mail-Adresse</FieldLabel>
+          <FieldLabel htmlFor="ownerEmail">{t("email")}</FieldLabel>
           <Input id="ownerEmail" name="ownerEmail" type="email" required />
-          <FieldDescription>Wir senden Ihnen einen Link zur Bestätigung und Passwort-Einrichtung.</FieldDescription>
+          <FieldDescription>{t("emailHint")}</FieldDescription>
         </Field>
         <SubmitButton />
       </FieldGroup>
@@ -71,11 +73,12 @@ export function RegisterOrganizationForm() {
 }
 
 function SubmitButton() {
+  const t = useTranslations("auth.register.form");
   const { pending } = useFormStatus();
   return (
     <Button type="submit" size="lg" className="w-full" disabled={pending}>
       {pending ? <Spinner data-icon="inline-start" /> : <Building2Icon data-icon="inline-start" />}
-      {pending ? "Organisation wird angelegt …" : "Organisation registrieren"}
+      {pending ? t("pending") : t("submit")}
     </Button>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,10 +10,10 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { MegaphoneIcon } from "lucide-react";
-import { campaignStatusLabels } from "@/lib/campaign-status";
 import type { Campaign } from "@/lib/api/types";
 
 export function CampaignsList({ workspaceId, campaigns }: { workspaceId: string; campaigns: Campaign[] }) {
+  const t = useTranslations("campaigns");
   const [showCompleted, setShowCompleted] = useState(false);
   const completedCount = useMemo(() => campaigns.filter((campaign) => campaign.status === "completed").length, [campaigns]);
   const visible = showCompleted ? campaigns : campaigns.filter((campaign) => campaign.status !== "completed");
@@ -21,7 +22,7 @@ export function CampaignsList({ workspaceId, campaigns }: { workspaceId: string;
     <div className="flex flex-col gap-4">
       {completedCount > 0 ? (
         <div className="flex items-center justify-end gap-2">
-          <Label htmlFor="show-completed" className="text-sm text-muted-foreground">Abgeschlossene anzeigen ({completedCount})</Label>
+          <Label htmlFor="show-completed" className="text-sm text-muted-foreground">{t("list.showCompleted", { count: completedCount })}</Label>
           <Switch id="show-completed" checked={showCompleted} onCheckedChange={setShowCompleted} />
         </div>
       ) : null}
@@ -31,10 +32,10 @@ export function CampaignsList({ workspaceId, campaigns }: { workspaceId: string;
             <Link key={campaign.id} href={`/workspaces/${workspaceId}/campaigns/${campaign.id}`}>
               <Card>
                 <CardHeader>
-                  <Badge variant={campaign.status === "active" ? "default" : "secondary"}>{campaignStatusLabels[campaign.status]}</Badge>
+                  <Badge variant={campaign.status === "active" ? "default" : "secondary"}>{t(`status.${campaign.status}`)}</Badge>
                   <CardTitle className="mt-4">{campaign.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">{campaign.survey_title} · Version {campaign.survey_version_number}</CardContent>
+                <CardContent className="text-sm text-muted-foreground">{t("versionLine", { survey: campaign.survey_title, number: campaign.survey_version_number })}</CardContent>
               </Card>
             </Link>
           ))}
@@ -43,8 +44,8 @@ export function CampaignsList({ workspaceId, campaigns }: { workspaceId: string;
         <Empty className="min-h-72 border bg-card">
           <EmptyHeader>
             <EmptyMedia variant="icon"><MegaphoneIcon /></EmptyMedia>
-            <EmptyTitle>Noch keine Kampagnen</EmptyTitle>
-            <EmptyDescription>Erstellen Sie eine Kampagne aus einer dieser Klinik zugewiesenen veröffentlichten Umfrage.</EmptyDescription>
+            <EmptyTitle>{t("list.emptyTitle")}</EmptyTitle>
+            <EmptyDescription>{t("list.emptyDescription")}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       )}

@@ -7,8 +7,7 @@ from app.schemas.auth import LoginRequest, TokenResponse
 
 async def login_with_keycloak(payload: LoginRequest) -> TokenResponse:
     token_url = (
-        f"{settings.keycloak_url}/realms/{settings.keycloak_realm}"
-        "/protocol/openid-connect/token"
+        f"{settings.keycloak_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/token"
     )
     form = {
         "grant_type": "password",

@@ -4,9 +4,8 @@ Revision ID: 7a3c9d1e2b4f
 Revises: 6f2b7c8d9e10
 """
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "7a3c9d1e2b4f"
 down_revision = "6f2b7c8d9e10"
@@ -27,7 +26,9 @@ def upgrade() -> None:
         sa.Column("ip_address", sa.String(length=45), nullable=True),
         sa.Column("user_agent", sa.String(length=500), nullable=True),
         sa.Column("metadata", sa.JSON(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["actor_user_id"], ["users.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["clinic_id"], ["clinics.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),

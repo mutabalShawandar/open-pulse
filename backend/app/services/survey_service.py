@@ -8,34 +8,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
     Organization,
-    Survey,
     QuestionType,
+    Survey,
     SurveyQuestion,
     SurveyQuestionOption,
     SurveyQuestionValidation,
     SurveySection,
     SurveyStatus,
     SurveyVersion,
-    SurveyVersionWorkspace,
     SurveyVersionStatus,
+    SurveyVersionWorkspace,
     Workspace,
 )
 from app.schemas.survey import (
+    SurveyCopyRequest,
     SurveyCreateRequest,
+    SurveyDraftCreateRequest,
     SurveyQuestionCreateRequest,
     SurveyQuestionOptionCreateRequest,
     SurveyQuestionOptionUpdateRequest,
     SurveyQuestionUpdateRequest,
     SurveyQuestionValidationCreateRequest,
     SurveyQuestionValidationUpdateRequest,
-    SurveyCopyRequest,
-    SurveyDraftCreateRequest,
     SurveySectionCreateRequest,
     SurveySectionUpdateRequest,
     SurveyUpdateRequest,
 )
 from app.services.audit_service import add_audit_event
-
 
 CHOICE_QUESTION_TYPES = {QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE}
 VALIDATION_RULES = {
@@ -123,7 +122,9 @@ async def get_survey_or_404(session: AsyncSession, survey_id: UUID) -> Survey:
 
 
 async def get_survey_organization_id_or_404(session: AsyncSession, survey_id: UUID) -> UUID:
-    organization_id = await session.scalar(select(Survey.organization_id).where(Survey.id == survey_id))
+    organization_id = await session.scalar(
+        select(Survey.organization_id).where(Survey.id == survey_id)
+    )
     if organization_id is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey not found")
     return organization_id
@@ -137,7 +138,9 @@ async def update_survey(
 ) -> Survey:
     survey = await get_survey_or_404(session, survey_id)
     if survey.status == SurveyStatus.ARCHIVED:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Archived surveys cannot be updated")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Archived surveys cannot be updated"
+        )
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(survey, field, value)
     add_audit_event(
@@ -178,10 +181,12 @@ async def restore_survey(session: AsyncSession, survey_id: UUID, actor_user_id: 
     if survey.status != SurveyStatus.ARCHIVED:
         return survey
     has_published_version = await session.scalar(
-        select(SurveyVersion.id).where(
+        select(SurveyVersion.id)
+        .where(
             SurveyVersion.survey_id == survey.id,
             SurveyVersion.status == SurveyVersionStatus.PUBLISHED,
-        ).limit(1)
+        )
+        .limit(1)
     )
     survey.status = SurveyStatus.PUBLISHED if has_published_version else SurveyStatus.DRAFT
     survey.archived_at = None
@@ -222,7 +227,9 @@ async def get_published_version_or_404(
         )
     )
     if version is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Published version not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Published version not found"
+        )
     return version
 
 
@@ -248,7 +255,9 @@ async def get_version_for_survey_or_404(
         )
     )
     if version is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey version not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Survey version not found"
+        )
     return version
 
 
@@ -332,13 +341,18 @@ async def create_draft(
             action="survey.draft_created",
             entity_type="survey_version",
             entity_id=draft.id,
-            metadata={"survey_id": str(survey_id), "source_version_id": str(source_version.id) if source_version else None},
+            metadata={
+                "survey_id": str(survey_id),
+                "source_version_id": str(source_version.id) if source_version else None,
+            },
         )
         await session.commit()
         await session.refresh(draft)
     except IntegrityError as error:
         await session.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Could not create draft") from error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Could not create draft"
+        ) from error
     return draft
 
 
@@ -355,7 +369,9 @@ async def copy_survey(
     survey = Survey(
         organization_id=source_survey.organization_id,
         title=payload.title or f"{source_survey.title} (Kopie)",
-        description=payload.description if payload.description is not None else source_survey.description,
+        description=payload.description
+        if payload.description is not None
+        else source_survey.description,
         status=SurveyStatus.DRAFT,
         created_by_user_id=actor_user_id,
     )
@@ -389,14 +405,20 @@ async def copy_survey(
         await session.refresh(draft)
     except IntegrityError as error:
         await session.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Could not copy survey") from error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Could not copy survey"
+        ) from error
     return survey, draft
 
 
-async def _validate_draft_for_publication(session: AsyncSession, draft: SurveyVersion) -> tuple[int, int]:
+async def _validate_draft_for_publication(
+    session: AsyncSession, draft: SurveyVersion
+) -> tuple[int, int]:
     sections = await list_sections(session, draft.id)
     if not sections:
-        raise HTTPException(status_code=422, detail="A published survey requires at least one section")
+        raise HTTPException(
+            status_code=422, detail="A published survey requires at least one section"
+        )
 
     question_count = 0
     for section in sections:
@@ -404,7 +426,9 @@ async def _validate_draft_for_publication(session: AsyncSession, draft: SurveyVe
             raise HTTPException(status_code=422, detail="Section titles cannot be empty")
         questions = await list_questions(session, section.id)
         if not questions:
-            raise HTTPException(status_code=422, detail="Published surveys cannot contain empty sections")
+            raise HTTPException(
+                status_code=422, detail="Published surveys cannot contain empty sections"
+            )
         for question in questions:
             question_count += 1
             if not question.title.strip():
@@ -425,10 +449,14 @@ async def _validate_draft_for_publication(session: AsyncSession, draft: SurveyVe
 
             validations = await list_validations(session, question.id)
             validation_types = {validation.rule_type for validation in validations}
-            if question.question_type == QuestionType.RATING and not {
-                "min_value",
-                "max_value",
-            } <= validation_types:
+            if (
+                question.question_type == QuestionType.RATING
+                and not {
+                    "min_value",
+                    "max_value",
+                }
+                <= validation_types
+            ):
                 raise HTTPException(
                     status_code=422,
                     detail="Rating questions require min_value and max_value rules",
@@ -455,7 +483,9 @@ async def publish_draft(
     if survey is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey not found")
     if survey.status == SurveyStatus.ARCHIVED:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Archived surveys cannot be published")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Archived surveys cannot be published"
+        )
     draft = await session.scalar(
         select(SurveyVersion)
         .where(SurveyVersion.id == draft_id, SurveyVersion.survey_id == survey_id)
@@ -464,7 +494,9 @@ async def publish_draft(
     if draft is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Draft not found")
     if draft.status != SurveyVersionStatus.DRAFT:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Version is already published")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Version is already published"
+        )
 
     section_count, question_count = await _validate_draft_for_publication(session, draft)
     latest_version = await session.scalar(
@@ -496,7 +528,9 @@ async def publish_draft(
         await session.refresh(draft)
     except IntegrityError as error:
         await session.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Could not publish draft") from error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Could not publish draft"
+        ) from error
     return draft
 
 
@@ -522,9 +556,13 @@ async def assign_version_to_workspace(
     survey_version_id: UUID,
     actor,
 ) -> SurveyVersionWorkspace:
-    version = await session.scalar(select(SurveyVersion).where(SurveyVersion.id == survey_version_id))
+    version = await session.scalar(
+        select(SurveyVersion).where(SurveyVersion.id == survey_version_id)
+    )
     if version is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey version not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Survey version not found"
+        )
     if version.status != SurveyVersionStatus.PUBLISHED:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -587,7 +625,9 @@ async def assign_version_to_workspace(
         await session.refresh(assignment)
     except IntegrityError as error:
         await session.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Could not assign survey version") from error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Could not assign survey version"
+        ) from error
     return assignment
 
 
@@ -685,7 +725,9 @@ async def get_section_or_404(
         )
     )
     if section is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey section not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Survey section not found"
+        )
     return section
 
 
@@ -833,7 +875,9 @@ async def get_question_or_404(
         )
     )
     if question is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey question not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Survey question not found"
+        )
     return question
 
 
@@ -1066,7 +1110,9 @@ async def reorder_options(
     )
     _require_choice_question(question)
     options = await list_options(session, question_id)
-    if len(option_ids) != len(set(option_ids)) or set(option_ids) != {option.id for option in options}:
+    if len(option_ids) != len(set(option_ids)) or set(option_ids) != {
+        option.id for option in options
+    }:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="option_ids must contain every question option exactly once",
@@ -1086,7 +1132,9 @@ async def reorder_options(
         return await list_options(session, question_id)
     except IntegrityError as error:
         await session.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Could not reorder options") from error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Could not reorder options"
+        ) from error
 
 
 async def list_validations(
@@ -1120,7 +1168,9 @@ def _validate_rule_value(question: SurveyQuestion, rule_type: str, rule_value: d
     numeric_rules = {"min_value", "max_value", "step"}
     date_rules = {"min_date", "max_date"}
     if rule_type in integer_rules and (not isinstance(value, int) or value < 0):
-        raise HTTPException(status_code=422, detail=f"Rule '{rule_type}' requires a non-negative integer")
+        raise HTTPException(
+            status_code=422, detail=f"Rule '{rule_type}' requires a non-negative integer"
+        )
     if rule_type in numeric_rules and not isinstance(value, (int, float)):
         raise HTTPException(status_code=422, detail=f"Rule '{rule_type}' requires a number")
     if rule_type == "step" and value <= 0:
@@ -1131,7 +1181,9 @@ def _validate_rule_value(question: SurveyQuestion, rule_type: str, rule_value: d
         try:
             date.fromisoformat(value)
         except ValueError as error:
-            raise HTTPException(status_code=422, detail=f"Rule '{rule_type}' requires an ISO date") from error
+            raise HTTPException(
+                status_code=422, detail=f"Rule '{rule_type}' requires an ISO date"
+            ) from error
 
 
 async def _validate_rule_bounds(
@@ -1141,7 +1193,9 @@ async def _validate_rule_bounds(
     rule_value: dict,
     excluded_validation_id: UUID | None = None,
 ) -> None:
-    rules = {rule.rule_type: rule.rule_value for rule in await list_validations(session, question.id)}
+    rules = {
+        rule.rule_type: rule.rule_value for rule in await list_validations(session, question.id)
+    }
     if excluded_validation_id is not None:
         rules = {
             rule.rule_type: rule.rule_value
@@ -1149,13 +1203,21 @@ async def _validate_rule_bounds(
             if rule.id != excluded_validation_id
         }
     rules[rule_type] = rule_value
-    pairs = [("min_length", "max_length"), ("min_selections", "max_selections"), ("min_value", "max_value"), ("min_date", "max_date")]
+    pairs = [
+        ("min_length", "max_length"),
+        ("min_selections", "max_selections"),
+        ("min_value", "max_value"),
+        ("min_date", "max_date"),
+    ]
     for minimum, maximum in pairs:
         if minimum in rules and maximum in rules:
             minimum_value = _rule_value_or_422(rules[minimum])
             maximum_value = _rule_value_or_422(rules[maximum])
             if minimum.endswith("date"):
-                minimum_value, maximum_value = date.fromisoformat(minimum_value), date.fromisoformat(maximum_value)
+                minimum_value, maximum_value = (
+                    date.fromisoformat(minimum_value),
+                    date.fromisoformat(maximum_value),
+                )
             if minimum_value > maximum_value:
                 raise HTTPException(status_code=422, detail=f"{minimum} cannot exceed {maximum}")
 
@@ -1168,7 +1230,9 @@ async def create_validation(
     question_id: UUID,
     payload: SurveyQuestionValidationCreateRequest,
 ) -> SurveyQuestionValidation:
-    question = await _editable_question_or_404(session, survey_id, draft_id, section_id, question_id)
+    question = await _editable_question_or_404(
+        session, survey_id, draft_id, section_id, question_id
+    )
     _validate_rule_value(question, payload.rule_type, payload.rule_value)
     await _validate_rule_bounds(session, question, payload.rule_type, payload.rule_value)
     validation = SurveyQuestionValidation(
@@ -1199,13 +1263,22 @@ async def get_validation_or_404(
 
 
 async def update_validation(
-    session: AsyncSession, survey_id: UUID, draft_id: UUID, section_id: UUID,
-    question_id: UUID, validation_id: UUID, payload: SurveyQuestionValidationUpdateRequest,
+    session: AsyncSession,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
+    validation_id: UUID,
+    payload: SurveyQuestionValidationUpdateRequest,
 ) -> SurveyQuestionValidation:
-    question = await _editable_question_or_404(session, survey_id, draft_id, section_id, question_id)
+    question = await _editable_question_or_404(
+        session, survey_id, draft_id, section_id, question_id
+    )
     validation = await get_validation_or_404(session, question_id, validation_id)
     _validate_rule_value(question, validation.rule_type, payload.rule_value)
-    await _validate_rule_bounds(session, question, validation.rule_type, payload.rule_value, validation.id)
+    await _validate_rule_bounds(
+        session, question, validation.rule_type, payload.rule_value, validation.id
+    )
     validation.rule_value = payload.rule_value
     await session.commit()
     await session.refresh(validation)
@@ -1213,8 +1286,12 @@ async def update_validation(
 
 
 async def delete_validation(
-    session: AsyncSession, survey_id: UUID, draft_id: UUID, section_id: UUID,
-    question_id: UUID, validation_id: UUID,
+    session: AsyncSession,
+    survey_id: UUID,
+    draft_id: UUID,
+    section_id: UUID,
+    question_id: UUID,
+    validation_id: UUID,
 ) -> None:
     await _editable_question_or_404(session, survey_id, draft_id, section_id, question_id)
     validation = await get_validation_or_404(session, question_id, validation_id)

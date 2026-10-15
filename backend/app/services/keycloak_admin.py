@@ -32,8 +32,7 @@ class KeycloakAdminClient:
     async def find_user_by_email(self, email: str) -> dict | None:
         """Find an existing Keycloak user without trusting a client-supplied subject."""
         admin_users_url = (
-            f"{settings.keycloak_internal_url}/admin/realms/{settings.keycloak_realm}"
-            "/users"
+            f"{settings.keycloak_internal_url}/admin/realms/{settings.keycloak_realm}/users"
         )
 
         try:
@@ -70,8 +69,7 @@ class KeycloakAdminClient:
         display_name: str,
     ) -> str:
         admin_users_url = (
-            f"{settings.keycloak_internal_url}/admin/realms/{settings.keycloak_realm}"
-            "/users"
+            f"{settings.keycloak_internal_url}/admin/realms/{settings.keycloak_realm}/users"
         )
 
         try:

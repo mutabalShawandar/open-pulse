@@ -51,9 +51,7 @@ class LoginServiceTests(unittest.TestCase):
         with patch("app.services.auth_service.httpx.AsyncClient", factory):
             with self.assertRaises(HTTPException) as error:
                 asyncio.run(
-                    login_with_keycloak(
-                        LoginRequest(username="dev-admin", password="wrong")
-                    )
+                    login_with_keycloak(LoginRequest(username="dev-admin", password="wrong"))
                 )
 
         self.assertEqual(error.exception.status_code, 401)
@@ -65,9 +63,7 @@ class LoginServiceTests(unittest.TestCase):
         with patch("app.services.auth_service.httpx.AsyncClient", factory):
             with self.assertRaises(HTTPException) as error:
                 asyncio.run(
-                    login_with_keycloak(
-                        LoginRequest(username="dev-admin", password="password")
-                    )
+                    login_with_keycloak(LoginRequest(username="dev-admin", password="password"))
                 )
 
         self.assertEqual(error.exception.status_code, 503)

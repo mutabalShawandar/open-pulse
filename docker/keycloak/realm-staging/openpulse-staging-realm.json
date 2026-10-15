@@ -18,8 +18,8 @@
   "revokeRefreshToken": true,
   "accessCodeLifespan": 60,
   "internationalizationEnabled": true,
-  "supportedLocales": ["de"],
-  "defaultLocale": "de",
+  "supportedLocales": ["en", "de"],
+  "defaultLocale": "en",
   "smtpServer": {
     "password": "${KEYCLOAK_SMTP_PASSWORD}",
     "starttls": "${KEYCLOAK_SMTP_STARTTLS}",

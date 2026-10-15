@@ -7,7 +7,7 @@ import { returnToCookie, sessionCookieOptions, sessionCookies } from "@/lib/auth
 const stateCookie = "umfrage_oauth_state";
 const verifierCookie = "umfrage_pkce_verifier";
 
-type TokenResponse = { access_token: string; refresh_token?: string; expires_in?: number; refresh_expires_in?: number };
+type TokenResponse = { access_token: string; id_token?: string; refresh_token?: string; expires_in?: number; refresh_expires_in?: number };
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -42,6 +42,8 @@ export async function GET(request: NextRequest) {
   const response = clearTemporaryCookies(NextResponse.redirect(resolveReturnTo(request) ?? appUrl("/")));
   response.cookies.set(sessionCookies.accessTokenCookie, tokens.access_token, sessionCookieOptions(tokens.expires_in));
   if (tokens.refresh_token) response.cookies.set(sessionCookies.refreshTokenCookie, tokens.refresh_token, sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14));
+  // Only used as id_token_hint so Keycloak can end its SSO session on logout.
+  if (tokens.id_token) response.cookies.set(sessionCookies.idTokenCookie, tokens.id_token, sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14));
   response.cookies.delete(returnToCookie);
   return response;
 }

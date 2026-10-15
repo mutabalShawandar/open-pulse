@@ -2,13 +2,16 @@
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 type RecipientRow = { id: number };
 
-export function RecipientImportForm({ action, submitLabel = "Empfänger importieren und hinzufügen" }: { action: (formData: FormData) => void | Promise<void>; submitLabel?: string }) {
+export function RecipientImportForm({ action, submitLabel }: { action: (formData: FormData) => void | Promise<void>; submitLabel?: string }) {
+  const t = useTranslations("campaigns.recipientImport");
+  const tw = useTranslations("campaigns.wizard");
   const [rows, setRows] = useState<RecipientRow[]>([{ id: 0 }]);
 
   const addRow = () => setRows((current) => [...current, { id: Date.now() }]);
@@ -20,14 +23,14 @@ export function RecipientImportForm({ action, submitLabel = "Empfänger importie
         {rows.map((row, index) => (
           <div key={row.id} className="grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
             <Field>
-              <FieldLabel htmlFor={`recipient-name-${row.id}`}>Name <span className="font-normal text-muted-foreground">(optional)</span></FieldLabel>
+              <FieldLabel htmlFor={`recipient-name-${row.id}`}>{t("name")} <span className="font-normal text-muted-foreground">{tw("optional")}</span></FieldLabel>
               <input id={`recipient-name-${row.id}`} name="recipientName" type="text" autoComplete="name" maxLength={255} className="h-8 rounded-md border bg-background px-2.5 text-sm" />
             </Field>
             <Field>
-              <FieldLabel htmlFor={`recipient-email-${row.id}`}>E-Mail-Adresse</FieldLabel>
+              <FieldLabel htmlFor={`recipient-email-${row.id}`}>{t("email")}</FieldLabel>
               <input id={`recipient-email-${row.id}`} name="recipientEmail" type="email" required autoComplete="email" maxLength={320} className="h-8 rounded-md border bg-background px-2.5 text-sm" />
             </Field>
-            <Button type="button" variant="ghost" size="icon" aria-label={`Empfänger ${index + 1} entfernen`} disabled={rows.length === 1} onClick={() => removeRow(row.id)}>
+            <Button type="button" variant="ghost" size="icon" aria-label={t("removeN", { number: index + 1 })} disabled={rows.length === 1} onClick={() => removeRow(row.id)}>
               <Trash2Icon />
             </Button>
           </div>
@@ -36,18 +39,18 @@ export function RecipientImportForm({ action, submitLabel = "Empfänger importie
 
       <Button type="button" variant="outline" className="w-fit" onClick={addRow}>
         <PlusIcon data-icon="inline-start" />
-        Weiteren Empfänger hinzufügen
+        {t("addAnother")}
       </Button>
 
       <div className="flex flex-col gap-2 border-t pt-5">
         <Field>
-          <FieldLabel htmlFor="recipient-file">Oder CSV-Datei importieren</FieldLabel>
+          <FieldLabel htmlFor="recipient-file">{t("csvLabel")}</FieldLabel>
           <input id="recipient-file" name="recipientFile" type="file" accept=".csv,text/csv,text/plain" className="block text-sm" />
-          <FieldDescription>Für größere Listen: Spalten „Name;E-Mail“ oder nur „E-Mail“. Maximal 2.000 Empfänger und 2 MB.</FieldDescription>
+          <FieldDescription>{t("csvHint")}</FieldDescription>
         </Field>
       </div>
 
-      <Button className="w-fit" type="submit">{submitLabel}</Button>
+      <Button className="w-fit" type="submit">{submitLabel ?? t("submit")}</Button>
     </form>
   );
 }

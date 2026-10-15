@@ -1,40 +1,49 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.exc import SQLAlchemyError
-from app.core.config import settings
-from sqlalchemy import select, text
-from uuid import UUID 
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.session import get_db_session
 from typing import Annotated
+from uuid import UUID
+
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import select, text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.deps import (
     get_current_user as get_authenticated_user,
-    require_platform_admin,
-    require_permission,
 )
+from app.api.deps import (
+    require_permission,
+    require_platform_admin,
+)
+from app.api.v1.administration import router as administration_router
+from app.api.v1.analytics import router as analytics_router
+from app.api.v1.campaigns import router as campaigns_router
+from app.api.v1.clinic_survey_versions import router as clinic_survey_versions_router
+from app.api.v1.organizations import router as organizations_router
+from app.api.v1.public import router as public_router
+from app.api.v1.recipients import (
+    campaign_router as campaign_recipients_router,
+)
+from app.api.v1.recipients import (
+    router as recipients_router,
+)
+from app.api.v1.surveys import router as surveys_router
+from app.core.config import settings
+from app.core.logging import configure_logging
+from app.db.session import get_db_session
 from app.models import User, Workspace
-from app.schemas.user import PlatformAdminGrantResponse, UserCreateRequest, UserResponse
 from app.schemas.auth import LoginRequest, TokenResponse
+from app.schemas.user import PlatformAdminGrantResponse, UserCreateRequest, UserResponse
 from app.schemas.workspace import (
     WorkspaceCreateRequest,
     WorkspaceMemberCreateRequest,
     WorkspaceMemberResponse,
     WorkspaceResponse,
 )
+from app.services.auth_service import login_with_keycloak
 from app.services.keycloak_admin import KeycloakAdminClient
 from app.services.user_service import create_platform_user, grant_platform_admin
 from app.services.workspace_service import add_workspace_member, create_workspace
-from app.services.auth_service import login_with_keycloak
-from app.core.logging import configure_logging
-from app.api.v1.surveys import router as surveys_router
-from app.api.v1.clinic_survey_versions import router as clinic_survey_versions_router
-from app.api.v1.administration import router as administration_router
-from app.api.v1.campaigns import router as campaigns_router
-from app.api.v1.public import router as public_router
-from app.api.v1.analytics import router as analytics_router
-from app.api.v1.recipients import campaign_router as campaign_recipients_router, router as recipients_router
-from app.api.v1.organizations import router as organizations_router
 
 is_dev = settings.app_env == "development"
 configure_logging()
@@ -70,7 +79,10 @@ async def limit_public_request_body(request: Request, call_next):
     if request.url.path.startswith("/api/v1/public/"):
         content_length = request.headers.get("content-length")
         if content_length and content_length.isdigit() and int(content_length) > 262_144:
-            return JSONResponse(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, content={"detail": "Request body is too large"})
+            return JSONResponse(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                content={"detail": "Request body is too large"},
+            )
     return await call_next(request)
 
 
@@ -98,45 +110,43 @@ async def create_clinic_endpoint(
     workspace = await create_workspace(session, payload, actor.id)
     return WorkspaceResponse.model_validate(workspace, from_attributes=True)
 
+
 @app.get("/health", tags=["system"])
 async def health() -> dict[str, str]:
     """
     Health check endpoint to verify that the API is running.
-    """ 
+    """
     return {"status": "healthy"}
 
+
 @app.get("/ready", tags=["system"])
-async def ready(
-    session: AsyncSession = Depends(get_db_session)
-    ) -> dict[str, str]:
+async def ready(session: AsyncSession = Depends(get_db_session)) -> dict[str, str]:
     """
     Readiness check endpoint to verify that the API is ready to handle requests.
     """
     try:
         # Execute a simple query to check database connectivity
         await session.execute(text("SELECT 1"))
-    except SQLAlchemyError:
+    except SQLAlchemyError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Database is unavailable. Please check the database connection and try again.",
-        )
-        
+        ) from exc
+
     return {"status": "ready"}
-    
+
 
 @app.get("/api/v1/me", tags=["user"])
-async def get_current_user(
-    user: Annotated[User, Depends(get_authenticated_user)]
-) -> dict:
+async def get_current_user(user: Annotated[User, Depends(get_authenticated_user)]) -> dict:
     """
     Endpoint to retrieve the current local application user.
     """
     return {
-            "id": str(user.id),
-            "email": user.email,
-            "display_name": user.display_name,
-            "is_active": user.is_active,
-         }
+        "id": str(user.id),
+        "email": user.email,
+        "display_name": user.display_name,
+        "is_active": user.is_active,
+    }
 
 
 @app.post(
@@ -214,7 +224,6 @@ async def grant_platform_admin_role(
         ),
         is_platform_admin=True,
     )
-
 
 
 @app.get("/api/v1/clinics/{clinic_id}", tags=["clinic"])

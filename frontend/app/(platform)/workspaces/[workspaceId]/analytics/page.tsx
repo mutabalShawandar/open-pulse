@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import {
   ArrowLeftIcon,
   BarChart3Icon,
@@ -19,6 +20,7 @@ export default async function WorkspaceAnalyticsPage(
   props: PageProps<"/workspaces/[workspaceId]/analytics">,
 ) {
   const { workspaceId: workspaceSlug } = await props.params;
+  const t = await getTranslations("analytics");
   const campaignId = (await props.searchParams).campaign as string | undefined;
   const token = await getAccessToken();
   if (!token) redirect("/login");
@@ -52,17 +54,17 @@ export default async function WorkspaceAnalyticsPage(
         render={<Link href={`/workspaces/${workspaceSlug}`} />}
       >
         <ArrowLeftIcon data-icon="inline-start" />
-        Zur Klinik
+        {t("back")}
       </Button>
 
       <header>
-        <p className="text-sm font-medium text-primary">Klinik · Auswertungen</p>
-        <h1 className="mt-2 text-3xl font-semibold">Antworten auswerten</h1>
+        <p className="text-sm font-medium text-primary">{t("eyebrow")}</p>
+        <h1 className="mt-2 text-3xl font-semibold">{t("title")}</h1>
       </header>
 
       {campaigns.length ? (
         <>
-          <nav className="flex flex-wrap gap-2" aria-label="Kampagne auswählen">
+          <nav className="flex flex-wrap gap-2" aria-label={t("selectCampaign")}>
             {campaigns.map((campaign) => (
               <Button
                 key={campaign.id}
@@ -79,8 +81,8 @@ export default async function WorkspaceAnalyticsPage(
             <>
               <AnalyticsExportActions workspaceId={workspace.id} campaignId={selectedCampaignId!} />
               <div className="grid gap-4 sm:grid-cols-2">
-                <Metric icon={<UsersIcon />} label="Gestartet" value={analytics.started_count} />
-                <Metric icon={<CheckCircle2Icon />} label="Abgeschlossen" value={analytics.completed_count} />
+                <Metric icon={<UsersIcon />} label={t("started")} value={analytics.started_count} />
+                <Metric icon={<CheckCircle2Icon />} label={t("completed")} value={analytics.completed_count} />
               </div>
               <section className="grid gap-4">
                 {analytics.questions.map((question) => (
@@ -94,7 +96,7 @@ export default async function WorkspaceAnalyticsPage(
         <Card className="border-dashed">
           <CardContent className="py-12 text-center text-muted-foreground">
             <BarChart3Icon className="mx-auto mb-3 size-8" />
-            Für diese Klinik gibt es noch keine Kampagnen.
+            {t("noCampaigns")}
           </CardContent>
         </Card>
       )}

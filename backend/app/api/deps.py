@@ -1,30 +1,30 @@
+import time
 from typing import Annotated
 
 import httpx
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app.core.config import settings
-import time
-
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.user import User
+
+from app.core.config import settings
 from app.db.session import get_db_session
-from app.models.identity import ExternalIdentityLink
 from app.models.authorization import Permission, Role, RolePermission, UserRole
+from app.models.identity import ExternalIdentityLink
+from app.models.user import User
 
 bearer_scheme = HTTPBearer(auto_error=False)
 _jwks_cache: dict | None = None
 _jwks_cache_expires_at = 0.0
-_jwks_cache_seconds = 3600.0 # Cache JWKS for 1 hour to reduce the number of requests to Keycloak
+_jwks_cache_seconds = 3600.0  # Cache JWKS for 1 hour to reduce the number of requests to Keycloak
 
 
 async def get_bearer_token(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)]
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
 ) -> str | None:
-    """Reads the Bearer token from the Authorization header and returns it. 
-    If the header is missing, 
+    """Reads the Bearer token from the Authorization header and returns it.
+    If the header is missing,
     raises an HTTPException with a 401 status code.
 
     Args:
@@ -42,8 +42,9 @@ async def get_bearer_token(
             detail="Missing authorization header",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return credentials.credentials
+
 
 async def get_keycloak_jwks() -> dict:
     """Fetches the public key from Keycloak's JWKS endpoint.
@@ -55,37 +56,35 @@ async def get_keycloak_jwks() -> dict:
         dict: The JWKS data.
     """
     global _jwks_cache, _jwks_cache_expires_at
-    
+
     if _jwks_cache is not None and time.monotonic() < _jwks_cache_expires_at:
         return _jwks_cache
-    
+
     jwks_url = (
         f"{settings.keycloak_internal_url}/realms/{settings.keycloak_realm}"
         "/protocol/openid-connect/certs"
     )
-   
+
     try:
         timeout = httpx.Timeout(5.0)
-        
-        async with httpx.AsyncClient(timeout = timeout) as client:
+
+        async with httpx.AsyncClient(timeout=timeout) as client:
             key_response = await client.get(jwks_url)
             key_response.raise_for_status()
             keys = key_response.json()
-            
+
         _jwks_cache = keys
-        _jwks_cache_expires_at = (
-            time.monotonic() + _jwks_cache_seconds
-            )
+        _jwks_cache_expires_at = time.monotonic() + _jwks_cache_seconds
 
         return keys
-        
+
     except (httpx.HTTPError, KeyError, ValueError) as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Keycloak service is unavailable or misconfigured",
         ) from e
-        
-        
+
+
 async def get_current_claims(
     token: Annotated[str, Depends(get_bearer_token)],
 ) -> dict:
@@ -99,16 +98,14 @@ async def get_current_claims(
     Raises:
         HTTPException: If the token is invalid or expired.
     """
-    
+
     jwks = await get_keycloak_jwks()
     try:
         token_header = jwt.get_unverified_header(token)
         token_kid = token_header["kid"]
-        
-        signing_key = next(
-            key for key in jwks["keys"] if key["kid"] == token_kid
-        )
-        
+
+        signing_key = next(key for key in jwks["keys"] if key["kid"] == token_kid)
+
         claims = jwt.decode(
             token,
             jwt.PyJWK.from_dict(signing_key),
@@ -117,7 +114,7 @@ async def get_current_claims(
             audience=settings.keycloak_audience,
             options={"verify_aud": True},
         )
-        
+
         return claims
     except (jwt.PyJWTError, KeyError, StopIteration) as e:
         raise HTTPException(
@@ -125,37 +122,33 @@ async def get_current_claims(
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         ) from e
-           
-           
+
+
 async def get_current_user(
     claims: Annotated[dict, Depends(get_current_claims)],
-    session: Annotated[AsyncSession, Depends(get_db_session)]
+    session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
-    
+
     subject = claims.get("sub")
-    
-    if not subject: 
+
+    if not subject:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token does not contain a subject claim",
         )
-        
-        
+
     statement = (
         select(User)
-        .join(
-            ExternalIdentityLink, 
-            ExternalIdentityLink.user_id == User.id
-        )
+        .join(ExternalIdentityLink, ExternalIdentityLink.user_id == User.id)
         .where(
             ExternalIdentityLink.provider == "keycloak",
-            ExternalIdentityLink.subject == subject,    
-            User.is_active == True
+            ExternalIdentityLink.subject == subject,
+            User.is_active.is_(True),
         )
     )
-    
+
     user = await session.scalar(statement)
-    
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

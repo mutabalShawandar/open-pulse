@@ -1968,10 +1968,8 @@
     ]
   },
   "internationalizationEnabled": true,
-  "supportedLocales": [
-    "de"
-  ],
-  "defaultLocale": "de",
+  "supportedLocales": ["en", "de"],
+  "defaultLocale": "en",
   "authenticationFlows": [
     {
       "id": "c78fa43f-b1c6-434e-a1a2-e6648a940b65",

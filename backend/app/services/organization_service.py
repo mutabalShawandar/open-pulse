@@ -1,11 +1,9 @@
-from uuid import UUID
-
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.authorization import Role, OrganizationMember
+from app.models.authorization import OrganizationMember, Role
 from app.models.identity import ExternalIdentityLink
 from app.models.organization import Organization
 from app.models.user import User
@@ -27,9 +25,7 @@ async def register_organization(
     admin-invited users) — this is what stands in for the "administrator-controlled
     workflow" domain boundary for a self-founded organization.
     """
-    owner_role = await session.scalar(
-        select(Role).where(Role.name == "organization_owner")
-    )
+    owner_role = await session.scalar(select(Role).where(Role.name == "organization_owner"))
     if owner_role is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

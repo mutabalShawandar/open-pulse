@@ -17,6 +17,8 @@ async def enforce_public_rate_limit(request: Request, bucket: str, limit: int = 
         if count == 1:
             await redis.expire(key, 61)
         if count > limit:
-            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Please try again later")
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Please try again later"
+            )
     finally:
         await redis.aclose()

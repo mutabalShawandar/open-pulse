@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { CheckIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import { importWizardRecipientsAction, submitCampaignWizardAction } from "@/app/(platform)/workspaces/[workspaceId]/campaigns/actions";
@@ -18,16 +19,10 @@ import type { PublishedSurveyVersionOption, Recipient } from "@/lib/api/types";
 
 type Step = 1 | 2 | 3 | 4;
 
-const stepLabels: Record<Step, string> = {
-  1: "Details",
-  2: "Empfänger",
-  3: "E-Mail-Vorlage",
-  4: "Umfrage & Überprüfung",
-};
-
 type ManualRow = { id: number; name: string; email: string };
 
 export function CampaignWizard({ workspaceId, initialRecipients, surveyVersionOptions }: { workspaceId: string; initialRecipients: Recipient[]; surveyVersionOptions: PublishedSurveyVersionOption[] }) {
+  const t = useTranslations("campaigns.wizard");
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [isPending, startTransition] = useTransition();
@@ -75,7 +70,7 @@ export function CampaignWizard({ workspaceId, initialRecipients, surveyVersionOp
         return next;
       });
       setManualRows([{ id: Date.now(), name: "", email: "" }]);
-      setImportMessage(`${result.createdCount} neu importiert, ${result.duplicateCount} bereits vorhanden.`);
+      setImportMessage(t("importResult", { created: result.createdCount, duplicates: result.duplicateCount }));
     });
   };
 
@@ -87,7 +82,7 @@ export function CampaignWizard({ workspaceId, initialRecipients, surveyVersionOp
         const [displayName, email] = row.includes(";") ? row.split(";", 2) : row.includes(",") ? row.split(",", 2) : ["", row];
         return { display_name: displayName.trim() || null, email: email.trim() };
       }).filter((row) => row.email && row.email.toLowerCase() !== "email" && row.email.toLowerCase() !== "e-mail");
-      if (!toImport.length) { setImportMessage("Die Datei enthielt keine gültigen E-Mail-Adressen."); return; }
+      if (!toImport.length) { setImportMessage(t("csvEmpty")); return; }
       const result = await importWizardRecipientsAction(workspaceId, toImport);
       if (!result.ok) { setImportMessage(result.error); return; }
       setRecipients(result.recipients);
@@ -97,7 +92,7 @@ export function CampaignWizard({ workspaceId, initialRecipients, surveyVersionOp
         for (const recipient of result.recipients) if (importedEmails.has(recipient.email.toLowerCase())) next.add(recipient.id);
         return next;
       });
-      setImportMessage(`${result.createdCount} neu importiert, ${result.duplicateCount} bereits vorhanden.`);
+      setImportMessage(t("importResult", { created: result.createdCount, duplicates: result.duplicateCount }));
     });
   };
 
@@ -124,47 +119,47 @@ export function CampaignWizard({ workspaceId, initialRecipients, surveyVersionOp
         {([1, 2, 3, 4] as Step[]).map((value) => (
           <li key={value} className={`flex items-center gap-2 rounded-full border px-3 py-1.5 ${step === value ? "border-primary bg-primary/10 font-medium text-primary" : "text-muted-foreground"}`}>
             <span className={`flex size-5 items-center justify-center rounded-full text-xs ${step > value ? "bg-primary text-primary-foreground" : "border"}`}>{step > value ? <CheckIcon className="size-3" /> : value}</span>
-            {stepLabels[value]}
+            {t(`steps.${value}`)}
           </li>
         ))}
       </ol>
 
       {step === 1 ? (
         <Card>
-          <CardHeader><CardTitle>Details</CardTitle><CardDescription>Titel und Beschreibung der Kampagne.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t("steps.1")}</CardTitle><CardDescription>{t("detailsHint")}</CardDescription></CardHeader>
           <CardContent className="flex flex-col gap-5">
-            <Field><FieldLabel htmlFor="wizard-title">Titel</FieldLabel><Input id="wizard-title" required value={title} onChange={(event) => setTitle(event.target.value)} /></Field>
-            <Field><FieldLabel htmlFor="wizard-description">Beschreibung</FieldLabel><Textarea id="wizard-description" value={description} onChange={(event) => setDescription(event.target.value)} /></Field>
-            <Field><FieldLabel htmlFor="wizard-ends-at">Endet am <span className="font-normal text-muted-foreground">(optional)</span></FieldLabel><Input id="wizard-ends-at" type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /><FieldDescription>Nach diesem Zeitpunkt wird die Kampagne automatisch beendet und nimmt keine Antworten mehr an.</FieldDescription></Field>
+            <Field><FieldLabel htmlFor="wizard-title">{t("title")}</FieldLabel><Input id="wizard-title" required value={title} onChange={(event) => setTitle(event.target.value)} /></Field>
+            <Field><FieldLabel htmlFor="wizard-description">{t("description")}</FieldLabel><Textarea id="wizard-description" value={description} onChange={(event) => setDescription(event.target.value)} /></Field>
+            <Field><FieldLabel htmlFor="wizard-ends-at">{t("endsAt")} <span className="font-normal text-muted-foreground">{t("optional")}</span></FieldLabel><Input id="wizard-ends-at" type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /><FieldDescription>{t("endsAtHint")}</FieldDescription></Field>
           </CardContent>
         </Card>
       ) : null}
 
       {step === 2 ? (
         <Card>
-          <CardHeader><CardTitle>Empfänger</CardTitle><CardDescription>Importieren Sie Empfänger und wählen Sie aus, wer dieser Kampagne zugeordnet werden soll. Dieser Schritt ist optional und kann später ergänzt werden.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t("recipientsTitle")}</CardTitle><CardDescription>{t("recipientsHint")}</CardDescription></CardHeader>
           <CardContent className="flex flex-col gap-6">
             <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3">
               {manualRows.map((row) => (
                 <div key={row.id} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
-                  <Field><FieldLabel>Name <span className="font-normal text-muted-foreground">(optional)</span></FieldLabel><Input value={row.name} onChange={(event) => updateManualRow(row.id, "name", event.target.value)} /></Field>
-                  <Field><FieldLabel>E-Mail-Adresse</FieldLabel><Input type="email" value={row.email} onChange={(event) => updateManualRow(row.id, "email", event.target.value)} /></Field>
+                  <Field><FieldLabel>{t("name")} <span className="font-normal text-muted-foreground">{t("optional")}</span></FieldLabel><Input value={row.name} onChange={(event) => updateManualRow(row.id, "name", event.target.value)} /></Field>
+                  <Field><FieldLabel>{t("email")}</FieldLabel><Input type="email" value={row.email} onChange={(event) => updateManualRow(row.id, "email", event.target.value)} /></Field>
                   <Button type="button" variant="ghost" size="icon" disabled={manualRows.length === 1} onClick={() => removeManualRow(row.id)}><Trash2Icon /></Button>
                 </div>
               ))}
               <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={addManualRow}><PlusIcon data-icon="inline-start" />Weitere Zeile</Button>
-                <Button type="button" size="sm" disabled={isPending} onClick={importManualRecipients}>{isPending ? <Spinner data-icon="inline-start" /> : null}{isPending ? "Wird importiert …" : "Importieren"}</Button>
+                <Button type="button" variant="outline" size="sm" onClick={addManualRow}><PlusIcon data-icon="inline-start" />{t("addRow")}</Button>
+                <Button type="button" size="sm" disabled={isPending} onClick={importManualRecipients}>{isPending ? <Spinner data-icon="inline-start" /> : null}{isPending ? t("importing") : t("import")}</Button>
               </div>
             </div>
             <Field>
-              <FieldLabel htmlFor="wizard-recipient-file">Oder CSV-Datei importieren</FieldLabel>
+              <FieldLabel htmlFor="wizard-recipient-file">{t("csvLabel")}</FieldLabel>
               <input id="wizard-recipient-file" type="file" accept=".csv,text/csv,text/plain" className="block text-sm" onChange={(event) => { const file = event.target.files?.[0]; if (file) importCsvFile(file); event.target.value = ""; }} />
-              <FieldDescription>Spalten „Name;E-Mail“ oder nur „E-Mail“. Maximal 2.000 Empfänger und 2 MB.</FieldDescription>
+              <FieldDescription>{t("csvHint")}</FieldDescription>
             </Field>
             {importMessage ? <p className="text-sm text-muted-foreground">{importMessage}</p> : null}
             <div>
-              <p className="mb-2 text-sm font-medium">Für diese Kampagne auswählen ({selectedRecipientIds.size} ausgewählt)</p>
+              <p className="mb-2 text-sm font-medium">{t("selectFor", { count: selectedRecipientIds.size })}</p>
               {recipients.length ? (
                 <div className="max-h-72 overflow-y-auto rounded-md border">
                   {recipients.map((recipient) => (
@@ -174,7 +169,7 @@ export function CampaignWizard({ workspaceId, initialRecipients, surveyVersionOp
                     </label>
                   ))}
                 </div>
-              ) : <p className="text-sm text-muted-foreground">Noch keine Empfänger für diese Klinik vorhanden.</p>}
+              ) : <p className="text-sm text-muted-foreground">{t("noRecipients")}</p>}
             </div>
           </CardContent>
         </Card>
@@ -182,44 +177,44 @@ export function CampaignWizard({ workspaceId, initialRecipients, surveyVersionOp
 
       {step === 3 ? (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-muted-foreground">Eine sinnvolle Standardvorlage ist bereits ausgefüllt — passen Sie sie an oder übernehmen Sie sie unverändert. Kann auch später auf der Kampagnenseite ergänzt werden.</p>
-          <EmailTemplateFields campaignTitle={title || "Ihre Kampagne"} values={email} onChange={(next) => setEmail((current) => ({ ...current, ...next }))} />
+          <p className="text-sm text-muted-foreground">{t("emailIntro")}</p>
+          <EmailTemplateFields campaignTitle={title || t("defaultCampaign")} values={email} onChange={(next) => setEmail((current) => ({ ...current, ...next }))} />
         </div>
       ) : null}
 
       {step === 4 ? (
         <Card>
-          <CardHeader><CardTitle>Umfrage & Überprüfung</CardTitle><CardDescription>Wählen Sie die veröffentlichte Umfrageversion, die für diese Kampagne verwendet wird.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t("surveyTitle")}</CardTitle><CardDescription>{t("surveyHint")}</CardDescription></CardHeader>
           <CardContent className="flex flex-col gap-6">
             <Field>
-              <FieldLabel htmlFor="wizard-survey-version">Veröffentlichte Umfrageversion</FieldLabel>
+              <FieldLabel htmlFor="wizard-survey-version">{t("surveyVersion")}</FieldLabel>
               {surveyVersionOptions.length ? (
                 <NativeSelect id="wizard-survey-version" required value={surveyVersionId} onChange={(event) => setSurveyVersionId(event.target.value)}>
-                  <NativeSelectOption value="" disabled>Version auswählen</NativeSelectOption>
+                  <NativeSelectOption value="" disabled>{t("chooseVersion")}</NativeSelectOption>
                   {surveyVersionOptions.map((option) => <NativeSelectOption key={option.id} value={option.id}>{option.label}</NativeSelectOption>)}
                 </NativeSelect>
-              ) : <p className="text-sm text-muted-foreground">Dieser Klinik ist noch keine veröffentlichte Umfrageversion zugeordnet. Ordnen Sie zuerst eine Version über die Klinikseite zu.</p>}
+              ) : <p className="text-sm text-muted-foreground">{t("noVersions")}</p>}
             </Field>
             <div className="rounded-lg border bg-muted/20 p-4 text-sm">
-              <p className="font-medium">Zusammenfassung</p>
+              <p className="font-medium">{t("summary")}</p>
               <dl className="mt-3 grid gap-2">
-                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Titel</dt><dd className="text-right">{title || "—"}</dd></div>
-                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Empfänger</dt><dd className="text-right">{selectedRecipientIds.size} ausgewählt</dd></div>
-                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">E-Mail-Vorlage</dt><dd className="text-right">{email.subject.trim() ? `Betreff: ${email.subject}` : "Noch nicht hinterlegt"}</dd></div>
-                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Umfrageversion</dt><dd className="text-right">{selectedSurveyLabel ?? "—"}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">{t("sumTitle")}</dt><dd className="text-right">{title || "—"}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">{t("sumRecipients")}</dt><dd className="text-right">{t("sumSelected", { count: selectedRecipientIds.size })}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">{t("sumTemplate")}</dt><dd className="text-right">{email.subject.trim() ? t("sumSubject", { subject: email.subject }) : t("sumNoTemplate")}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">{t("sumSurvey")}</dt><dd className="text-right">{selectedSurveyLabel ?? "—"}</dd></div>
               </dl>
             </div>
-            {error ? <Alert variant="destructive"><AlertTitle>Fehler</AlertTitle><AlertDescription>{error}</AlertDescription></Alert> : null}
+            {error ? <Alert variant="destructive"><AlertTitle>{t("errorTitle")}</AlertTitle><AlertDescription>{error}</AlertDescription></Alert> : null}
           </CardContent>
         </Card>
       ) : null}
 
       <div className="flex justify-between">
-        <Button type="button" variant="outline" disabled={step === 1 || isPending} onClick={() => setStep((current) => (current - 1) as Step)}>Zurück</Button>
+        <Button type="button" variant="outline" disabled={step === 1 || isPending} onClick={() => setStep((current) => (current - 1) as Step)}>{t("back")}</Button>
         {step < 4 ? (
-          <Button type="button" disabled={!canGoNext} onClick={() => setStep((current) => (current + 1) as Step)}>Weiter</Button>
+          <Button type="button" disabled={!canGoNext} onClick={() => setStep((current) => (current + 1) as Step)}>{t("next")}</Button>
         ) : (
-          <Button type="button" disabled={isPending || !surveyVersionId} onClick={submit} aria-busy={isPending}>{isPending ? <Spinner data-icon="inline-start" /> : null}{isPending ? "Wird erstellt …" : "Kampagne erstellen"}</Button>
+          <Button type="button" disabled={isPending || !surveyVersionId} onClick={submit} aria-busy={isPending}>{isPending ? <Spinner data-icon="inline-start" /> : null}{isPending ? t("creating") : t("create")}</Button>
         )}
       </div>
     </div>

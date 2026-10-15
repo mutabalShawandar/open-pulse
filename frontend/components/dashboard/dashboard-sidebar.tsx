@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   Building2Icon,
   ClipboardListIcon,
@@ -12,18 +13,15 @@ import type { CurrentUser } from "@/lib/api/types";
 import { userDisplayName, userInitials } from "@/lib/user-display";
 
 const navigation = [
-  { label: "Übersicht", icon: LayoutDashboardIcon, href: "/" },
-  { label: "Umfragen", icon: ClipboardListIcon, href: "/surveys" },
-  { label: "Kliniken", icon: Building2Icon, href: "/workspaces" },
-  {
-    label: "Administration",
-    icon: ShieldCheckIcon,
-    href: "/administration/users",
-  },
-  { label: "E-Mail-Versand", icon: MailIcon, href: "/administration/email" },
-];
+  { key: "overview", icon: LayoutDashboardIcon, href: "/" },
+  { key: "surveys", icon: ClipboardListIcon, href: "/surveys" },
+  { key: "workspaces", icon: Building2Icon, href: "/workspaces" },
+  { key: "administration", icon: ShieldCheckIcon, href: "/administration/users" },
+  { key: "email", icon: MailIcon, href: "/administration/email" },
+] as const;
 
 export function DashboardSidebar({ user }: { user: CurrentUser }) {
+  const t = useTranslations("dashboard");
   return (
     <aside className="hidden min-h-screen flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground lg:flex">
       <Link href="/" className="flex items-center gap-3 px-2">
@@ -32,15 +30,15 @@ export function DashboardSidebar({ user }: { user: CurrentUser }) {
         </div>
         <span className="font-heading text-lg font-semibold tracking-tight">OpenPulse</span>
       </Link>
-      <nav aria-label="Hauptnavigation" className="mt-10 flex flex-col gap-1">
-        {navigation.map(({ label, icon: Icon, href }) => (
+      <nav aria-label={t("nav.label")} className="mt-10 flex flex-col gap-1">
+        {navigation.map(({ key, icon: Icon, href }) => (
           <Link
             key={href}
             href={href}
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
           >
             <Icon className="size-4" />
-            <span>{label}</span>
+            <span>{t(`nav.${key}`)}</span>
           </Link>
         ))}
       </nav>
@@ -52,7 +50,7 @@ export function DashboardSidebar({ user }: { user: CurrentUser }) {
         </Avatar>
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{userDisplayName(user)}</p>
-          <p className="truncate text-xs text-sidebar-foreground/55">Plattformbenutzer</p>
+          <p className="truncate text-xs text-sidebar-foreground/55">{t("platformUser")}</p>
         </div>
       </div>
     </aside>

@@ -6,7 +6,12 @@ from app.core.config import settings
 
 def normalize_campaign_path(campaign_title: str) -> str:
     """Create the readable, stable path stored for a campaign."""
-    normalized = unicodedata.normalize("NFKD", campaign_title.replace("ß", "ss")).encode("ascii", "ignore").decode("ascii").lower()
+    normalized = (
+        unicodedata.normalize("NFKD", campaign_title.replace("ß", "ss"))
+        .encode("ascii", "ignore")
+        .decode("ascii")
+        .lower()
+    )
     readable = re.sub(r"[^a-z0-9]+", "-", normalized).strip("-")[:80]
     return readable or "survey"
 

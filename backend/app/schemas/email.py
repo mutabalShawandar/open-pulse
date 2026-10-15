@@ -6,7 +6,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 def _valid_email(value: str) -> str:
     candidate = value.strip()
-    if "@" not in candidate or candidate.count("@") != 1 or any(character in candidate for character in "\r\n"):
+    if (
+        "@" not in candidate
+        or candidate.count("@") != 1
+        or any(character in candidate for character in "\r\n")
+    ):
         raise ValueError("A valid email address is required")
     local, domain = candidate.rsplit("@", 1)
     if not local or not domain or "." not in domain:

@@ -7,7 +7,11 @@ from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.schemas.user import UserCreateRequest
-from app.services.user_service import create_platform_user, deactivate_platform_user, grant_platform_admin
+from app.services.user_service import (
+    create_platform_user,
+    deactivate_platform_user,
+    grant_platform_admin,
+)
 
 
 class FakeKeycloak:
@@ -170,4 +174,6 @@ class UserServiceTests(unittest.TestCase):
         self.assertFalse(user.is_active)
         self.assertEqual(keycloak.disabled_subjects, ["keycloak-subject"])
         self.assertEqual(session.commit_count, 1)
-        self.assertTrue(any(getattr(value, "action", None) == "user.deactivated" for value in session.values))
+        self.assertTrue(
+            any(getattr(value, "action", None) == "user.deactivated" for value in session.values)
+        )

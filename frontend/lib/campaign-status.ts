@@ -1,10 +1,4 @@
 import type { Campaign } from "@/lib/api/types";
 
-export const campaignStatusLabels: Record<Campaign["status"], string> = {
-  draft: "Entwurf",
-  scheduled: "Geplant",
-  active: "Versendet",
-  paused: "Pausiert",
-  completed: "Abgeschlossen",
-  cancelled: "Abgebrochen",
-};
+// Display labels live in messages/*.json under "campaigns.status.{status}".
+export const campaignStatuses: Campaign["status"][] = ["draft", "scheduled", "active", "paused", "completed", "cancelled"];
