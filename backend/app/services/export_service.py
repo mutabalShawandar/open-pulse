@@ -60,6 +60,20 @@ def _safe_filename(value: str) -> str:
     )
 
 
+PDF_ANSWER_MAX_CHARACTERS = 1_500
+PDF_ANSWER_MAX_LINES = 25
+
+
+def _truncate_for_pdf(value: str) -> str:
+    """Keep one answer small enough to fit on a page; the Excel export has the full text."""
+    lines = value.splitlines()
+    truncated = len(lines) > PDF_ANSWER_MAX_LINES or len(value) > PDF_ANSWER_MAX_CHARACTERS
+    if not truncated:
+        return value
+    shortened = "\n".join(lines[:PDF_ANSWER_MAX_LINES])[:PDF_ANSWER_MAX_CHARACTERS]
+    return f"{shortened}\n[Truncated. See the Excel export for the full answer.]"
+
+
 def _format_answer(answer: ResponseAnswer, selected_labels: list[str]) -> str:
     parts = selected_labels.copy()
     if answer.boolean_value is not None:
@@ -187,7 +201,10 @@ async def export_report_data(
 
 def build_excel_export(data: dict[str, Any]) -> tuple[bytes, str]:
     output = BytesIO()
-    workbook = xlsxwriter.Workbook(output, {"in_memory": True})
+    # Respondent text is untrusted: never let a cell be interpreted as a formula or a link.
+    workbook = xlsxwriter.Workbook(
+        output, {"in_memory": True, "strings_to_formulas": False, "strings_to_urls": False}
+    )
     title = data["campaign"].title
     navy, teal, pale, text = "#16324F", "#0F766E", "#EAF4F2", "#243447"
     title_format = workbook.add_format(
@@ -650,7 +667,10 @@ def build_pdf_export(data: dict[str, Any]) -> tuple[bytes, str]:
         appendix = [[paragraph("Question", "Small"), paragraph("Answer", "Small")]]
         appendix.extend(
             [
-                [paragraph(row["question"], "Small"), paragraph(row["answer"], "Small")]
+                [
+                    paragraph(row["question"], "Small"),
+                    paragraph(_truncate_for_pdf(row["answer"]), "Small"),
+                ]
                 for row in text_rows
             ]
         )
