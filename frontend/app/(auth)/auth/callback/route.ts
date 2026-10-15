@@ -1,13 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { authConfig, authEndpoints, isCanonicalPlatformHost, isOrganizationAppHost } from "@/lib/auth/config";
+import {
+  authConfig,
+  authEndpoints,
+  isCanonicalPlatformHost,
+  isOrganizationAppHost,
+} from "@/lib/auth/config";
 import { getCurrentUser } from "@/lib/api/client";
 import { returnToCookie, sessionCookieOptions, sessionCookies } from "@/lib/auth/session";
 
-const stateCookie = "umfrage_oauth_state";
-const verifierCookie = "umfrage_pkce_verifier";
+const stateCookie = "openpulse_oauth_state";
+const verifierCookie = "openpulse_pkce_verifier";
 
-type TokenResponse = { access_token: string; id_token?: string; refresh_token?: string; expires_in?: number; refresh_expires_in?: number };
+type TokenResponse = {
+  access_token: string;
+  id_token?: string;
+  refresh_token?: string;
+  expires_in?: number;
+  refresh_expires_in?: number;
+};
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -28,22 +39,44 @@ export async function GET(request: NextRequest) {
   });
   if (authConfig.keycloakClientSecret) body.set("client_secret", authConfig.keycloakClientSecret);
 
-  const tokenResponse = await fetch(authEndpoints.token, { method: "POST", body, cache: "no-store" });
-  if (!tokenResponse.ok) return clearTemporaryCookies(NextResponse.redirect(appUrl("/login?error=token")));
+  const tokenResponse = await fetch(authEndpoints.token, {
+    method: "POST",
+    body,
+    cache: "no-store",
+  });
+  if (!tokenResponse.ok)
+    return clearTemporaryCookies(NextResponse.redirect(appUrl("/login?error=token")));
 
   const tokens = (await tokenResponse.json()) as TokenResponse;
   try {
     const user = await getCurrentUser(tokens.access_token);
-    if (!user.is_active) return clearTemporaryCookies(NextResponse.redirect(appUrl("/access-denied")));
+    if (!user.is_active)
+      return clearTemporaryCookies(NextResponse.redirect(appUrl("/access-denied")));
   } catch {
     return clearTemporaryCookies(NextResponse.redirect(appUrl("/access-denied")));
   }
 
-  const response = clearTemporaryCookies(NextResponse.redirect(resolveReturnTo(request) ?? appUrl("/")));
-  response.cookies.set(sessionCookies.accessTokenCookie, tokens.access_token, sessionCookieOptions(tokens.expires_in));
-  if (tokens.refresh_token) response.cookies.set(sessionCookies.refreshTokenCookie, tokens.refresh_token, sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14));
+  const response = clearTemporaryCookies(
+    NextResponse.redirect(resolveReturnTo(request) ?? appUrl("/")),
+  );
+  response.cookies.set(
+    sessionCookies.accessTokenCookie,
+    tokens.access_token,
+    sessionCookieOptions(tokens.expires_in),
+  );
+  if (tokens.refresh_token)
+    response.cookies.set(
+      sessionCookies.refreshTokenCookie,
+      tokens.refresh_token,
+      sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14),
+    );
   // Only used as id_token_hint so Keycloak can end its SSO session on logout.
-  if (tokens.id_token) response.cookies.set(sessionCookies.idTokenCookie, tokens.id_token, sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14));
+  if (tokens.id_token)
+    response.cookies.set(
+      sessionCookies.idTokenCookie,
+      tokens.id_token,
+      sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14),
+    );
   response.cookies.delete(returnToCookie);
   return response;
 }

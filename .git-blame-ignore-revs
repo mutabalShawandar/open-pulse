@@ -1,2 +1,5 @@
 # style(backend): apply ruff formatting and lint fixes
 1dd47ebc4f1013fd1cc70f2dc99c08cd3d4f280b
+
+# style(frontend): add Prettier and format the codebase
+c80c729e5567d171c925844197fa5764d284b588

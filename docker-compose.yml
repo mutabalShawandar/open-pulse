@@ -78,7 +78,24 @@ services:
       migrate:
         condition: service_completed_successfully
       keycloak:
-        condition: service_started
+        condition: service_healthy
+
+  # Optional demo data. Start with: docker compose --profile demo up
+  seed-demo:
+    profiles: ["demo"]
+    build:
+      context: ./backend
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: http://storage:8333
+    command: ["python", "-m", "scripts.seed_demo"]
+    depends_on:
+      bootstrap-admin:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
 
@@ -120,7 +137,7 @@ services:
       - -c
       - |
         for attempt in $$(seq 1 30); do
-          python scripts/bootstrap_platform_admin.py --email "$${SEED_ADMIN_EMAIL:-admin@openpulse.local}" && exit 0
+          python scripts/bootstrap_platform_admin.py --email "$${SEED_ADMIN_EMAIL:-admin@openpulse.local}"             && python scripts/seed_local_smtp.py && exit 0
           echo "Waiting for Keycloak to accept admin API requests (attempt $$attempt/30)..."
           sleep 3
         done
@@ -141,6 +158,7 @@ services:
       KC_HOSTNAME: ${KEYCLOAK_URL}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
+      KC_HEALTH_ENABLED: "true"
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       KC_DB_SCHEMA: ${KEYCLOAK_SCHEMA}
@@ -150,6 +168,18 @@ services:
       - "8081:8080"
     volumes:
       - ./docker/keycloak/local-realm:/opt/keycloak/data/import:ro
+    healthcheck:
+      # The Keycloak image has no curl; probe the management port with bash.
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000 &&
+          printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
+          grep -q '"status": "UP"' <&3
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
     depends_on:
       postgres:
         condition: service_healthy

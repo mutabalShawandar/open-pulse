@@ -12,7 +12,10 @@ export default async function PlatformHomePage() {
   let surveys: Survey[] = [];
   if (accessToken) {
     try {
-      [workspaces, surveys] = await Promise.all([listWorkspaces(accessToken), listSurveys(accessToken)]);
+      [workspaces, surveys] = await Promise.all([
+        listWorkspaces(accessToken),
+        listSurveys(accessToken),
+      ]);
     } catch (error) {
       if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
       throw error;

@@ -2,9 +2,9 @@
 
 The application supports one platform-managed SMTP connection for outbound campaign email. Incoming email is intentionally out of scope.
 
-## Deployment secret
+## Encryption key
 
-Set a unique Fernet key as `EMAIL_CREDENTIAL_ENCRYPTION_KEY` for both the `backend` and `worker` services. Generate it once and store it in the production secret manager:
+SMTP passwords are encrypted with a Fernet key, `EMAIL_CREDENTIAL_ENCRYPTION_KEY`, which both the `backend` and `worker` services need. `.env.example` contains a key that is fine for local development only. For anything beyond that, generate your own once and keep it in a secret store:
 
 ```powershell
 cd backend
@@ -16,10 +16,12 @@ Do not rotate this key casually: existing SMTP passwords cannot be decrypted aft
 ## Administration workflow
 
 1. Sign in as a platform administrator.
-2. Open **Administration → E-Mail-Versand**.
+2. Open **Administration → Email delivery**.
 3. Enter the sender address, SMTP host, port, TLS mode, and optional authentication credentials.
 4. Save, then send a test email to a mailbox you control.
 
 Passwords are encrypted using the deployment key before being stored. The read API returns only whether a password is configured; it never returns the password. Configuration changes and test sends create audit events without credential values or recipient addresses.
 
-For local Mailpit development, use `mailpit` as the SMTP host and port `1025` with no TLS or authentication. Mailpit's inbox is exposed on port `8025` by the local Compose stack.
+## Local development
+
+On first start, the local Compose stack seeds a default SMTP configuration that points at Mailpit (`mailpit`, port `1025`, no TLS, no authentication, sender `no-reply@openpulse.local`). It is only created if no configuration exists yet, so changes you make in the UI are never overwritten. Open Mailpit's inbox at http://localhost:8025 to read the emails the application sends.

@@ -1,0 +1,55 @@
+name: Snyk
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "41 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  snyk:
+    name: Dependency and code scan
+    runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # Pull requests from forks do not receive repository secrets, and the
+      # token may not be configured yet. Skip cleanly instead of failing.
+      - name: Check for Snyk token
+        id: token
+        run: |
+          if [ -n "$SNYK_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "SNYK_TOKEN is not available; skipping Snyk scan."
+          fi
+
+      - uses: actions/setup-node@v7
+        if: steps.token.outputs.available == 'true'
+        with:
+          node-version: "24"
+
+      - name: Install Snyk CLI
+        if: steps.token.outputs.available == 'true'
+        run: npm install --global snyk@1
+
+      - name: Backend dependencies
+        if: steps.token.outputs.available == 'true'
+        run: snyk test --file=backend/pyproject.toml --severity-threshold=high
+
+      - name: Frontend dependencies
+        if: steps.token.outputs.available == 'true'
+        run: snyk test --file=frontend/package.json --severity-threshold=high
+
+      - name: Code (SAST)
+        if: steps.token.outputs.available == 'true'
+        run: snyk code test --severity-threshold=high

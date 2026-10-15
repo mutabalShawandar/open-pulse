@@ -25,7 +25,8 @@ export async function createUserAction(formData: FormData) {
     await createPlatformUser(accessToken, { email, display_name: displayName });
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
-    if (error instanceof ApiError && error.status === 409) redirect("/administration/users?error=exists");
+    if (error instanceof ApiError && error.status === 409)
+      redirect("/administration/users?error=exists");
     redirect("/administration/users?error=create");
   }
 

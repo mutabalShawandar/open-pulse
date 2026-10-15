@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { authConfig, authEndpoints, isCanonicalPlatformHost, isOrganizationAppHost } from "@/lib/auth/config";
+import {
+  authConfig,
+  authEndpoints,
+  isCanonicalPlatformHost,
+  isOrganizationAppHost,
+} from "@/lib/auth/config";
 import { sessionCookieOptions, sessionCookies } from "@/lib/auth/session";
 
-type TokenResponse = { access_token: string; refresh_token?: string; expires_in?: number; refresh_expires_in?: number };
+type TokenResponse = {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+  refresh_expires_in?: number;
+};
 
 // When NEXT_PUBLIC_ROOT_DOMAIN is set (e.g. "domain.de"), a request to
 // "{workspace-slug}.domain.de/{public_slug}" is rewritten internally to
@@ -18,7 +28,8 @@ export async function proxy(request: NextRequest) {
   const isRootDomain = !rootDomain || hostname === rootDomain || hostname === `www.${rootDomain}`;
   const organizationSlug = isOrganizationAppHost(hostname);
   const isPlatformHost = isCanonicalPlatformHost(hostname) || organizationSlug !== null;
-  const isSubdomainSurvey = Boolean(rootDomain) && !isRootDomain && !isPlatformHost && hostname.endsWith(`.${rootDomain}`);
+  const isSubdomainSurvey =
+    Boolean(rootDomain) && !isRootDomain && !isPlatformHost && hostname.endsWith(`.${rootDomain}`);
   const isPlatformSurvey = url.pathname.startsWith("/respond/");
 
   // Carried on the *request* headers (not response headers) so Server
@@ -34,22 +45,48 @@ export async function proxy(request: NextRequest) {
   // The session cookie is domain-wide (see lib/auth/session.ts) once
   // NEXT_PUBLIC_ROOT_DOMAIN is set, so this runs identically on the canonical
   // "app.{root}" host and on every "app.{org-slug}.{root}" host.
-  if (isPlatformHost && !url.pathname.startsWith("/auth/") && shouldRefresh(request.cookies.get(sessionCookies.accessTokenCookie)?.value)) {
+  if (
+    isPlatformHost &&
+    !url.pathname.startsWith("/auth/") &&
+    shouldRefresh(request.cookies.get(sessionCookies.accessTokenCookie)?.value)
+  ) {
     const refreshToken = request.cookies.get(sessionCookies.refreshTokenCookie)?.value;
     const tokens = refreshToken ? await refreshAccessToken(refreshToken) : null;
     if (tokens) {
-      const cookies = request.cookies.getAll().filter((cookie) => cookie.name !== sessionCookies.accessTokenCookie && cookie.name !== sessionCookies.refreshTokenCookie);
+      const cookies = request.cookies
+        .getAll()
+        .filter(
+          (cookie) =>
+            cookie.name !== sessionCookies.accessTokenCookie &&
+            cookie.name !== sessionCookies.refreshTokenCookie,
+        );
       cookies.push({ name: sessionCookies.accessTokenCookie, value: tokens.access_token });
-      if (tokens.refresh_token) cookies.push({ name: sessionCookies.refreshTokenCookie, value: tokens.refresh_token });
-      forwardedHeaders.set("cookie", cookies.map((cookie) => `${encodeURIComponent(cookie.name)}=${encodeURIComponent(cookie.value)}`).join("; "));
+      if (tokens.refresh_token)
+        cookies.push({ name: sessionCookies.refreshTokenCookie, value: tokens.refresh_token });
+      forwardedHeaders.set(
+        "cookie",
+        cookies
+          .map((cookie) => `${encodeURIComponent(cookie.name)}=${encodeURIComponent(cookie.value)}`)
+          .join("; "),
+      );
 
       const response = NextResponse.next({ request: { headers: forwardedHeaders } });
-      response.cookies.set(sessionCookies.accessTokenCookie, tokens.access_token, sessionCookieOptions(tokens.expires_in));
-      if (tokens.refresh_token) response.cookies.set(sessionCookies.refreshTokenCookie, tokens.refresh_token, sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14));
+      response.cookies.set(
+        sessionCookies.accessTokenCookie,
+        tokens.access_token,
+        sessionCookieOptions(tokens.expires_in),
+      );
+      if (tokens.refresh_token)
+        response.cookies.set(
+          sessionCookies.refreshTokenCookie,
+          tokens.refresh_token,
+          sessionCookieOptions(tokens.refresh_expires_in ?? 60 * 60 * 24 * 14),
+        );
       return response;
     }
   }
-  if (!isSubdomainSurvey && !isPlatformSurvey) return NextResponse.next({ request: { headers: forwardedHeaders } });
+  if (!isSubdomainSurvey && !isPlatformSurvey)
+    return NextResponse.next({ request: { headers: forwardedHeaders } });
 
   const recipientToken = url.searchParams.get("token");
   if (recipientToken) {
@@ -80,7 +117,14 @@ function shouldRefresh(accessToken: string | undefined) {
   try {
     const payload = accessToken.split(".")[1];
     if (!payload) return true;
-    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(payload.length / 4) * 4, "="))) as { exp?: number };
+    const decoded = JSON.parse(
+      atob(
+        payload
+          .replace(/-/g, "+")
+          .replace(/_/g, "/")
+          .padEnd(Math.ceil(payload.length / 4) * 4, "="),
+      ),
+    ) as { exp?: number };
     return !decoded.exp || decoded.exp * 1000 <= Date.now() + 60_000;
   } catch {
     return true;
@@ -88,11 +132,15 @@ function shouldRefresh(accessToken: string | undefined) {
 }
 
 async function refreshAccessToken(refreshToken: string): Promise<TokenResponse | null> {
-  const body = new URLSearchParams({ grant_type: "refresh_token", client_id: authConfig.keycloakClientId, refresh_token: refreshToken });
+  const body = new URLSearchParams({
+    grant_type: "refresh_token",
+    client_id: authConfig.keycloakClientId,
+    refresh_token: refreshToken,
+  });
   if (authConfig.keycloakClientSecret) body.set("client_secret", authConfig.keycloakClientSecret);
   try {
     const response = await fetch(authEndpoints.token, { method: "POST", body, cache: "no-store" });
-    return response.ok ? await response.json() as TokenResponse : null;
+    return response.ok ? ((await response.json()) as TokenResponse) : null;
   } catch {
     return null;
   }

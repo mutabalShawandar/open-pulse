@@ -121,7 +121,7 @@ async def campaign_response_data(session: AsyncSession, campaign: Campaign) -> d
         "id": campaign.id,
         "clinic_id": campaign.workspace_id,
         "survey_version_id": campaign.survey_version_id,
-        "survey_title": survey.title if survey else "Unbekannte Umfrage",
+        "survey_title": survey.title if survey else "Unknown survey",
         "survey_version_number": version.version_number
         if version and version.version_number
         else 0,

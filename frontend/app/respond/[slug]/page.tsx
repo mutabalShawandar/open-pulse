@@ -23,7 +23,11 @@ export default async function PublicSurveyPage(props: PageProps<"/respond/[slug]
       <div className="mx-auto max-w-3xl">
         <header className="mb-8 text-center">
           {campaign.logo_url ? (
-            <img src={campaign.logo_url} alt={t("logoAlt", { name: campaign.clinic_name })} className="mx-auto mb-5 size-16 rounded-2xl bg-white object-contain p-1 shadow-lg" />
+            <img
+              src={campaign.logo_url}
+              alt={t("logoAlt", { name: campaign.clinic_name })}
+              className="mx-auto mb-5 size-16 rounded-2xl bg-white object-contain p-1 shadow-lg"
+            />
           ) : (
             <div className="mx-auto mb-5 flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
               <ClipboardCheck className="size-6" />
@@ -32,16 +36,43 @@ export default async function PublicSurveyPage(props: PageProps<"/respond/[slug]
           <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
             {campaign.clinic_name || t("tagline")}
           </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">{campaign.title}</h1>
-          {campaign.description ? <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">{campaign.description}</p> : null}
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+            {campaign.title}
+          </h1>
+          {campaign.description ? (
+            <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
+              {campaign.description}
+            </p>
+          ) : null}
         </header>
         <PublicSurveyForm campaign={campaign} slug={campaignSlug} />
         <footer className="flex flex-col items-center gap-3 py-8 text-center text-xs text-muted-foreground">
           <p>{t("anonymous")}</p>
           <nav aria-label={t("legalNav")} className="flex flex-wrap justify-center gap-x-4 gap-y-2">
-            <a className="underline underline-offset-4 hover:text-foreground" href="https://example.com/impressum/" target="_blank" rel="noreferrer">{t("legalNotice")}</a>
-            <a className="underline underline-offset-4 hover:text-foreground" href="https://example.com/datenschutz/" target="_blank" rel="noreferrer">{t("privacy")}</a>
-            <a className="underline underline-offset-4 hover:text-foreground" href="https://example.com/agb/" target="_blank" rel="noreferrer">{t("terms")}</a>
+            <a
+              className="underline underline-offset-4 hover:text-foreground"
+              href="https://example.com/impressum/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t("legalNotice")}
+            </a>
+            <a
+              className="underline underline-offset-4 hover:text-foreground"
+              href="https://example.com/datenschutz/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t("privacy")}
+            </a>
+            <a
+              className="underline underline-offset-4 hover:text-foreground"
+              href="https://example.com/agb/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t("terms")}
+            </a>
           </nav>
         </footer>
       </div>

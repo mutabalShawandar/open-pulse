@@ -24,11 +24,17 @@ function optionalValue(formData: FormData, field: string) {
 
 function workspaceInputFrom(formData: FormData): WorkspaceInput | null {
   const name = String(formData.get("name") ?? "").trim();
-  const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
+  const slug = String(formData.get("slug") ?? "")
+    .trim()
+    .toLowerCase();
   const houseNumberValue = optionalValue(formData, "hausnummer");
   const hausnummer = houseNumberValue === null ? null : Number(houseNumberValue);
 
-  if (!name || !slug || (hausnummer !== null && (!Number.isInteger(hausnummer) || hausnummer < 1))) {
+  if (
+    !name ||
+    !slug ||
+    (hausnummer !== null && (!Number.isInteger(hausnummer) || hausnummer < 1))
+  ) {
     return null;
   }
 
@@ -144,17 +150,36 @@ export async function unassignSurveyVersionAction(workspaceSlug: string, formDat
 export async function importWorkspaceRecipientsAction(workspaceSlug: string, formData: FormData) {
   const file = formData.get("recipientFile");
   const hasFile = file instanceof File && file.size > 0;
-  if (file instanceof File && file.size > 2 * 1024 * 1024) redirect(`/workspaces/${workspaceSlug}/recipients?error=file-size`);
+  if (file instanceof File && file.size > 2 * 1024 * 1024)
+    redirect(`/workspaces/${workspaceSlug}/recipients?error=file-size`);
   const recipients = hasFile
-    ? (await file.text()).replace(/^﻿/, "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((row) => {
-      const [displayName, email] = row.includes(";") ? row.split(";", 2) : row.includes(",") ? row.split(",", 2) : ["", row];
-      return { display_name: displayName.trim() || null, email: email.trim() };
-    }).filter((recipient) => recipient.email.toLowerCase() !== "email" && recipient.email.toLowerCase() !== "e-mail")
-    : formData.getAll("recipientEmail").map(String).map((email, index) => ({
-      display_name: String(formData.getAll("recipientName")[index] ?? "").trim() || null,
-      email: email.trim(),
-    })).filter((recipient) => recipient.email);
-  if (!recipients.length || recipients.length > 2_000) redirect(`/workspaces/${workspaceSlug}/recipients?error=recipients`);
+    ? (await file.text())
+        .replace(/^﻿/, "")
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((row) => {
+          const [displayName, email] = row.includes(";")
+            ? row.split(";", 2)
+            : row.includes(",")
+              ? row.split(",", 2)
+              : ["", row];
+          return { display_name: displayName.trim() || null, email: email.trim() };
+        })
+        .filter(
+          (recipient) =>
+            recipient.email.toLowerCase() !== "email" && recipient.email.toLowerCase() !== "e-mail",
+        )
+    : formData
+        .getAll("recipientEmail")
+        .map(String)
+        .map((email, index) => ({
+          display_name: String(formData.getAll("recipientName")[index] ?? "").trim() || null,
+          email: email.trim(),
+        }))
+        .filter((recipient) => recipient.email);
+  if (!recipients.length || recipients.length > 2_000)
+    redirect(`/workspaces/${workspaceSlug}/recipients?error=recipients`);
 
   const accessToken = await getAccessToken();
   if (!accessToken) redirect("/login");
@@ -169,7 +194,9 @@ export async function importWorkspaceRecipientsAction(workspaceSlug: string, for
     redirect(`/workspaces/${workspaceSlug}/recipients?error=recipients`);
   }
   revalidatePath(`/workspaces/${workspaceSlug}/recipients`);
-  redirect(`/workspaces/${workspaceSlug}/recipients?created=${createdCount}&duplicates=${duplicateCount}`);
+  redirect(
+    `/workspaces/${workspaceSlug}/recipients?created=${createdCount}&duplicates=${duplicateCount}`,
+  );
 }
 
 export async function optOutWorkspaceRecipientAction(workspaceSlug: string, recipientId: string) {

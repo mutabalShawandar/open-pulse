@@ -28,7 +28,13 @@ export function WorkspaceForm({ action, workspace, submitLabel }: WorkspaceFormP
           </Field>
           <Field>
             <FieldLabel htmlFor="slug">{t("slug")}</FieldLabel>
-            <Input id="slug" name="slug" defaultValue={workspace?.slug} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required />
+            <Input
+              id="slug"
+              name="slug"
+              defaultValue={workspace?.slug}
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              required
+            />
             <FieldDescription>{t("slugHint")}</FieldDescription>
           </Field>
         </div>
@@ -36,13 +42,23 @@ export function WorkspaceForm({ action, workspace, submitLabel }: WorkspaceFormP
           <FieldLabel htmlFor="logo">{t("logo")}</FieldLabel>
           <div className="flex items-center gap-4 rounded-xl border bg-muted/30 p-3">
             {workspace?.logo_url ? (
-              <img src={workspace.logo_url} alt={t("logoCurrent")} className="size-14 rounded-lg bg-white object-contain p-1" />
+              <img
+                src={workspace.logo_url}
+                alt={t("logoCurrent")}
+                className="size-14 rounded-lg bg-white object-contain p-1"
+              />
             ) : (
               <div className="flex size-14 items-center justify-center rounded-lg bg-background text-muted-foreground">
                 <ImagePlusIcon className="size-5" />
               </div>
             )}
-            <Input id="logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp" className="max-w-sm bg-background" />
+            <Input
+              id="logo"
+              name="logo"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="max-w-sm bg-background"
+            />
           </div>
           <FieldDescription>{t("logoHint")}</FieldDescription>
         </Field>
@@ -57,7 +73,14 @@ export function WorkspaceForm({ action, workspace, submitLabel }: WorkspaceFormP
           </Field>
           <Field>
             <FieldLabel htmlFor="hausnummer">{t("houseNumber")}</FieldLabel>
-            <Input id="hausnummer" name="hausnummer" type="number" min="1" step="1" defaultValue={workspace?.hausnummer ?? ""} />
+            <Input
+              id="hausnummer"
+              name="hausnummer"
+              type="number"
+              min="1"
+              step="1"
+              defaultValue={workspace?.hausnummer ?? ""}
+            />
           </Field>
         </div>
         <div className="grid gap-5 sm:grid-cols-[9rem_minmax(0,1fr)]">

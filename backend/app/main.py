@@ -49,7 +49,7 @@ is_dev = settings.app_env == "development"
 configure_logging()
 
 app = FastAPI(
-    title="Umfrage Tool API",
+    title="OpenPulse API",
     version="0.1.0",
     docs_url="/docs" if is_dev else None,
     redoc_url="/redoc" if is_dev else None,

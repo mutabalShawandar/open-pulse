@@ -1,5 +1,7 @@
 # Backend Plan
 
+> **Historical planning document.** It was written during the original build, before the OpenPulse rebrand. In it, "clinic" means **workspace**; the REST paths (`/api/v1/clinics/...`) and some identifiers (`clinic_manager`, `require_clinic_permission`) keep the old name for compatibility. Notes about VPS or production deployment are out of scope for v0.1, which is local-only. For the current state see [README.md](../README.md) and [AGENTS.md](../AGENTS.md).
+
 ## 1. Recommended Architecture
 
 Build the first version as a Python modular monolith. One deployable backend is simpler to operate on a single VPS, while clear domain modules keep the code ready for future extraction if growth requires it.

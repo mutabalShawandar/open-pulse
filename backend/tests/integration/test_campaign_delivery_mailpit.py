@@ -98,7 +98,7 @@ class CampaignDeliveryMailpitTests(unittest.IsolatedAsyncioTestCase):
                 template = CampaignEmailTemplate(
                     campaign_id=campaign.id,
                     subject="Einladung {{campaign_title}}",
-                    html_body='<p>Hallo {{recipient_name}}</p><a href="{{survey_link}}">Umfrage</a>',
+                    html_body='<p>Hallo {{recipient_name}}</p><a href="{{survey_link}}">Survey</a>',
                     text_body="Hallo {{recipient_name}}: {{survey_link}}",
                 )
                 smtp = SmtpConfiguration(

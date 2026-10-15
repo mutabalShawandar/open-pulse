@@ -40,7 +40,10 @@ async function loadWorkspace(workspaceSlug: string) {
   }
 }
 
-async function loadSurveyVersionManagement(workspaceId: string, versionLabel: (survey: string, number: number | string) => string) {
+async function loadSurveyVersionManagement(
+  workspaceId: string,
+  versionLabel: (survey: string, number: number | string) => string,
+) {
   const accessToken = await getAccessToken();
   if (!accessToken) return null;
 
@@ -90,7 +93,10 @@ export default async function WorkspaceDetailPage({
   const workspace = await loadWorkspace(workspaceSlug);
   const address = fullAddress(workspace);
   const query = await searchParams;
-  const surveyVersionManagement = await loadSurveyVersionManagement(workspace.id, (survey, number) => tc("versionLine", { survey, number }));
+  const surveyVersionManagement = await loadSurveyVersionManagement(
+    workspace.id,
+    (survey, number) => tc("versionLine", { survey, number }),
+  );
   const assignmentError = query.assignmentError;
 
   return (
@@ -107,7 +113,11 @@ export default async function WorkspaceDetailPage({
       <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div className="flex items-start gap-4">
           {workspace.logo_url ? (
-            <img src={workspace.logo_url} alt={t("logoAlt", { name: workspace.name })} className="size-12 rounded-2xl bg-white object-contain p-1 shadow-lg shadow-primary/15" />
+            <img
+              src={workspace.logo_url}
+              alt={t("logoAlt", { name: workspace.name })}
+              className="size-12 rounded-2xl bg-white object-contain p-1 shadow-lg shadow-primary/15"
+            />
           ) : (
             <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/15">
               <Building2Icon className="size-6" />
@@ -115,24 +125,50 @@ export default async function WorkspaceDetailPage({
           )}
           <div>
             <p className="text-sm font-medium text-muted-foreground">{t("detail.profile")}</p>
-            <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">{workspace.name}</h1>
+            <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">
+              {workspace.name}
+            </h1>
             <p className="mt-2 text-sm text-muted-foreground">/{workspace.slug}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="secondary">{t("detail.badge")}</Badge>
-          <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/edit`} />}>
+          <Button
+            nativeButton={false}
+            variant="outline"
+            render={<Link href={`/workspaces/${workspaceSlug}/edit`} />}
+          >
             <PencilIcon data-icon="inline-start" />
             {t("detail.edit")}
           </Button>
-          <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/campaigns`} />}>{t("detail.campaigns")}</Button>
-          <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/recipients`} />}>{t("detail.recipients")}</Button>
-          <Button nativeButton={false} variant="outline" render={<Link href={`/workspaces/${workspaceSlug}/analytics`} />}>{t("detail.analytics")}</Button>
+          <Button
+            nativeButton={false}
+            variant="outline"
+            render={<Link href={`/workspaces/${workspaceSlug}/campaigns`} />}
+          >
+            {t("detail.campaigns")}
+          </Button>
+          <Button
+            nativeButton={false}
+            variant="outline"
+            render={<Link href={`/workspaces/${workspaceSlug}/recipients`} />}
+          >
+            {t("detail.recipients")}
+          </Button>
+          <Button
+            nativeButton={false}
+            variant="outline"
+            render={<Link href={`/workspaces/${workspaceSlug}/analytics`} />}
+          >
+            {t("detail.analytics")}
+          </Button>
         </div>
       </section>
       {query.created || query.updated ? (
         <Alert>
-          <AlertTitle>{query.created ? t("detail.createdTitle") : t("detail.updatedTitle")}</AlertTitle>
+          <AlertTitle>
+            {query.created ? t("detail.createdTitle") : t("detail.updatedTitle")}
+          </AlertTitle>
           <AlertDescription>
             {query.created ? t("detail.createdBody") : t("detail.updatedBody")}
           </AlertDescription>
@@ -140,7 +176,9 @@ export default async function WorkspaceDetailPage({
       ) : null}
       {query.assignmentAdded || query.assignmentRemoved ? (
         <Alert>
-          <AlertTitle>{query.assignmentAdded ? t("detail.assignmentAdded") : t("detail.assignmentRemoved")}</AlertTitle>
+          <AlertTitle>
+            {query.assignmentAdded ? t("detail.assignmentAdded") : t("detail.assignmentRemoved")}
+          </AlertTitle>
           <AlertDescription>
             {query.assignmentAdded ? t("detail.addedBody") : t("detail.removedBody")}
           </AlertDescription>
@@ -150,16 +188,18 @@ export default async function WorkspaceDetailPage({
         <Alert variant="destructive">
           <AlertTitle>{t("detail.assignErrorTitle")}</AlertTitle>
           <AlertDescription>
-            {assignmentError === "exists" ? t("detail.exists") : assignmentError === "validation" ? t("detail.validation") : t("detail.unknown")}
+            {assignmentError === "exists"
+              ? t("detail.exists")
+              : assignmentError === "validation"
+                ? t("detail.validation")
+                : t("detail.unknown")}
           </AlertDescription>
         </Alert>
       ) : null}
       <Card>
         <CardHeader className="border-b">
           <CardTitle>{t("detail.locationTitle")}</CardTitle>
-          <CardDescription>
-            {t("detail.locationHint")}
-          </CardDescription>
+          <CardDescription>{t("detail.locationHint")}</CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
           {address.length > 0 ? (
@@ -182,9 +222,7 @@ export default async function WorkspaceDetailPage({
         <Card>
           <CardHeader className="border-b">
             <CardTitle>{t("detail.versionsTitle")}</CardTitle>
-            <CardDescription>
-              {t("detail.versionsHint")}
-            </CardDescription>
+            <CardDescription>{t("detail.versionsHint")}</CardDescription>
           </CardHeader>
           <CardContent className="pt-5">
             <WorkspaceSurveyVersions workspaceSlug={workspaceSlug} {...surveyVersionManagement} />

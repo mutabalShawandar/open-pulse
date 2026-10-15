@@ -5,7 +5,13 @@ import { Building2Icon, ChevronRightIcon, MapPinIcon, PlusIcon } from "lucide-re
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { listWorkspaces } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
 import { getRequestOrganization } from "@/lib/auth/request-organization";
@@ -22,17 +28,19 @@ export default async function WorkspacesPage() {
   // the platform user can see); on an "app.{org-slug}.{root}" host, narrow it
   // to that organization here so an org subdomain only shows its own workspaces.
   const organization = await getRequestOrganization();
-  const workspaces = organization ? allWorkspaces.filter((workspace) => workspace.organization_id === organization.id) : allWorkspaces;
+  const workspaces = organization
+    ? allWorkspaces.filter((workspace) => workspace.organization_id === organization.id)
+    : allWorkspaces;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-sm font-medium text-muted-foreground">{t("eyebrow")}</p>
-          <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">{t("listTitle")}</h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            {t("listIntro")}
-          </p>
+          <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">
+            {t("listTitle")}
+          </h1>
+          <p className="mt-2 max-w-2xl text-muted-foreground">{t("listIntro")}</p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="secondary">{t("total", { count: workspaces.length })}</Badge>
@@ -50,9 +58,7 @@ export default async function WorkspacesPage() {
               <Building2Icon />
             </EmptyMedia>
             <EmptyTitle>{t("emptyTitle")}</EmptyTitle>
-            <EmptyDescription>
-              {t("emptyDescription")}
-            </EmptyDescription>
+            <EmptyDescription>{t("emptyDescription")}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
@@ -61,12 +67,20 @@ export default async function WorkspacesPage() {
             const location = workspaceLocation(workspace);
 
             return (
-              <Link key={workspace.id} href={`/workspaces/${workspace.slug}`} className="group block">
+              <Link
+                key={workspace.id}
+                href={`/workspaces/${workspace.slug}`}
+                className="group block"
+              >
                 <Card className="h-full transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:ring-primary/35">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-3">
                       {workspace.logo_url ? (
-                        <img src={workspace.logo_url} alt={t("logoAlt", { name: workspace.name })} className="size-10 rounded-xl bg-white object-contain p-1 ring-1 ring-border" />
+                        <img
+                          src={workspace.logo_url}
+                          alt={t("logoAlt", { name: workspace.name })}
+                          className="size-10 rounded-xl bg-white object-contain p-1 ring-1 ring-border"
+                        />
                       ) : (
                         <div className="flex size-10 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
                           <Building2Icon className="size-5" />

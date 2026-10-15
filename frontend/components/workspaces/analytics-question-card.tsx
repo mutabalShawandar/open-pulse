@@ -41,7 +41,9 @@ export function AnalyticsQuestionCard({ question }: { question: Question }) {
           </div>
         ) : null}
         {question.earliest_date ? (
-          <p className="mb-4 text-sm">{t("period", { from: question.earliest_date, to: question.latest_date ?? "—" })}</p>
+          <p className="mb-4 text-sm">
+            {t("period", { from: question.earliest_date, to: question.latest_date ?? "—" })}
+          </p>
         ) : null}
         {data.length ? (
           <AnalyticsBarChart data={data} />
@@ -67,18 +69,41 @@ function YesNoCard({ question }: { question: Question }) {
         <CardDescription>{t("answers", { count: question.answer_count })}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
-        <Outcome icon={<ThumbsUpIcon />} label={t("yes")} count={yes} percent={Math.round((yes / total) * 100)} />
-        <Outcome icon={<ThumbsDownIcon />} label={t("no")} count={no} percent={Math.round((no / total) * 100)} />
+        <Outcome
+          icon={<ThumbsUpIcon />}
+          label={t("yes")}
+          count={yes}
+          percent={Math.round((yes / total) * 100)}
+        />
+        <Outcome
+          icon={<ThumbsDownIcon />}
+          label={t("no")}
+          count={no}
+          percent={Math.round((no / total) * 100)}
+        />
       </CardContent>
     </Card>
   );
 }
 
-function Outcome({ icon, label, count, percent }: { icon: React.ReactNode; label: string; count: number; percent: number }) {
+function Outcome({
+  icon,
+  label,
+  count,
+  percent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  percent: number;
+}) {
   const t = useTranslations("analytics");
   return (
     <div className="rounded-xl border p-4">
-      <div className="flex items-center gap-2 text-sm font-medium">{icon}{label}</div>
+      <div className="flex items-center gap-2 text-sm font-medium">
+        {icon}
+        {label}
+      </div>
       <p className="mt-4 text-3xl font-semibold">{percent}%</p>
       <p className="mt-1 text-sm text-muted-foreground">{t("answers", { count })}</p>
     </div>
@@ -108,20 +133,30 @@ function TextCard({ question }: { question: Question }) {
         {answers.length ? (
           <div className="flex flex-col gap-2">
             {answers.map((answer, index) => (
-              <blockquote key={`${question.question_id}-${index}`} className="rounded-lg bg-muted p-3 text-sm">
+              <blockquote
+                key={`${question.question_id}-${index}`}
+                className="rounded-lg bg-muted p-3 text-sm"
+              >
                 {answer}
               </blockquote>
             ))}
           </div>
         ) : (
-          <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-            {t("noText")}
-          </p>
+          <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">{t("noText")}</p>
         )}
 
         {hasMoreAnswers ? (
-          <Button variant="outline" size="sm" className="w-fit" onClick={() => setIsExpanded((value) => !value)}>
-            {isExpanded ? <ChevronUpIcon data-icon="inline-start" /> : <ChevronDownIcon data-icon="inline-start" />}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-fit"
+            onClick={() => setIsExpanded((value) => !value)}
+          >
+            {isExpanded ? (
+              <ChevronUpIcon data-icon="inline-start" />
+            ) : (
+              <ChevronDownIcon data-icon="inline-start" />
+            )}
             {isExpanded ? t("showLess") : t("showAll", { count: question.text_answers.length })}
           </Button>
         ) : null}

@@ -3,11 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import {
-  ApiError,
-  saveSmtpConfiguration,
-  sendSmtpTestEmail,
-} from "@/lib/api/client";
+import { ApiError, saveSmtpConfiguration, sendSmtpTestEmail } from "@/lib/api/client";
 import { getAccessToken } from "@/lib/auth/session";
 
 function readRequired(formData: FormData, name: string): string {
@@ -16,8 +12,10 @@ function readRequired(formData: FormData, name: string): string {
 
 function fail(action: "save" | "test", error: unknown): never {
   if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
-  if (error instanceof ApiError && error.status === 422) redirect(`/administration/email?error=${action}-validation`);
-  if (error instanceof ApiError && error.status === 503) redirect(`/administration/email?error=${action}-encryption`);
+  if (error instanceof ApiError && error.status === 422)
+    redirect(`/administration/email?error=${action}-validation`);
+  if (error instanceof ApiError && error.status === 503)
+    redirect(`/administration/email?error=${action}-encryption`);
   redirect(`/administration/email?error=${action}`);
 }
 
@@ -29,7 +27,8 @@ export async function saveSmtpConfigurationAction(formData: FormData) {
   const senderName = readRequired(formData, "senderName");
   const senderEmail = readRequired(formData, "senderEmail");
   const port = Number.parseInt(readRequired(formData, "port"), 10);
-  if (!host || !senderName || !senderEmail || !Number.isInteger(port)) redirect("/administration/email?error=save-validation");
+  if (!host || !senderName || !senderEmail || !Number.isInteger(port))
+    redirect("/administration/email?error=save-validation");
 
   try {
     await saveSmtpConfiguration(accessToken, {

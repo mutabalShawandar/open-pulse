@@ -4,7 +4,7 @@ OpenPulse is an independently developed open-source portfolio edition of a multi
 
 The original system was developed as a private, client-specific deployment. OpenPulse is its deliberately generalized edition: client branding, private configuration, infrastructure details, data, recipient lists, and secrets are not included.
 
-The Git history is intentionally retained to show the development timeline and engineering decisions behind the platform. The public edition adds a generic Organization tenant layer: each organization has member users and manages multiple client workspaces. It will use a new English-first OpenPulse brand.
+The Git history is intentionally retained to show the development timeline and engineering decisions behind the platform. The public edition adds a generic Organization tenant layer: each organization has member users and manages multiple client workspaces. It uses an English-first OpenPulse brand with a German translation.
 
 ## What this demonstrates
 
@@ -12,6 +12,6 @@ The Git history is intentionally retained to show the development timeline and e
 - Building versioned survey content with immutable published versions
 - Designing secure public response flows
 - Delivering full-stack systems with Next.js, FastAPI, PostgreSQL, Keycloak, Redis, and Docker Compose
-- Writing tests, migrations, deployment documentation, and operational configuration
+- Writing tests, migrations, CI pipelines, and a one-command local container setup
 
 This document describes provenance, not an affiliation with or endorsement by any client.

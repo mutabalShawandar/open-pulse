@@ -19,7 +19,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
-export function SendCampaignDialog({ campaignTitle, recipientCount, subject, action }: { campaignTitle: string; recipientCount: number; subject: string; action: (formData: FormData) => void | Promise<void> }) {
+export function SendCampaignDialog({
+  campaignTitle,
+  recipientCount,
+  subject,
+  action,
+}: {
+  campaignTitle: string;
+  recipientCount: number;
+  subject: string;
+  action: (formData: FormData) => void | Promise<void>;
+}) {
   const t = useTranslations("campaigns.sendDialog");
   return (
     <AlertDialog>
@@ -29,7 +39,9 @@ export function SendCampaignDialog({ campaignTitle, recipientCount, subject, act
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogMedia><SendIcon /></AlertDialogMedia>
+          <AlertDialogMedia>
+            <SendIcon />
+          </AlertDialogMedia>
           <AlertDialogTitle>{t("title")}</AlertDialogTitle>
           <AlertDialogDescription>
             <span className="block">{t("campaign", { title: campaignTitle })}</span>

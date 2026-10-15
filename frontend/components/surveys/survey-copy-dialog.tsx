@@ -60,7 +60,12 @@ export function SurveyCopyDialog({
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="source-version">{t("source")}</FieldLabel>
-              <NativeSelect defaultValue={sourceVersions[0].id} id="source-version" name="sourceVersionId" required>
+              <NativeSelect
+                defaultValue={sourceVersions[0].id}
+                id="source-version"
+                name="sourceVersionId"
+                required
+              >
                 {sourceVersions.map((sourceVersion) => (
                   <NativeSelectOption key={sourceVersion.id} value={sourceVersion.id}>
                     {sourceVersion.label}
@@ -71,15 +76,27 @@ export function SurveyCopyDialog({
             </Field>
             <Field>
               <FieldLabel htmlFor="copy-title">{t("copyTitle")}</FieldLabel>
-              <Input defaultValue={`${surveyTitle} – ${t("copySuffix")}`} id="copy-title" name="copyTitle" required />
+              <Input
+                defaultValue={`${surveyTitle} – ${t("copySuffix")}`}
+                id="copy-title"
+                name="copyTitle"
+                required
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="copy-description">{t("fDescription")}</FieldLabel>
-              <Textarea defaultValue={description ?? ""} id="copy-description" name="copyDescription" rows={3} />
+              <Textarea
+                defaultValue={description ?? ""}
+                id="copy-description"
+                name="copyDescription"
+                rows={3}
+              />
             </Field>
           </FieldGroup>
           <DialogFooter className="mt-5">
-            <DialogClose render={<Button type="button" variant="outline" />}>{t("cancel")}</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>
+              {t("cancel")}
+            </DialogClose>
             <Button type="submit">
               <CopyIcon data-icon="inline-start" />
               {t("submit")}

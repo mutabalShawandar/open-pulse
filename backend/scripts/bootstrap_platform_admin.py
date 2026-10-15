@@ -8,6 +8,7 @@ from pathlib import Path
 # Allow direct execution from the backend/scripts directory.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from fastapi import HTTPException
 from sqlalchemy import select
 
 from app.db.session import async_session_factory
@@ -82,7 +83,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--email", required=True)
     args = parser.parse_args()
-    asyncio.run(bootstrap(args.email))
+    try:
+        asyncio.run(bootstrap(args.email))
+    except HTTPException as error:
+        # Keycloak is often still starting; keep the retry loop's output readable.
+        print(f"Not ready yet: {error.detail}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

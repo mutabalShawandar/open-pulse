@@ -6,5 +6,9 @@ export function userDisplayName(user: CurrentUser): string {
 
 export function userInitials(user: CurrentUser): string {
   const words = userDisplayName(user).split(/\s+/).filter(Boolean);
-  return words.slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+  return words
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
 }

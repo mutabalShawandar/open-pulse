@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     minio_endpoint: str = "http://minio:9000"
     minio_access_key: str | None = None
     minio_secret_key: str | None = None
-    minio_bucket: str = "clinic-assets"
+    minio_bucket: str = "workspace-assets"
     # e.g. "domain.de" — when set, public survey links use "https://{workspace_slug}.{public_root_domain}/{public_slug}"
     # instead of "{public_frontend_url}/respond/{public_slug}". Requires wildcard DNS/TLS and the frontend's
     # subdomain-rewrite middleware to be in place.
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     campaign_delivery_max_attempts: int = 3
     campaign_delivery_retry_base_seconds: int = 15
     cors_origins: str = "http://localhost:3000"
-    # Matches clinic subdomains (e.g. "https://clinic-slug.domain.de") when PUBLIC_ROOT_DOMAIN
+    # Matches workspace subdomains (e.g. "https://workspace-slug.domain.de") when PUBLIC_ROOT_DOMAIN
     # is in use, since those origins can't be listed individually in CORS_ORIGINS.
     cors_origin_regex: str | None = None
     # A Fernet key. Keep this in the deployment secret store, never in Git.
@@ -55,7 +55,7 @@ class Settings(BaseSettings):
 
     @property
     def effective_cors_origin_regex(self) -> str | None:
-        """Allow the configured origins plus clinic survey subdomains over HTTPS."""
+        """Allow the configured origins plus workspace survey subdomains over HTTPS."""
         patterns = [f"(?:{self.cors_origin_regex})"] if self.cors_origin_regex else []
         if self.public_root_domain:
             patterns.append(rf"https://[a-z0-9-]+\.{re.escape(self.public_root_domain)}")
