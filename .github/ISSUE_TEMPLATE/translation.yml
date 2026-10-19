@@ -1,0 +1,39 @@
+name: Translation
+description: Fix a translation or propose a new language
+labels: ["translation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        User-facing text lives in `frontend/messages/en.json` and `frontend/messages/de.json`. Both files must have the same keys. See "Translations" in CONTRIBUTING.md.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is this about?
+      options:
+        - Correct or improve existing text
+        - Add a new language
+        - Text that is missing from the translation files
+    validations:
+      required: true
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: "German, French, ..."
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Which key or screen is affected, what it says now, and what it should say.
+    validations:
+      required: true
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Would you like to submit the change?
+      options:
+        - "Yes"
+        - "No, just reporting"
