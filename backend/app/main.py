@@ -41,6 +41,7 @@ from app.schemas.workspace import (
     WorkspaceResponse,
 )
 from app.services.auth_service import login_with_keycloak
+from app.services.authorization_service import get_global_access
 from app.services.keycloak_admin import KeycloakAdminClient
 from app.services.user_service import create_platform_user, grant_platform_admin
 from app.services.workspace_service import add_workspace_member, create_workspace
@@ -137,15 +138,23 @@ async def ready(session: AsyncSession = Depends(get_db_session)) -> dict[str, st
 
 
 @app.get("/api/v1/me", tags=["user"])
-async def get_current_user(user: Annotated[User, Depends(get_authenticated_user)]) -> dict:
+async def get_current_user(
+    user: Annotated[User, Depends(get_authenticated_user)],
+    session: AsyncSession = Depends(get_db_session),
+) -> dict:
     """
-    Endpoint to retrieve the current local application user.
+    Endpoint to retrieve the current local application user and their global access,
+    so the frontend can hide navigation the user cannot use. The backend still
+    enforces every permission on its own routes.
     """
+    is_platform_admin, permissions = await get_global_access(session, user)
     return {
         "id": str(user.id),
         "email": user.email,
         "display_name": user.display_name,
         "is_active": user.is_active,
+        "is_platform_admin": is_platform_admin,
+        "permissions": permissions,
     }
 
 
