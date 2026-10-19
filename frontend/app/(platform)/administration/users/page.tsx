@@ -15,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { listPlatformUsers } from "@/lib/api/client";
+import { redirect } from "next/navigation";
+import { ApiError, listPlatformUsers } from "@/lib/api/client";
+import type { PlatformUser } from "@/lib/api/types";
 import { requireUser } from "@/lib/auth/require-user";
 import { getAccessToken } from "@/lib/auth/session";
 
@@ -23,7 +25,13 @@ export default async function UsersPage({ searchParams }: PageProps<"/administra
   const actor = await requireUser();
   const accessToken = await getAccessToken();
   if (!accessToken) return null;
-  const users = await listPlatformUsers(accessToken);
+  let users: PlatformUser[];
+  try {
+    users = await listPlatformUsers(accessToken);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
+    throw error;
+  }
   const query = await searchParams;
   const t = await getTranslations("admin");
 

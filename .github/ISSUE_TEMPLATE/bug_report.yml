@@ -1,0 +1,58 @@
+name: Bug report
+description: Something does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please do not include real personal data, passwords, or tokens.
+        For security problems, use the private reporting link on the issue chooser instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `docker compose up`
+        2. Sign in as ...
+        3. Click ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Authentication / sign-in
+        - Surveys and builder
+        - Campaigns and public survey
+        - Recipients and email delivery
+        - Analytics and exports
+        - Administration
+        - Translations
+        - Docker Compose / setup
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: "main @ abc1234"
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Docker Desktop version, and browser.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: For example the output of `docker compose logs backend`. Remove anything sensitive.
+      render: shell

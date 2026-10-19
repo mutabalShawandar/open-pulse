@@ -17,6 +17,33 @@ from app.models import (
 )
 
 
+async def get_global_access(session: AsyncSession, user: User) -> tuple[bool, list[str]]:
+    """Return (is_platform_admin, sorted global permission names) for the user.
+
+    Only reflects roles assigned directly to the user (user_roles), which is what
+    the platform-level administration routes check; workspace permissions are
+    resolved separately per workspace.
+    """
+    is_platform_admin = (
+        await session.scalar(
+            select(Role.id)
+            .join(UserRole, UserRole.role_id == Role.id)
+            .where(UserRole.user_id == user.id, Role.name == "platform_admin")
+            .limit(1)
+        )
+        is not None
+    )
+    permissions = await session.scalars(
+        select(Permission.name)
+        .join(RolePermission, RolePermission.permission_id == Permission.id)
+        .join(UserRole, UserRole.role_id == RolePermission.role_id)
+        .where(UserRole.user_id == user.id)
+        .distinct()
+        .order_by(Permission.name)
+    )
+    return is_platform_admin, list(permissions)
+
+
 async def require_clinic_permission(
     session: AsyncSession, user: User, clinic_id: UUID, permission_name: str
 ) -> None:

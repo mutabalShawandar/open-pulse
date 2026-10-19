@@ -167,21 +167,12 @@ npm ci
 npm run lint
 npm run format:check
 npm run typecheck
+npm test
 npm run build
 ```
 
-GitHub Actions runs all of the above on every pull request, plus a Compose smoke test (`.github/scripts/compose-smoke.sh`), CodeQL, and Snyk. The frontend does not have a test framework yet.
-
-## Project direction
-
-OpenPulse is open source today, under the [MIT License](LICENSE), and it will stay open while the project proves that it is useful in real-world use. If it does, the plan is to continue its development as a closed-source product operated as a hosted (SaaS) service.
-
-What that means in practice:
-
-- **Released versions stay free.** Every version published under the MIT License remains MIT-licensed. Nothing changes retroactively: contributors and everyone else can keep using, modifying, and forking the code they already have, at no cost and including commercially.
-- **Contributions are MIT-licensed.** The MIT License allows code to be used in proprietary software, so contributed code may become part of a closed-source version. Please contribute only if you are comfortable with that.
-- **There is no timeline.** This is a plan, not a commitment to a date, and it depends on the project proving itself first. If the plan changes, this section will be updated.
+GitHub Actions runs all of the above on every pull request, plus a Compose smoke test (`.github/scripts/compose-smoke.sh`), CodeQL, and Snyk. Frontend tests (Vitest) check translation key parity, auth redirects, the API client, and the administration pages.
 
 ## License
 
-OpenPulse is released under the [MIT License](LICENSE). See [Project direction](#project-direction) for how the project is expected to evolve.
+OpenPulse is released under the [MIT License](LICENSE).

@@ -20,6 +20,7 @@ You need the environment variables from the repository's `.env.example` (`NEXT_P
 | `npm run lint`                            | ESLint                              |
 | `npm run format` / `npm run format:check` | Prettier (write / check)            |
 | `npm run typecheck`                       | Generate route types and type-check |
+| `npm test`                                | Vitest unit and page tests          |
 | `npm run build`                           | Production build                    |
 
 CI runs lint, the format check, the type check, and the build on every pull request.

@@ -1,11 +1,16 @@
-export type CurrentUser = {
+export type PlatformUser = {
   id: string;
   email: string;
   display_name: string | null;
   is_active: boolean;
 };
 
-export type PlatformUser = CurrentUser;
+// /api/v1/me: the user plus their global access. Used only to decide what to show;
+// the backend enforces permissions on every route.
+export type CurrentUser = PlatformUser & {
+  is_platform_admin: boolean;
+  permissions: string[];
+};
 
 export type Organization = {
   id: string;
