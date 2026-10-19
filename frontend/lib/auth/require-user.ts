@@ -8,12 +8,14 @@ export async function requireUser(): Promise<CurrentUser> {
   const accessToken = await getAccessToken();
   if (!accessToken) redirect("/login");
 
+  // redirect() works by throwing, so it must stay outside the try/catch below.
+  let user: CurrentUser;
   try {
-    const user = await getCurrentUser(accessToken);
-    if (!user.is_active) redirect("/access-denied");
-    return user;
+    user = await getCurrentUser(accessToken);
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) redirect("/access-denied");
     redirect("/login");
   }
+  if (!user.is_active) redirect("/access-denied");
+  return user;
 }
