@@ -150,7 +150,7 @@ services:
         condition: service_started
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.1
+    image: quay.io/keycloak/keycloak:26.8
     container_name: openpulse-keycloak
     command: start-dev --import-realm
     environment:
